@@ -1,0 +1,35 @@
+@baseUrl = http://localhost:3000
+@todoId = 00000000-0000-0000-0000-000000000000
+
+### Docs (Swagger UI)
+GET {{baseUrl}}/docs
+
+### Status
+GET {{baseUrl}}/api/status
+
+### Todos - List
+GET {{baseUrl}}/api/todos
+
+### Todos - Create
+POST {{baseUrl}}/api/todos
+Content-Type: application/json
+
+{
+  "title": "Comprar leche",
+  "completed": false
+}
+
+### Todos - Get by ID
+GET {{baseUrl}}/api/todos/{{todoId}}
+
+### Todos - Update by ID
+PUT {{baseUrl}}/api/todos/{{todoId}}
+Content-Type: application/json
+
+{
+  "title": "Comprar pan",
+  "completed": true
+}
+
+### Todos - Delete by ID
+DELETE {{baseUrl}}/api/todos/{{todoId}}
