@@ -6,7 +6,7 @@ const service = new TodoService();
 export async function listTodos(req: Request, res: Response) {
   const items = await service.list();
   res.json(items);
-}
+} 
 
 export async function getTodo(req: Request, res: Response) {
   const { id } = req.params;
