@@ -1,5 +1,5 @@
 {
-  "name": "tpo-aplicaciones-interactivas",
+  "name": "tpo_aplicaciones_interactivas",
   "version": "1.0.0",
   "main": "dist/index.js",
   "scripts": {
@@ -43,10 +43,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jmjaime/tpo.git"
+    "url": "git+https://github.com/Flac222/tpo_aplicaciones_interactivas.git"
   },
   "bugs": {
-    "url": "https://github.com/jmjaime/tpo/issues"
+    "url": "https://github.com/Flac222/tpo_aplicaciones_interactivas/issues"
   },
-  "homepage": "https://github.com/jmjaime/tpo#readme"
+  "homepage": "https://github.com/Flac222/tpo_aplicaciones_interactivas#readme"
 }

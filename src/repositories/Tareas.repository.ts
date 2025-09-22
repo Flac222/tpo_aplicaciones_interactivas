@@ -1,6 +1,6 @@
 import AppDataSource from "../db/data-source";
 import { Repository } from "typeorm";
-import { Tarea } from "../entities/Tarea.entity";
+import { Tarea } from "../entities/Tareas.entity";
 
 export class TareaRepository {
   private readonly repository: Repository<Tarea>;
@@ -15,7 +15,7 @@ export class TareaRepository {
 
   findById(id: number): Promise<Tarea | null> {
     return this.repository.findOne({
-      where: { id },
+      where: { id : id.toString() },
       relations: ["usuario", "equipo"],
     });
   }
