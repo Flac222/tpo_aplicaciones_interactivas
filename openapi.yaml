@@ -4,7 +4,9 @@ info:
   version: 1.0.0
 servers:
   - url: http://localhost:3000
+
 paths:
+  # Estado del sistema
   /api/status:
     get:
       summary: Estado del sistema
@@ -19,98 +21,197 @@ paths:
                   status: { type: string }
                   time: { type: string, format: date-time }
 
-  /api/todos:
-    get:
-      summary: Listar todos
-      responses:
-        "200":
-          description: Lista de todos
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Todo'
+  # ---------- Usuarios ----------
+  /api/users/register:
     post:
-      summary: Crear un todo
+      summary: Registrar usuario
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TodoCreate'
+              $ref: '#/components/schemas/UsuarioCreate'
       responses:
         "201":
-          description: Todo creado
+          description: Usuario creado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Todo'
+                $ref: '#/components/schemas/Usuario'
 
-  /api/todos/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        description: ID del todo
-        schema:
-          type: string
-          format: uuid
-    get:
-      summary: Obtener un todo
-      responses:
-        "200":
-          description: Todo encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Todo'
-        "404":
-          description: No encontrado
-    put:
-      summary: Actualizar un todo
+  /api/users/login:
+    post:
+      summary: Login de usuario
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TodoUpdate'
+              $ref: '#/components/schemas/UsuarioLogin'
       responses:
         "200":
-          description: Todo actualizado
+          description: Login exitoso
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Todo'
-        "404":
-          description: No encontrado
-    delete:
-      summary: Eliminar un todo
+                type: object
+                properties:
+                  token: { type: string }
+                  usuario: { $ref: '#/components/schemas/Usuario' }
+
+  # ---------- Equipos ----------
+  /api/equipos:
+    post:
+      summary: Crear equipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipoCreate'
       responses:
-        "204":
-          description: Eliminado
-        "404":
-          description: No encontrado
+        "201":
+          description: Equipo creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Equipo'
+
+  /api/equipos/{id}/invitar:
+    post:
+      summary: Invitar miembro a un equipo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitarMiembro'
+      responses:
+        "200":
+          description: Miembro invitado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Equipo'
+
+  # ---------- Tareas ----------
+  /api/tareas:
+    post:
+      summary: Crear tarea
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TareaCreate'
+      responses:
+        "201":
+          description: Tarea creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tarea'
+
+  /api/tareas/{id}/estado:
+    put:
+      summary: Actualizar estado de tarea
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TareaEstadoUpdate'
+      responses:
+        "200":
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tarea'
 
 components:
   schemas:
-    Todo:
+    # ---------- Usuarios ----------
+    Usuario:
       type: object
       properties:
         id: { type: string, format: uuid }
-        title: { type: string }
-        completed: { type: boolean }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-    TodoCreate:
+        nombre: { type: string }
+        email: { type: string }
+    UsuarioCreate:
       type: object
-      required: [title]
+      required: [nombre, email, password]
       properties:
-        title: { type: string }
-        completed: { type: boolean }
-    TodoUpdate:
+        nombre: { type: string }
+        email: { type: string }
+        password: { type: string }
+    UsuarioLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    # ---------- Equipos ----------
+    Equipo:
       type: object
       properties:
-        title: { type: string }
-        completed: { type: boolean }
-   
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        propietarioId: { type: string, format: uuid }
+        miembros:
+          type: array
+          items:
+            $ref: '#/components/schemas/Usuario'
+    EquipoCreate:
+      type: object
+      required: [nombre, propietarioId]
+      properties:
+        nombre: { type: string }
+        propietarioId: { type: string, format: uuid }
+    InvitarMiembro:
+      type: object
+      required: [usuarioId, propietarioId]
+      properties:
+        usuarioId: { type: string, format: uuid }
+        propietarioId: { type: string, format: uuid }
+
+    # ---------- Tareas ----------
+    Tarea:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        titulo: { type: string }
+        descripcion: { type: string }
+        estado: { type: string, enum: ["Pendiente","En curso","Terminada","Cancelada"] }
+        prioridad: { type: string, enum: ["Alta","Media","Baja"] }
+        creadorId: { type: string, format: uuid }
+        equipoId: { type: string, format: uuid, nullable: true }
+        fechaCreacion: { type: string, format: date-time }
+        fechaActualizacion: { type: string, format: date-time }
+    TareaCreate:
+      type: object
+      required: [titulo, creadorId]
+      properties:
+        titulo: { type: string }
+        descripcion: { type: string }
+        creadorId: { type: string, format: uuid }
+        equipoId: { type: string, format: uuid }
+    TareaEstadoUpdate:
+      type: object
+      required: [nuevoEstado, usuarioId]
+      properties:
+        nuevoEstado:
+          type: string
+          enum: ["Pendiente","En curso","Terminada","Cancelada"]
+        usuarioId: { type: string, format: uuid }

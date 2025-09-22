@@ -1,35 +1,72 @@
 @baseUrl = http://localhost:3000
-@todoId = 00000000-0000-0000-0000-000000000000
 
-### Docs (Swagger UI)
+### Swagger UI
 GET {{baseUrl}}/docs
 
-### Status
+### Estado del sistema
 GET {{baseUrl}}/api/status
 
-### Todos - List
-GET {{baseUrl}}/api/todos
-
-### Todos - Create
-POST {{baseUrl}}/api/todos
+# ---------- Usuarios ----------
+### Registrar usuario
+POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "title": "Comprar leche",
-  "completed": false
+  "nombre": "Ezequiel",
+  "email": "eze@example.com",
+  "password": "123456"
 }
 
-### Todos - Get by ID
-GET {{baseUrl}}/api/todos/{{todoId}}
-
-### Todos - Update by ID
-PUT {{baseUrl}}/api/todos/{{todoId}}
+### Login
+POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "title": "Comprar pan",
-  "completed": true
+  "email": "eze@example.com",
+  "password": "123456"
 }
 
-### Todos - Delete by ID
-DELETE {{baseUrl}}/api/todos/{{todoId}}
+# ---------- Equipos ----------
+@userId = "ID_DEL_USUARIO_LOGUEADO"
+@equipoId = "00000000-0000-0000-0000-000000000000"
+
+### Crear equipo
+POST {{baseUrl}}/api/equipos
+Content-Type: application/json
+
+{
+  "nombre": "Equipo Backend",
+  "propietarioId": "{{userId}}"
+}
+
+### Invitar miembro al equipo
+POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
+Content-Type: application/json
+
+{
+  "usuarioId": "ID_DEL_USUARIO_A_INVITAR",
+  "propietarioId": "{{userId}}"
+}
+
+# ---------- Tareas ----------
+@tareaId = "00000000-0000-0000-0000-000000000000"
+
+### Crear tarea
+POST {{baseUrl}}/api/tareas
+Content-Type: application/json
+
+{
+  "titulo": "Implementar login",
+  "descripcion": "Crear endpoint de login con JWT",
+  "creadorId": "{{userId}}",
+  "equipoId": "{{equipoId}}"
+}
+
+### Cambiar estado de tarea
+PUT {{baseUrl}}/api/tareas/{{tareaId}}/estado
+Content-Type: application/json
+
+{
+  "nuevoEstado": "En curso",
+  "usuarioId": "{{userId}}"
+}
