@@ -17,7 +17,7 @@ export class TareaService {
 
     let equipo: Equipo | null = null;
     if (equipoId) {
-      equipo = await this.equipoRepo.findOne({ where: { id: equipoId }, relations: ["miembros"] });
+      //equipo = await this.equipoRepo.findOne({ where: { id: equipoId }, relations: ["miembros"] });
       if (!equipo) throw new Error("Equipo no encontrado");
     }
 
@@ -25,10 +25,11 @@ export class TareaService {
       titulo,
       descripcion,
       creador,
-      equipo: equipo ?? undefined,
+      equipo: equipoId ? { id: equipoId } as Equipo : undefined, // ← solo pasás el ID
       estado: EstadoTarea.PENDIENTE,
       prioridad: PrioridadTarea.MEDIA
     });
+
     await this.tareaRepo.save(tarea);
 
     const historial = this.historialRepo.create({

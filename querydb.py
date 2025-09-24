@@ -43,5 +43,5 @@ def mostrar_contenido(tabla):
 # 🧪 Ejecución
 if __name__ == "__main__":
     listar_tablas()
-    tabla_a_mostrar = "usuario"  # Cambiá por la tabla que quieras ver
+    tabla_a_mostrar = "equipo"  # Cambiá por la tabla que quieras ver
     mostrar_contenido(tabla_a_mostrar)

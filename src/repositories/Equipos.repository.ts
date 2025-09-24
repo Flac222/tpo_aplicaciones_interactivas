@@ -10,13 +10,13 @@ export class EquipoRepository {
   }
 
   findAll(): Promise<Equipo[]> {
-    return this.repository.find({ relations: ["usuarios", "tareas"] });
+    return this.repository.find({ relations: ["miembros", "tareas"] });
   }
 
   findById(id: number): Promise<Equipo | null> {
     return this.repository.findOne({
       where: { id: id.toString() },
-      relations: ["usuarios", "tareas"],
+      relations: ["miembros", "tareas"],
     });
   }
 

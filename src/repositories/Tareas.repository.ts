@@ -1,6 +1,7 @@
 import AppDataSource from "../db/data-source";
 import { Repository } from "typeorm";
 import { Tarea } from "../entities/Tareas.entity";
+import { Equipo } from "../entities/Equipo.entity";
 
 export class TareaRepository {
   private readonly repository: Repository<Tarea>;
@@ -20,10 +21,15 @@ export class TareaRepository {
     });
   }
 
-  create(tarea: Partial<Tarea>): Promise<Tarea> {
-    const newTarea = this.repository.create(tarea);
-    return this.repository.save(newTarea);
+create(tarea: Partial<Tarea>): Promise<Tarea> {
+  if (tarea.equipo && typeof tarea.equipo === "object" && "id" in tarea.equipo) {
+    tarea.equipo = { id: tarea.equipo.id } as Equipo; // solo pasás el ID
   }
+
+  const newTarea = this.repository.create(tarea);
+  return this.repository.save(newTarea);
+}
+
 
   update(id: number, data: Partial<Tarea>): Promise<Tarea | null> {
     return this.findById(id).then((tarea) => {
