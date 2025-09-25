@@ -17,7 +17,10 @@ export class TareaService {
 
     let equipo: Equipo | null = null;
     if (equipoId) {
-      //equipo = await this.equipoRepo.findOne({ where: { id: equipoId }, relations: ["miembros"] });
+      equipo = await this.equipoRepo.findOne({
+        where: { id: equipoId },
+        relations: ["miembros"]    // si necesitas cargar la relación
+      });
       if (!equipo) throw new Error("Equipo no encontrado");
     }
 

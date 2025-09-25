@@ -19,11 +19,17 @@ export async function actualizarEstado(req: Request, res: Response) {
     const { id } = req.params;
     const { nuevoEstado, usuarioId } = req.body;
 
-    if (!(nuevoEstado in EstadoTarea)) {
+    // extraemos solo los valores del enum
+    const estadosValidos = Object.values(EstadoTarea) as string[];
+    if (!estadosValidos.includes(nuevoEstado)) {
       return res.status(400).json({ error: "Estado inválido" });
     }
 
-    const tarea = await tareaService.actualizarEstado(id, nuevoEstado as EstadoTarea, usuarioId);
+    const tarea = await tareaService.actualizarEstado(
+      id,
+      nuevoEstado as EstadoTarea,
+      usuarioId
+    );
     res.json(tarea);
   } catch (err: any) {
     res.status(400).json({ error: err.message });

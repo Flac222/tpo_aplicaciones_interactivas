@@ -15,8 +15,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "Ezequiel",
-  "email": "eze@example.com",
+  "nombre": "Ezequiel1",
+  "email": "eze2@example.com",
   "password": "123456"
 }
 
@@ -33,8 +33,8 @@ Content-Type: application/json
 
 ### ---------- Equipos ----------
 
-@userId = 11111111-1111-1111-1111-111111111111
-@equipoId = 22222222-2222-2222-2222-222222222222
+@userId = b7b0cfb4-558d-4e1c-817d-1a6b6f509ddc
+@equipoId = e3295e73-af49-4a01-a93c-b1b8c30dcbab
 
 ### Crear equipo
 POST {{baseUrl}}/api/equipos
@@ -51,14 +51,14 @@ POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
 Content-Type: application/json
 
 {
-  "usuarioId": "33333333-3333-3333-3333-333333333333",
+  "usuarioId": "4ee15231-e249-43e7-a734-262347ee1292",
   "propietarioId": "{{userId}}"
 }
 
 
 ### ---------- Tareas ----------
 
-@tareaId = 44444444-4444-4444-4444-444444444444
+@tareaId = 5c9daba3-1006-42b9-b9b5-cd574feb4c1c
 
 ### Crear tarea
 POST {{baseUrl}}/api/tareas
@@ -72,6 +72,7 @@ Content-Type: application/json
   "prioridad": "Alta",
   "estado": "Pendiente"
 }
+
 
 
 ### Cambiar estado de tarea
