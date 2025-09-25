@@ -11,7 +11,7 @@ export class TareaService {
   private equipoRepo = AppDataSource.getRepository(Equipo);
   private historialRepo = AppDataSource.getRepository(Historial);
 
-  async crearTarea(titulo: string, descripcion: string, creadorId: string, equipoId?: string) {
+  async crearTarea(titulo: string, descripcion: string, creadorId: string, equipoId?: string, estado?: string, prioridad?: string) {
     const creador = await this.usuarioRepo.findOneBy({ id: creadorId });
     if (!creador) throw new Error("Usuario no encontrado");
 
@@ -26,8 +26,8 @@ export class TareaService {
       descripcion,
       creador,
       equipo: equipoId ? { id: equipoId } as Equipo : undefined, // ← solo pasás el ID
-      estado: EstadoTarea.PENDIENTE,
-      prioridad: PrioridadTarea.MEDIA
+      estado: estado as EstadoTarea || EstadoTarea.PENDIENTE,
+      prioridad: prioridad as PrioridadTarea || PrioridadTarea.MEDIA
     });
 
     await this.tareaRepo.save(tarea);

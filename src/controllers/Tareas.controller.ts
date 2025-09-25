@@ -6,8 +6,8 @@ const tareaService = new TareaService();
 
 export async function crearTarea(req: Request, res: Response) {
   try {
-    const { titulo, descripcion, creadorId, equipoId } = req.body;
-    const tarea = await tareaService.crearTarea(titulo, descripcion, creadorId, equipoId);
+    const { titulo, descripcion, creadorId, equipoId, estado, prioridad } = req.body;
+    const tarea = await tareaService.crearTarea(titulo, descripcion, creadorId, equipoId, estado, prioridad);
     res.json(tarea);
   } catch (err: any) {
     res.status(400).json({ error: err.message });

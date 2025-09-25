@@ -207,6 +207,8 @@ components:
         descripcion: { type: string }
         creadorId: { type: string, format: uuid }
         equipoId: { type: string, format: uuid }
+        prioridad: { type: string, enum: ["Alta","Media","Baja"] }
+        estado: { type: string, enum: ["Pendiente","En curso","Terminada","Cancelada"] }
     TareaEstadoUpdate:
       type: object
       required: [nuevoEstado, usuarioId]

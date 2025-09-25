@@ -25,7 +25,7 @@ Content-Type: application/json
   "email": "eze@example.com",
   "password": "123456"
 }
-
+/*
 # ---------- Equipos ----------
 @userId = "ID_DEL_USUARIO_LOGUEADO"
 @equipoId = "00000000-0000-0000-0000-000000000000"
@@ -70,3 +70,4 @@ Content-Type: application/json
   "nuevoEstado": "En curso",
   "usuarioId": "{{userId}}"
 }
+

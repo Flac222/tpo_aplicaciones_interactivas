@@ -6,7 +6,8 @@ import path from "path";
 
 import userRoutes from "./routes/Usuario.routes";
 import equipoRoutes from "./routes/Equipos.routes";
-import tareaRoutes from "./routes/Equipos.routes";
+import tareaRoutes from "./routes/Tareas.routes";
+import statusRouter from "./routes/status.routes";
 
 export function createApp() {
   const app = express();
@@ -17,7 +18,7 @@ export function createApp() {
   const openapiPath = path.join(__dirname, "../openapi.yaml");
   const openapiDocument = YAML.load(openapiPath);
   app.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiDocument));
-
+  app.use("/api/status", statusRouter);
   app.use("/api/users", userRoutes);
   app.use("/api/equipos", equipoRoutes);
   app.use("/api/tareas", tareaRoutes);
