@@ -1,25 +1,45 @@
-## TPO Aplicaciones Interactivas - API
+## TPO Aplicaciones Interactivas - Grupo 6
 
-Node.js + TypeScript + Express + TypeORM + PostgreSQL
+### Miembros
+- [Kagushutchi](https://github.com/Kagushutchi/) 1167217
+- [Flac222](https://github.com/Flac222/) 1169070
 
-### Prerrequisitos
+### Stack:
 
-- Node.js 18+
-- PostgreSQL 13+
+- Node.js 24
+- TypeScript 
+- Express
+- TypeORM
+- PostgreSQL 16
 
-### Configuración rápida
+### Configuración
 
-1. Crear el archivo de entorno
+1. Crear el archivo de entorno:
 
 ```bash
-cp .env.example .env
-# Editá los valores según tu entorno (usuario, contraseña, base, host, puerto)
+cp .env
+
+#Ejemplo
+
+PORT=3000 # Server
+
+# PostgreSQL connection
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=my_username
+DB_PASSWORD=my_secure_password
+DB_NAME=my_db_name
 ```
 
 2. Instalar dependencias
 
 ```bash
 npm install
+npm install --save-dev @types/jest
+npm install --save-dev jest ts-jest @types/jest
+npm install --save-dev @jest/types
+npm install --save-dev @types/node
+npx tsc
 ```
 
 3. Compilar TypeScript (opcional si usás `dev`)
@@ -32,6 +52,7 @@ npm run build
 
 ```bash
 npm run migration:run
+npm run migration:generate
 ```
 
 5. Iniciar la API
@@ -45,13 +66,6 @@ npm start
 ```
 
 La API escucha por defecto en `http://localhost:${PORT}` (ver `PORT` en `.env`).
-
-### Variables de entorno
-
-Usá `.env.example` como referencia. Variables principales:
-
-- `PORT` (p. ej. 3000)
-- `DB_HOST`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`
 
 ### Base de datos y TypeORM
 
@@ -89,13 +103,6 @@ Notas:
 
   - `GET /api/status`
 
-- Todos (CRUD de ejemplo, quitar)
-  - `GET /api/todos`
-  - `GET /api/todos/:id`
-  - `POST /api/todos` body: `{ "title": "Tarea", "completed": false }`
-  - `PUT /api/todos/:id` body parcial: `{ "title": "Nuevo título", "completed": true }`
-  - `DELETE /api/todos/:id`
-
 ### Estructura del proyecto (resumen)
 
 ```
@@ -111,7 +118,3 @@ src/
     data-source.ts        # Configuración TypeORM
     migrations/           # Migraciones
 ```
-
-### Referencias
-
-- Ejemplo oficial TypeORM + Express: [typeorm.io/docs/guides/example-with-express](https://typeorm.io/docs/guides/example-with-express)
