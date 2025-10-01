@@ -65,4 +65,20 @@ export class TareaService {
 
     return tarea;
   }
+
+  static async listarPorEquipoYFiltro(
+    equipoId: string,
+    estado?: EstadoTarea,
+    prioridad?: PrioridadTarea
+  ) {
+    const query = AppDataSource.getRepository(Tarea)
+      .createQueryBuilder("tarea")
+      .leftJoinAndSelect("tarea.equipo", "equipo")
+      .where("equipo.id = :equipoId", { equipoId });
+
+    if (estado) query.andWhere("tarea.estado = :estado", { estado });
+    if (prioridad) query.andWhere("tarea.prioridad = :prioridad", { prioridad });
+
+    return await query.getMany();
+  }
 }

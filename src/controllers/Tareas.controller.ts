@@ -35,3 +35,22 @@ export async function actualizarEstado(req: Request, res: Response) {
     res.status(400).json({ error: err.message });
   }
 }
+export const listarTareasPorFiltro = async (req: Request, res: Response) => {
+  const { equipoId } = req.params;
+  const { estado, prioridad } = req.query;
+
+  try {
+    const tareas = await TareaService.listarPorEquipoYFiltro(
+      equipoId,
+      estado as any,
+      prioridad as any
+    );
+    res.json(tareas);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(400).json({ error: error.message });
+    } else {
+      res.status(400).json({ error: "Unknown error" });
+    }
+  }
+};
