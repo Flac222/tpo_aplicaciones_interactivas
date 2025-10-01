@@ -4,12 +4,19 @@ import { UsuarioService } from "../services/Usuario.service";
 const usuarioService = new UsuarioService();
 
 export async function crearUsuario(req: Request, res: Response) {
+  const { nombre, email, password } = req.body;
+
+  // Regex simple: algo@algo.algo
+  const emailRegex = /^\S+@\S+\.\S+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "Formato de e-mail inválido" });
+  }
+
   try {
-    const { nombre, email, password } = req.body;
     const usuario = await usuarioService.crearUsuario(nombre, email, password);
-    res.json(usuario);
+    return res.status(201).json(usuario);
   } catch (err: any) {
-    res.status(400).json({ error: err.message });
+    return res.status(400).json({ error: err.message });
   }
 }
 
@@ -21,4 +28,17 @@ export async function login(req: Request, res: Response) {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
-}
+} 
+export const listarEquiposDelUsuario = async (req: Request, res: Response) => {
+  try {
+    const equipos = await usuarioService.listarEquiposDelUsuario(req.params.id);
+    res.json(equipos);
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(404).json({ error: error.message });
+    } else {
+      res.status(404).json({ error: "Ocurrió un error desconocido" });
+    }
+  }
+};
+

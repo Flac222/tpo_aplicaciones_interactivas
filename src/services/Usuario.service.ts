@@ -26,4 +26,14 @@ export class UsuarioService {
     const token = jwt.sign({ id: usuario.id }, "SECRET", { expiresIn: "1d" });
     return { usuario, token };
   }
+
+  async listarEquiposDelUsuario(usuarioId: string) {
+    const usuario = await AppDataSource.getRepository(Usuario).findOne({
+      where: { id: usuarioId },
+      relations: ["equipos"]
+    });
+
+    if (!usuario) throw new Error("Usuario no encontrado");
+    return usuario.equipos;
+  }
 }
