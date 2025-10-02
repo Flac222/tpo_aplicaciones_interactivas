@@ -14,7 +14,7 @@ export class TareaRepository {
     return this.repository.find({ relations: ["usuario", "equipo"] });
   }
 
-  findById(id: number): Promise<Tarea | null> {
+  findById(id: string): Promise<Tarea | null> {
     return this.repository.findOne({
       where: { id : id.toString() },
       relations: ["usuario", "equipo"],
@@ -31,15 +31,15 @@ create(tarea: Partial<Tarea>): Promise<Tarea> {
 }
 
 
-  update(id: number, data: Partial<Tarea>): Promise<Tarea | null> {
-    return this.findById(id).then((tarea) => {
+update(id: string, data: Partial<Tarea>): Promise<Tarea | null> {
+  return this.findById(id).then((tarea) => {
       if (!tarea) return null;
       Object.assign(tarea, data);
       return this.repository.save(tarea);
     });
   }
 
-  async delete(id: number): Promise<boolean> {
+async delete(id: number): Promise<boolean> {
     const result = await this.repository.delete(id);
     return result.affected !== 0;
   }

@@ -13,16 +13,17 @@ export class UsuarioRepository {
     return this.repository.find();
   }
 
-  findById(id: number): Promise<Usuario | null> {
-    return this.repository.findOne({ where: { id: id.toString() } });
-  }
+findById(id: string): Promise<Usuario | null> {
+  return this.repository.findOne({ where: { id } });
+}
+
 
   create(usuario: Partial<Usuario>): Promise<Usuario> {
     const newUsuario = this.repository.create(usuario);
     return this.repository.save(newUsuario);
   }
 
-  update(id: number, data: Partial<Usuario>): Promise<Usuario | null> {
+  update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
     return this.findById(id).then((usuario) => {
       if (!usuario) return null;
       Object.assign(usuario, data);

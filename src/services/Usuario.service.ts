@@ -1,4 +1,4 @@
-// services/usuarioService.ts
+
 import  AppDataSource  from "../db/data-source";
 import { Usuario } from "../entities/Usuario.entity";
 import bcrypt from "bcrypt";
@@ -27,13 +27,4 @@ export class UsuarioService {
     return { usuario, token };
   }
 
-  async listarEquiposDelUsuario(usuarioId: string) {
-    const usuario = await AppDataSource.getRepository(Usuario).findOne({
-      where: { id: usuarioId },
-      relations: ["equipos"]
-    });
-
-    if (!usuario) throw new Error("Usuario no encontrado");
-    return usuario.equipos;
-  }
 }
