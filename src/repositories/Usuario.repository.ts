@@ -23,7 +23,7 @@ findById(id: string): Promise<Usuario | null> {
     return this.repository.save(newUsuario);
   }
 
-  update(id: number, data: Partial<Usuario>): Promise<Usuario | null> {
+  update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
     return this.findById(id).then((usuario) => {
       if (!usuario) return null;
       Object.assign(usuario, data);
@@ -31,7 +31,7 @@ findById(id: string): Promise<Usuario | null> {
     });
   }
 
-  async delete(id: number): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const result = await this.repository.delete(id);
     return result.affected !== 0;
   }

@@ -1,11 +1,13 @@
 
 import  AppDataSource  from "../db/data-source";
 import { Usuario } from "../entities/Usuario.entity";
+import { UsuarioRepository } from "../repositories/Usuario.repository";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export class UsuarioService {
   private usuarioRepo = AppDataSource.getRepository(Usuario);
+  private usuarioCustomRepo = new UsuarioRepository();
 
   async crearUsuario(nombre: string, email: string, password: string) {
     const existe = await this.usuarioRepo.findOneBy({ email });
@@ -27,4 +29,25 @@ export class UsuarioService {
     return { usuario, token };
   }
 
+  async actualizarUsuario(id: string, data: Partial<Usuario>) {
+    if (data.email) {
+      const existe = await this.usuarioRepo.findOneBy({ email: data.email });
+      if (existe && existe.id !== id) throw new Error("El email ya está en uso");
+    }
+
+    if (data.password) {
+      data.password = await bcrypt.hash(data.password, 10);
+    }
+
+    const actualizado = await this.usuarioCustomRepo.update(id, data);
+    if (!actualizado) throw new Error("Usuario no encontrado");
+    return actualizado;
+  }
+
+  async eliminarUsuario(id: string): Promise<boolean> {
+    return await this.usuarioCustomRepo.delete(id);
+  }
 }
+
+
+

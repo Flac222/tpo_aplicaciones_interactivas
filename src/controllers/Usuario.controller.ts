@@ -28,6 +28,31 @@ export async function login(req: Request, res: Response) {
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
-} 
+}
+
+export async function actualizarUsuario(req: Request, res: Response) {
+  const { id } = req.params;
+  const { nombre, email, password } = req.body;
+
+  try {
+    const usuario = await usuarioService.actualizarUsuario(id, { nombre, email, password });
+    res.json(usuario);
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
+export async function eliminarUsuario(req: Request, res: Response) {
+  const { id } = req.params;
+
+  try {
+    const eliminado = await usuarioService.eliminarUsuario(id);
+    if (!eliminado) return res.status(404).json({ error: "Usuario no encontrado" });
+    res.json({ eliminado: true });
+  } catch (err: any) {
+    res.status(400).json({ error: err.message });
+  }
+}
+
 
 
