@@ -4,9 +4,12 @@ import { Tarea, EstadoTarea, PrioridadTarea } from "../entities/Tareas.entity";
 import { Usuario } from "../entities/Usuario.entity";
 import { Equipo } from "../entities/Equipo.entity";
 import { Historial } from "../entities/Historial.entity";
+import { TareaRepository } from "../repositories/Tareas.repository";
+
 
 export class TareaService {
   private tareaRepo = AppDataSource.getRepository(Tarea);
+  private TareaRepository = new TareaRepository();
   private usuarioRepo = AppDataSource.getRepository(Usuario);
   private equipoRepo = AppDataSource.getRepository(Equipo);
   private historialRepo = AppDataSource.getRepository(Historial);
@@ -81,4 +84,29 @@ export class TareaService {
 
     return await query.getMany();
   }
+
+  async eliminarTareaService(tareaId: string, usuarioId: string): Promise<boolean> {
+  const tarea = await this.tareaRepo.findOne({
+    where: { id: tareaId },
+    relations: ["equipo"]
+  });
+
+  if (!tarea) throw new Error("Tarea no encontrada");
+
+  if (!tarea.equipo) throw new Error("La tarea no pertenece a ningún equipo");
+
+  const equipo = await this.equipoRepo.findOne({
+    where: { id: tarea.equipo.id },
+    relations: ["propietario"]
+  });
+
+  if (!equipo) throw new Error("Equipo no encontrado");
+
+  if (equipo.propietario.id !== usuarioId) {
+    throw new Error("No tienes permisos para eliminar esta tarea");
+  }
+
+  
+  return await this.TareaRepository.delete(tareaId);
+}
 }

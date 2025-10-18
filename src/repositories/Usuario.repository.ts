@@ -23,7 +23,7 @@ findById(id: string): Promise<Usuario | null> {
     return this.repository.save(newUsuario);
   }
 
-  update(id: string, data: Partial<Usuario>): Promise<Usuario | null> {
+  update(id: number, data: Partial<Usuario>): Promise<Usuario | null> {
     return this.findById(id).then((usuario) => {
       if (!usuario) return null;
       Object.assign(usuario, data);

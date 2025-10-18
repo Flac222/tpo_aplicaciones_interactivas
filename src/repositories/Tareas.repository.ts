@@ -39,7 +39,7 @@ update(id: string, data: Partial<Tarea>): Promise<Tarea | null> {
     });
   }
 
-async delete(id: number): Promise<boolean> {
+async delete(id: string): Promise<boolean> {
     const result = await this.repository.delete(id);
     return result.affected !== 0;
   }

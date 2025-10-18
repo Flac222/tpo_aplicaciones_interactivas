@@ -53,4 +53,17 @@ export const listarTareasPorFiltro = async (req: Request, res: Response) => {
       res.status(400).json({ error: "Unknown error" });
     }
   }
+
 };
+
+export async function eliminarTarea(req: Request, res: Response) {
+  const { id } = req.params;
+  const { usuarioId } = req.body;
+
+  try {
+    const resultado = await tareaService.eliminarTareaService(id, usuarioId);
+    res.json({ eliminado: resultado });
+  } catch (err: any) {
+    res.status(403).json({ error: err.message });
+  }
+}
