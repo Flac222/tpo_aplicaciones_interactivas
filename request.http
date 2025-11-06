@@ -4,6 +4,8 @@
 
 @tareaId = 5c9daba3-1006-42b9-b9b5-cd574feb4c1c
 
+@commentId = 8f3b2c1a-3e4d-4f5a-9c6d-7e8f9a0b1c2d
+
 ###
 ### Swagger UI
 GET {{baseUrl}}/docs
@@ -138,4 +140,39 @@ Content-Type: application/json
 {
   "tareaId": "{{tareaId}}",
   "usuarioId": "{{userId}}"
+}
+
+### ---------- Comentarios ----------
+
+### Listar comentarios de una tarea
+GET {{baseUrl}}/api/tareas/{{tareaId}}/comentarios
+Content-Type: application/json
+
+{
+  "tareaId": "{{tareaId}}"
+}
+
+### Crear comentario en una tarea
+POST {{baseUrl}}/api/tareas/{{tareaId}}/comentarios
+Content-Type: application/json
+
+{
+  "contenido": "Este es un comentario de prueba.",
+  "autorId": "{{userId}}"
+}
+
+### Editar comentario
+PUT {{baseUrl}}/api/comentarios/{{commentId}}
+Content-Type: application/json
+
+{
+  "contenido": "Comentario editado."
+}
+
+### Eliminar comentario
+DELETE {{baseUrl}}/api/comentarios/{{commentId}}
+Content-Type: application/json
+
+{
+  "id": "{{commentId}}"
 }

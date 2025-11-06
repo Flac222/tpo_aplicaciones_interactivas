@@ -1,19 +1,23 @@
 import { Router } from "express";
-import { ComentarioController } from "../controllers/comentarios.controller";
+import {
+  crearComentario,
+  listarComentariosTarea,
+  editarComentario,
+  borrarComentario
+} from "../controllers/comentarios.controller";
 
 const router = Router();
-const controller = new ComentarioController();
 
-//GET: Listar todos los comentarios de una tarea
-router.get("/tareas/:tareaId/comentarios", controller.listarPorTarea);
+// Listar todos los comentarios de una tarea
+router.get("/tareas/:tareaId/comentarios", listarComentariosTarea);
 
-// POST: Crear comentario en una tarea
-router.post("/tareas/:tareaId/comentarios", controller.crear);
+// Crear un nuevo comentario en una tarea
+router.post("/tareas/:tareaId/comentarios", crearComentario);
 
-// PUT: Editar comentario
-router.put("/comentarios/:id", controller.editar);
+// Editar un comentario
+router.put("/comentarios/:id", editarComentario);
 
-// DELETE: Eliminar comentario
-router.delete("/comentarios/:id", controller.eliminar);
+// Borrar un comentario
+router.delete("/comentarios/:id", borrarComentario);
 
 export default router;
