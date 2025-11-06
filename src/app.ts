@@ -8,6 +8,7 @@ import userRoutes from "./routes/Usuario.routes";
 import equipoRoutes from "./routes/Equipos.routes";
 import tareaRoutes from "./routes/Tareas.routes";
 import statusRouter from "./routes/status.routes";
+import comentarioRoutes from "./routes/comentarios.routes";
 
 export function createApp() {
   const app = express();
@@ -22,6 +23,7 @@ export function createApp() {
   app.use("/api/users", userRoutes);
   app.use("/api/equipos", equipoRoutes);
   app.use("/api/tareas", tareaRoutes);
+  app.use("/api/comentarios", comentarioRoutes);
 
   return app;
 }

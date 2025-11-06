@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AutoMigration1758737095627 implements MigrationInterface {
-    name = 'AutoMigration1758737095627'
+export class AutoMigration1761002809237 implements MigrationInterface {
+    name = 'AutoMigration1761002809237'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "comentario" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "contenido" text NOT NULL, "fecha" TIMESTAMP NOT NULL DEFAULT now(), "fechaActualizacion" TIMESTAMP NOT NULL DEFAULT now(), "autorId" uuid, "tareaId" uuid, CONSTRAINT "PK_c9014211e5fbf491b9e3543bb19" PRIMARY KEY ("id"))`);

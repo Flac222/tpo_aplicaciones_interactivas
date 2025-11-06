@@ -10,13 +10,13 @@ import {
 const router = Router();
 
 
-router.post("/", crearEquipo);
+router.post("/:id", crearEquipo);
 
 
 router.post("/:id/invitar", invitarMiembro);
 
 
-router.get("/usuario/:userId", listarEquiposUsuario);
+router.get("/:userId", listarEquiposUsuario);
 
 
 router.post("/:id/salir", salirEquipo);

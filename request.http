@@ -1,5 +1,10 @@
 @baseUrl = http://localhost:3000
+@userId = d4d16a5f-fc0d-4c1b-8f88-c73f37523b63
+@equipoId = e3295e73-af49-4a01-a93c-b1b8c30dcbab
 
+@tareaId = 5c9daba3-1006-42b9-b9b5-cd574feb4c1c
+
+###
 ### Swagger UI
 GET {{baseUrl}}/docs
 
@@ -26,18 +31,40 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze@example.com",
+  "email": "eze3@example.com.ar",
   "password": "123456"
+}
+
+
+### Actualizar usuario
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "nombre": "EzequielPepe",
+  "email": "eze3@example.com.ar",
+  "password": "123456"
+}
+
+
+
+### Borrar usuario
+DELETE {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+
+{
+  "id": "{{userId}}"
 }
 
 
 ### ---------- Equipos ----------
 
-@userId = b7b0cfb4-558d-4e1c-817d-1a6b6f509ddc
-@equipoId = e3295e73-af49-4a01-a93c-b1b8c30dcbab
+### Obtener Equipos
+GET {{baseUrl}}/api/{{userId}}
+
 
 ### Crear equipo
-POST {{baseUrl}}/api/equipos
+POST {{baseUrl}}/api/equipos/{{userId}}
 Content-Type: application/json
 
 {
@@ -55,10 +82,30 @@ Content-Type: application/json
   "propietarioId": "{{userId}}"
 }
 
+### Salir del equipo
+POST {{baseUrl}}/api/{{userId}}/salir
+Content-Type: application/json
+
+{
+  "equipoId": "{{equipoId}}"
+}
+
+DELETE {{baseUrl}}/api/equipos/{{userId}}
+Content-Type: application/json
+
+{
+  "equipoId": "{{equipoId}}"
+} 
 
 ### ---------- Tareas ----------
 
-@tareaId = 5c9daba3-1006-42b9-b9b5-cd574feb4c1c
+### Listar tareas por equipo
+GET {{baseUrl}}/api/tareas/equipo/{{equipoId}}
+Content-Type: application/json
+
+{
+  "equipoId": "{{equipoId}}"
+}
 
 ### Crear tarea
 POST {{baseUrl}}/api/tareas
@@ -81,5 +128,14 @@ Content-Type: application/json
 
 {
   "nuevoEstado": "En curso",
+  "usuarioId": "{{userId}}"
+}
+
+### Eliminar tarea
+DELETE {{baseUrl}}/api/tareas/{{tareaId}}/{{userId}}
+Content-Type: application/json
+
+{
+  "tareaId": "{{tareaId}}",
   "usuarioId": "{{userId}}"
 }
