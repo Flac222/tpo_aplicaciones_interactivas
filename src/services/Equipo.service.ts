@@ -35,7 +35,7 @@ export class EquipoService {
     }
 
     equipo.miembros.push(usuario);
-    return this.equipoRepo.create(equipo); // re-usa save porque tu repo ya hace eso
+    return this.equipoRepo.create(equipo); // 
   }
 
   async listarEquiposUsuario(userId: string) {
