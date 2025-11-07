@@ -1,12 +1,12 @@
 @baseUrl = http://localhost:3000
-@userId = 8ab3f5bc-a5be-4109-9e19-a2d2b5d2ef76
-@equipoId = c6c26864-b819-449f-9373-dce846cfceb3
+@userId = 9aba693f-2414-402a-9ecd-d3f8479a1b4c
+@equipoId = 9068b2a3-95fd-4e43-a809-8820ba07d2f8
 
-@tareaId = 511d3187-7c8d-4ad0-a854-b30994f4c73b
+@tareaId = dd496250-8ade-41c4-890b-2cbf11efc12f
 
 @user2Id = 76a71a0d-6fa4-421f-9ffd-98bcb6634430
 
-@commentId = 8f3b2c1a-3e4d-4f5a-9c6d-7e8f9a0b1c2d
+@commentId = 584c8205-fd90-4088-a838-6ed5e72a9c79
 
 ###
 ### Swagger UI
@@ -73,7 +73,7 @@ Content-Type: application/json
 
 
 ### Obtener Equipos
-GET {{baseUrl}}/api/equipos/{{userId}}/listar
+GET {{baseUrl}}/api/equipos/equipos/{{userId}}
 Content-Type: application/json
 
 {
@@ -89,8 +89,6 @@ Content-Type: application/json
   "nombre": "Equipo Backend",
   "propietarioId": "{{userId}}"
 }
-
-
 
 
 
@@ -182,7 +180,7 @@ Content-Type: application/json
 }
 
 ### Editar comentario
-PUT {{baseUrl}}/api/comentarios/{{commentId}}
+PUT {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
 Content-Type: application/json
 
 {

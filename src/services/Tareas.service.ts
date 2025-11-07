@@ -17,12 +17,11 @@ export class TareaService {
   async crearTarea(titulo: string, descripcion: string, creadorId: string, equipoId?: string, estado?: string, prioridad?: string) {
     const creador = await this.usuarioRepo.findOneBy({ id: creadorId });
     if (!creador) throw new Error("Usuario no encontrado");
-
     let equipo: Equipo | null = null;
     if (equipoId) {
       equipo = await this.equipoRepo.findOne({
         where: { id: equipoId },
-        relations: ["miembros"]    // si necesitas cargar la relación
+        relations: ["miembros"]    
       });
       if (!equipo) throw new Error("Equipo no encontrado");
     }
@@ -31,7 +30,7 @@ export class TareaService {
       titulo,
       descripcion,
       creador,
-      equipo: equipoId ? { id: equipoId } as Equipo : undefined, // ← solo pasás el ID
+      equipo: equipoId ? { id: equipoId } as Equipo : undefined, // 
       estado: estado as EstadoTarea || EstadoTarea.PENDIENTE,
       prioridad: prioridad as PrioridadTarea || PrioridadTarea.MEDIA
     });
