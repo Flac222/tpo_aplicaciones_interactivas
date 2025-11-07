@@ -11,13 +11,13 @@ export class TareaRepository {
   }
 
   findAll(): Promise<Tarea[]> {
-    return this.repository.find({ relations: ["usuario", "equipo"] });
+    return this.repository.find({ relations: ["creador", "equipo"] });
   }
 
   findById(id: string): Promise<Tarea | null> {
     return this.repository.findOne({
       where: { id : id.toString() },
-      relations: ["usuario", "equipo"],
+      relations: ["creador", "equipo"],
     });
   }
 

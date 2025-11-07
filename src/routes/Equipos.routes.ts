@@ -16,10 +16,10 @@ router.post("/:id", crearEquipo);
 router.post("/:id/invitar", invitarMiembro);
 
 
-router.get("/:userId", listarEquiposUsuario);
+router.get("/equipos/:userId", listarEquiposUsuario);
 
 
-router.post("/:id/salir", salirEquipo);
+router.post("/:userid/salir", salirEquipo);
 
 
 router.delete("/:id", borrarEquipo);

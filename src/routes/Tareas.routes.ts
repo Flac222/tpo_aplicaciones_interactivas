@@ -4,8 +4,8 @@ import { crearTarea, actualizarEstado,listarTareasPorFiltro,eliminarTarea } from
 const router = Router();
 
 router.post("/", crearTarea);
-router.get("/", listarTareasPorFiltro);
+router.get("/:equipoId", listarTareasPorFiltro);
 router.put("/:id/estado", actualizarEstado);
-router.delete("/:id", eliminarTarea);
+router.delete("/:id/:userId", eliminarTarea);
 
 export default router;

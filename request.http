@@ -1,8 +1,10 @@
 @baseUrl = http://localhost:3000
-@userId = d4d16a5f-fc0d-4c1b-8f88-c73f37523b63
-@equipoId = e3295e73-af49-4a01-a93c-b1b8c30dcbab
+@userId = 8ab3f5bc-a5be-4109-9e19-a2d2b5d2ef76
+@equipoId = c6c26864-b819-449f-9373-dce846cfceb3
 
-@tareaId = 5c9daba3-1006-42b9-b9b5-cd574feb4c1c
+@tareaId = 511d3187-7c8d-4ad0-a854-b30994f4c73b
+
+@user2Id = 76a71a0d-6fa4-421f-9ffd-98bcb6634430
 
 @commentId = 8f3b2c1a-3e4d-4f5a-9c6d-7e8f9a0b1c2d
 
@@ -22,8 +24,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "Ezequiel1",
-  "email": "eze3@example.com.ar",
+  "nombre": "Ezequiel2",
+  "email": "eze4@example.com.ar",
   "password": "123456"
 }
 
@@ -33,7 +35,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze3@example.com.ar",
+  "email": "eze4@example.com.ar",
   "password": "123456"
 }
 
@@ -44,7 +46,7 @@ Content-Type: application/json
 
 {
   "nombre": "EzequielPepe",
-  "email": "eze3@example.com.ar",
+  "email": "eze4@example.com.ar",
   "password": "123456"
 }
 
@@ -61,8 +63,22 @@ Content-Type: application/json
 
 ### ---------- Equipos ----------
 
+### Salir del equipo
+POST {{baseUrl}}/api/equipos/{{equipoId}}/salir
+Content-Type: application/json
+
+{
+  "userId": "{{user2Id}}"
+}
+
+
 ### Obtener Equipos
-GET {{baseUrl}}/api/{{userId}}
+GET {{baseUrl}}/api/equipos/{{userId}}/listar
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}"
+}
 
 
 ### Crear equipo
@@ -75,39 +91,43 @@ Content-Type: application/json
 }
 
 
+
+
+
 ### Invitar miembro al equipo
 POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
 Content-Type: application/json
 
 {
-  "usuarioId": "4ee15231-e249-43e7-a734-262347ee1292",
+  "usuarioId": "{{user2Id}}",
   "propietarioId": "{{userId}}"
 }
 
-### Salir del equipo
-POST {{baseUrl}}/api/{{userId}}/salir
+### Borrar equipo
+
+DELETE {{baseUrl}}/api/equipos/{{equipoId}}
 Content-Type: application/json
 
 {
-  "equipoId": "{{equipoId}}"
+  "userId": "{{userId}}"
 }
 
-DELETE {{baseUrl}}/api/equipos/{{userId}}
-Content-Type: application/json
-
-{
-  "equipoId": "{{equipoId}}"
-} 
 
 ### ---------- Tareas ----------
 
-### Listar tareas por equipo
-GET {{baseUrl}}/api/tareas/equipo/{{equipoId}}
+
+
+### Listar tareas por filtro
+GET {{baseUrl}}/api/tareas/{{equipoId}}
 Content-Type: application/json
 
 {
-  "equipoId": "{{equipoId}}"
+  "equipoId": "{{equipoId}}",
+  "prioridad": "Alta",
+  "estado": "Pendiente"
 }
+
+
 
 ### Crear tarea
 POST {{baseUrl}}/api/tareas
@@ -145,7 +165,7 @@ Content-Type: application/json
 ### ---------- Comentarios ----------
 
 ### Listar comentarios de una tarea
-GET {{baseUrl}}/api/tareas/{{tareaId}}/comentarios
+GET {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
 Content-Type: application/json
 
 {
@@ -153,7 +173,7 @@ Content-Type: application/json
 }
 
 ### Crear comentario en una tarea
-POST {{baseUrl}}/api/tareas/{{tareaId}}/comentarios
+POST {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
 Content-Type: application/json
 
 {
