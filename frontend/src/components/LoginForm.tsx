@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
 export function LoginForm() {
-    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -14,9 +14,9 @@ export function LoginForm() {
         setError("");
 
         try {
-            await login(username, password);
-        } catch (err) {
-            setError("Error al iniciar sesión. Intenta de nuevo.");
+            await login(email, password);
+        } catch (err: any) {
+            setError(err.message || "Error al iniciar sesión. Intenta de nuevo.");
         } finally {
             setLoading(false);
         }
@@ -24,7 +24,7 @@ export function LoginForm() {
 
     return (
         <div className="card" style={{ maxWidth: "500px", margin: "2rem auto" }}>
-            <h2 className="card-title">Iniciar Sesión en Kanban tira piedra</h2>
+            <h2 className="card-title">Iniciar Sesión</h2>
 
             {error && (
                 <div style={{
@@ -41,13 +41,13 @@ export function LoginForm() {
 
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label className="form-label">Username:</label>
+                    <label className="form-label">E-mail:</label>
                     <input
                         type="text"
                         className="form-input"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Ingresa tu username"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Ingresa tu e-mail"
                         required
                         disabled={loading}
                     />
@@ -70,10 +70,6 @@ export function LoginForm() {
                     {loading ? "⏳ Ingresando..." : "🚀 Entrar"}
                 </button>
             </form>
-
-            <p style={{ marginTop: "1.5rem", textAlign: "center", color: "var(--text-secondary)", fontSize: "0.9em" }}>
-                💡 Tip: Usa cualquier username y password para ingresar
-            </p>
         </div>
     );
 }

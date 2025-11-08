@@ -6,7 +6,7 @@ export function HomePage() {
             {/* Header */}
             <div className="card" style={{ textAlign: "center", marginBottom: "2rem" }}>
                 <h1 style={{ fontSize: "3em", marginBottom: "0.5rem" }}>
-                    Bienvenido a Kanban tira piedra
+                    Bienvenido a Kanban Tira Piedra
                 </h1>
                 <p style={{ fontSize: "1.2em", color: "var(--text-secondary)" }}>
                     Una app de kanban

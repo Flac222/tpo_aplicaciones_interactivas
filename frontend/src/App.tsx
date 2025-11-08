@@ -13,7 +13,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
     const { theme, toggleTheme } = use(ThemeContext);
-    const { isAuthenticated, gamer, logout } = useAuth();
+    const { isAuthenticated, usuario, logout } = useAuth();
     
     return (
         <BrowserRouter>
@@ -24,7 +24,7 @@ function App() {
             }}>
                 <nav className="navbar">
                     <Link to="/" className="navbar-brand">
-                        🗐 Kanban tira piedra
+                        🗐 KANBAN TIRA PIEDRA
                     </Link>
 
                     <div className="navbar-links">
@@ -36,7 +36,7 @@ function App() {
                                 <Link to="/feed" className="navbar-link">
                                     📱 Feed
                                 </Link>
-                                <Link to={`/profile/${gamer?.username}`} className="navbar-link">
+                                <Link to={`/profile/${usuario?.username}`} className="navbar-link">
                                     👤 Perfil
                                 </Link>
                                 <Link to="/settings" className="navbar-link">
@@ -58,7 +58,7 @@ function App() {
 
                         {isAuthenticated ? (
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <span className="badge">{gamer?.avatar} {gamer?.username}</span>
+                                <span className="badge">{usuario?.username}</span>
                                 <button
                                     onClick={logout}
                                     className="btn-danger"
@@ -114,9 +114,9 @@ function App() {
                     borderTop: "1px solid var(--bg-tertiary)",
                     marginTop: "3rem"
                 }}>
-                    <p>🎮 GamerHub - Red Social de Gamers</p>
+                    <p>Kanban tira piedra - Esto no es un kanban o si</p>
                     <p style={{ fontSize: "0.9em", marginTop: "0.5rem" }}>
-                        Proyecto Educativo - React Clase III
+                        Trabajo practico de la materia aplicaciones interactivas
                     </p>
                 </footer>
             </div>

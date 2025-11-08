@@ -1,71 +1,73 @@
-import { createContext, useState, ReactNode, use } from "react";
+import { createContext, useState, ReactNode, useContext } from "react";
 
-interface Gamer {
-    id: number;
-    username: string;
-    avatar: string;
-    level: number;
-    points: number;
+interface Usuario {
+  id: string;
+  username: string;
+  email: string;
 }
 
 interface AuthContextType {
-    gamer: Gamer | null;
-    login: (username: string, password: string) => Promise<void>;
-    logout: () => void;
-    isAuthenticated: boolean;
+  usuario: Usuario | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+  token: string | null;
 }
 
-export const AuthContext = createContext<AuthContextType>({
-    gamer: null,
-    login: async () => { },
-    logout: () => { },
-    isAuthenticated: false,
-});
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const [gamer, setGamer] = useState<Gamer | null>(null);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-    const login = async (username: string, password: string) => {
-        // Simulación de login
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+  const login = async (email: string, password: string) => {
+    try {
+      const res = await fetch("http://localhost:3000/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-        if (username && password) {
-            setGamer({
-                id: 1,
-                username: username,
-                avatar: username.includes("pro") ? "🎮" : "👤",
-                level: Math.floor(Math.random() * 50) + 1,
-                points: Math.floor(Math.random() * 20000),
-            });
-        } else {
-            throw new Error("Credenciales inválidas");
-        }
-    };
+      if (!res.ok) {
+        throw new Error("Error en login");
+      }
 
-    const logout = () => {
-        setGamer(null);
-    };
+      const data = await res.json();
+      setUsuario(data.usuario);
+      setToken(data.token);
+      localStorage.setItem("token", data.token);
+    } catch (error) {
+      console.error(error);
+      throw error;
+    }
+  };
 
-    return (
-        <AuthContext
-            value={{
-                gamer,
-                login,
-                logout,
-                isAuthenticated: gamer !== null,
-            }}
-        >
-            {children}
-        </AuthContext>
-    );
+  const logout = () => {
+    setUsuario(null);
+    setToken(null);
+    localStorage.removeItem("token");
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        usuario,
+        login,
+        logout,
+        isAuthenticated: usuario !== null,
+        token,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 // Custom Hook
 export function useAuth() {
-    const context = use(AuthContext);
-    if (!context) {
-        throw new Error("useAuth debe usarse dentro de AuthProvider");
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth debe usarse dentro de AuthProvider");
+  }
+  return context;
 }
-
