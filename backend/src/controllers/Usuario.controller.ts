@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UsuarioService } from "../services/Usuario.service";
+import { AuthRequest } from "../middlewares/auth.middleware";
 
 const usuarioService = new UsuarioService();
 
@@ -30,7 +31,7 @@ export async function login(req: Request, res: Response) {
   }
 }
 
-export async function actualizarUsuario(req: Request, res: Response) {
+export async function actualizarUsuario(req: AuthRequest, res: Response) {
   const { id } = req.params;
   const { nombre, email, password } = req.body;
 
@@ -42,7 +43,7 @@ export async function actualizarUsuario(req: Request, res: Response) {
   }
 }
 
-export async function eliminarUsuario(req: Request, res: Response) {
+export async function eliminarUsuario(req: AuthRequest, res: Response) {
   const { id } = req.params;
 
   try {

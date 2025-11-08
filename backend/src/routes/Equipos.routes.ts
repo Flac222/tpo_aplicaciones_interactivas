@@ -6,23 +6,24 @@ import {
   salirEquipo, 
   borrarEquipo 
 } from "../controllers/Equipos.controller";
+import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
 
 
-router.post("/:id", crearEquipo);
+router.post("/:id", authMiddleware, crearEquipo);
 
 
-router.post("/:id/invitar", invitarMiembro);
+router.post("/:id/invitar", authMiddleware,  invitarMiembro);
 
 
-router.get("/equipos/:userId", listarEquiposUsuario);
+router.get("/equipos/:userId", authMiddleware, listarEquiposUsuario);
 
 
-router.post("/:userid/salir", salirEquipo);
+router.post("/:userid/salir", authMiddleware, salirEquipo);
 
 
-router.delete("/:id", borrarEquipo);
+router.delete("/:id", authMiddleware, borrarEquipo);
 
 export default router;
 

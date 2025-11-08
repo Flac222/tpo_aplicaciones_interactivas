@@ -1,12 +1,10 @@
 @baseUrl = http://localhost:3000
 @userId = 9aba693f-2414-402a-9ecd-d3f8479a1b4c
 @equipoId = 9068b2a3-95fd-4e43-a809-8820ba07d2f8
-
 @tareaId = dd496250-8ade-41c4-890b-2cbf11efc12f
-
 @user2Id = 76a71a0d-6fa4-421f-9ffd-98bcb6634430
-
-@commentId = 584c8205-fd90-4088-a838-6ed5e72a9c79
+@commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
+@token =
 
 ###
 ### Swagger UI
@@ -29,8 +27,9 @@ Content-Type: application/json
   "password": "123456"
 }
 
-
-### Login
+###
+### Login (IMPORTANTE: Este paso es el primero)
+# @name loginRequest
 POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
@@ -39,10 +38,19 @@ Content-Type: application/json
   "password": "123456"
 }
 
+### <--- ¡¡ESTA LÍNEA ES LA SOLUCIÓN!!
 
-### Actualizar usuario
+# Captura el token de la respuesta de login
+# Asume que la respuesta es un JSON como: { "token": "tu_jwt_aqui" }
+@token = {{loginRequest.response.body.token}}
+
+# (Opcional) Puedes imprimir el token para verificarlo
+# @tokenPreview = {{token}}
+###
+### Actualizar usuario (Requiere Auth)
 PUT {{baseUrl}}/api/users/{{userId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nombre": "EzequielPepe",
@@ -50,11 +58,11 @@ Content-Type: application/json
   "password": "123456"
 }
 
-
-
-### Borrar usuario
+###
+### Borrar usuario (Requiere Auth)
 DELETE {{baseUrl}}/api/users/{{userId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "id": "{{userId}}"
@@ -63,48 +71,55 @@ Content-Type: application/json
 
 ### ---------- Equipos ----------
 
-### Salir del equipo
+### Salir del equipo (Requiere Auth)
 POST {{baseUrl}}/api/equipos/{{equipoId}}/salir
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "userId": "{{user2Id}}"
 }
 
-
-### Obtener Equipos
+###
+### Obtener Equipos (Requiere Auth)
 GET {{baseUrl}}/api/equipos/equipos/{{userId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
+# Nota: Los GET con body son inusuales. 
+# Si el 'userId' ya está en la URL, este body es redundante.
 {
   "userId": "{{userId}}"
 }
 
-
-### Crear equipo
+###
+### Crear equipo (Requiere Auth)
 POST {{baseUrl}}/api/equipos/{{userId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nombre": "Equipo Backend",
-  "propietarioId": "{{userId}}"
+  "propietarioId": "{{userId}}" 
+
 }
 
-
-
-### Invitar miembro al equipo
+###
+### Invitar miembro al equipo (Requiere Auth)
 POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "usuarioId": "{{user2Id}}",
   "propietarioId": "{{userId}}"
 }
 
-### Borrar equipo
-
+###
+### Borrar equipo (Requiere Auth)
 DELETE {{baseUrl}}/api/equipos/{{equipoId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "userId": "{{userId}}"
@@ -113,47 +128,50 @@ Content-Type: application/json
 
 ### ---------- Tareas ----------
 
-
-
-### Listar tareas por filtro
+### Listar tareas por filtro (Requiere Auth)
 GET {{baseUrl}}/api/tareas/{{equipoId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
+# Nota: Los GET con body son inusuales. 
+# Es mejor pasar filtros como query params, ej:
+# GET {{baseUrl}}/api/tareas/{{equipoId}}?prioridad=Alta&estado=Pendiente
 {
   "equipoId": "{{equipoId}}",
   "prioridad": "Alta",
   "estado": "Pendiente"
 }
 
-
-
-### Crear tarea
+###
+### Crear tarea (Requiere Auth)
 POST {{baseUrl}}/api/tareas
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "titulo": "Implementar login",
   "descripcion": "Crear endpoint de login con JWT",
-  "creadorId": "{{userId}}",
   "equipoId": "{{equipoId}}",
   "prioridad": "Alta",
   "estado": "Pendiente"
 }
 
-
-
-### Cambiar estado de tarea
+###
+### Cambiar estado de tarea (Requiere Auth)
 PUT {{baseUrl}}/api/tareas/{{tareaId}}/estado
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "nuevoEstado": "En curso",
   "usuarioId": "{{userId}}"
 }
 
-### Eliminar tarea
+###
+### Eliminar tarea (Requiere Auth)
 DELETE {{baseUrl}}/api/tareas/{{tareaId}}/{{userId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "tareaId": "{{tareaId}}",
@@ -162,34 +180,41 @@ Content-Type: application/json
 
 ### ---------- Comentarios ----------
 
-### Listar comentarios de una tarea
+### Listar comentarios de una tarea (Requiere Auth)
 GET {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "tareaId": "{{tareaId}}"
 }
 
-### Crear comentario en una tarea
+###
+### Crear comentario en una tarea (Requiere Auth)
 POST {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "contenido": "Este es un comentario de prueba.",
-  "autorId": "{{userId}}"
+  "creadorId": "{{userId}}"
 }
 
-### Editar comentario
+###
+### Editar comentario (Requiere Auth)
 PUT {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "contenido": "Comentario editado."
 }
 
-### Eliminar comentario
-DELETE {{baseUrl}}/api/comentarios/{{commentId}}
+###
+### Eliminar comentario (Requiere Auth)
+DELETE {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
 Content-Type: application/json
+Authorization: Bearer {{token}}
 
 {
   "id": "{{commentId}}"

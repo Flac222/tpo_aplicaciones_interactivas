@@ -22,12 +22,13 @@ export class UsuarioService {
     const usuario = await this.usuarioRepo.findOneBy({ email });
     if (!usuario) throw new Error("Usuario no encontrado");
 
-    const valido = await bcrypt.compare(password, usuario.password);
-    if (!valido) throw new Error("Contraseña incorrecta");
+    const valido = await bcrypt.compare(password, usuario.password);
+    if (!valido) throw new Error("Contraseña incorrecta");
 
-    const token = jwt.sign({ id: usuario.id }, "SECRET", { expiresIn: "1d" });
-    return { usuario, token };
-  }
+    const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET!, { expiresIn: "1d" }); 
+    return { usuario, token };
+  }
+
 
   async actualizarUsuario(id: string, data: Partial<Usuario>) {
     if (data.email) {

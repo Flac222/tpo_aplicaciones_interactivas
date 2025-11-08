@@ -1,15 +1,18 @@
 openapi: 3.1.1
 info:
-  title: TPO - Aplicaciones Interactivas
+  title: TPO - Aplicaciones Interactivas (API)
   version: 1.0.0
+  description: API para gestión de usuarios, equipos, tareas y comentarios. Versión alineada con los controllers y routes provistos por el proyecto.
+
 servers:
   - url: http://localhost:3000
+    description: Servidor local de desarrollo
 
 paths:
-  # Estado del sistema
   /api/status:
     get:
       summary: Estado del sistema
+      tags: [Status]
       responses:
         "200":
           description: OK
@@ -18,126 +21,588 @@ paths:
               schema:
                 type: object
                 properties:
-                  status: { type: string }
-                  time: { type: string, format: date-time }
+                  status:
+                    type: string
+                    example: "ok"
+                  time:
+                    type: string
+                    format: date-time
+                    example: "2025-11-07T18:00:00Z"
 
   # ---------- Usuarios ----------
   /api/users/register:
     post:
       summary: Registrar usuario
+      tags: [Usuarios]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsuarioCreate'
+              $ref: "#/components/schemas/UsuarioCreate"
       responses:
         "201":
           description: Usuario creado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Usuario'
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/users/login:
     post:
       summary: Login de usuario
+      tags: [Usuarios]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UsuarioLogin'
+              $ref: "#/components/schemas/UsuarioLogin"
       responses:
         "200":
-          description: Login exitoso
+          description: Login exitoso (token + usuario)
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token: { type: string }
-                  usuario: { $ref: '#/components/schemas/Usuario' }
+                  token:
+                    type: string
+                    example: "eyJhbGciOi..."
+                  usuario:
+                    $ref: "#/components/schemas/Usuario"
+        "400":
+          description: Credenciales inválidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
-  # ---------- Equipos ----------
-  /api/equipos:
-    post:
-      summary: Crear equipo
+  /api/users/{id}:
+    put:
+      summary: Actualizar usuario
+      tags: [Usuarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/EquipoCreate'
+              type: object
+              properties:
+                nombre:
+                  type: string
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Usuario actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Usuario"
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Eliminar usuario
+      tags: [Usuarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        description: (Opcional) payload con id u otros datos de validación. Tu controller ignora el body y usa el parámetro.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Usuario eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedResponse"
+        "404":
+          description: Usuario no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------- Equipos ----------
+  # Incluyo ambas variantes (POST /api/equipos y POST /api/equipos/{id}) para cubrir tu router / requests
+  /api/equipos:
+    post:
+      summary: Crear equipo (sin id en path)
+      tags: [Equipos]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EquipoCreate"
       responses:
         "201":
           description: Equipo creado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Equipo'
+                $ref: "#/components/schemas/Equipo"
+        "400":
+          description: Error en creación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
-  /api/equipos/{id}/invitar:
+  /api/equipos/{id}:
     post:
-      summary: Invitar miembro a un equipo
+      summary: Crear equipo (variante con id en path, según tu router)
+      tags: [Equipos]
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
+            description: En tus requests envías el userId aquí; backend usa el body. Se deja para compatibilidad.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/InvitarMiembro'
+              $ref: "#/components/schemas/EquipoCreate"
       responses:
-        "200":
-          description: Miembro invitado
+        "201":
+          description: Equipo creado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Equipo'
+                $ref: "#/components/schemas/Equipo"
+        "400":
+          description: Error en creación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: Borrar equipo (DELETE /api/equipos/{id})
+      tags: [Equipos]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: Usuario que solicita borrar (tu controller espera userId en body)
+      responses:
+        "200":
+          description: Equipo borrado con éxito
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/equipos/{equipoId}/invitar:
+    post:
+      summary: Invitar miembro a un equipo
+      tags: [Equipos]
+      parameters:
+        - name: equipoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitarMiembro"
+      responses:
+        "200":
+          description: Miembro invitado / equipo actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Equipo"
+        "400":
+          description: Error al invitar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/equipos/{equipoId}/salir:
+    post:
+      summary: Salir de un equipo (POST /api/equipos/{equipoId}/salir)
+      tags: [Equipos]
+      parameters:
+        - name: equipoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Usuario salió del equipo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Saliste del equipo con éxito"
+                  equipo:
+                    $ref: "#/components/schemas/Equipo"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/equipos/equipos/{userId}:
+    get:
+      summary: Listar equipos de un usuario
+      tags: [Equipos]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Equipos del usuario
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Equipo"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   # ---------- Tareas ----------
   /api/tareas:
     post:
       summary: Crear tarea
+      tags: [Tareas]
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TareaCreate'
+              $ref: "#/components/schemas/TareaCreate"
       responses:
         "201":
           description: Tarea creada
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Tarea'
+                $ref: "#/components/schemas/Tarea"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/tareas/{equipoId}:
+    get:
+      summary: Listar tareas por equipo y filtro (estado, prioridad)
+      tags: [Tareas]
+      parameters:
+        - name: equipoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: estado
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Estado de la tarea (Pendiente, En curso, Terminada, Cancelada)
+        - name: prioridad
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Prioridad (Alta, Media, Baja)
+      responses:
+        "200":
+          description: Lista de tareas filtradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tarea"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
   /api/tareas/{id}/estado:
     put:
       summary: Actualizar estado de tarea
+      tags: [Tareas]
       parameters:
         - name: id
           in: path
           required: true
-          schema: { type: string, format: uuid }
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TareaEstadoUpdate'
+              $ref: "#/components/schemas/TareaEstadoUpdate"
       responses:
         "200":
           description: Estado actualizado
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Tarea'
+                $ref: "#/components/schemas/Tarea"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/tareas/{id}/{userId}:
+    delete:
+      summary: Eliminar tarea (ruta usada en tu router)
+      tags: [Tareas]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                usuarioId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: Resultado de eliminación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  eliminado:
+                    type: boolean
+                    example: true
+        "403":
+          description: No autorizado / error al eliminar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------- Comentarios ----------
+  /api/comentarios/tareas/{tareaId}/comentarios:
+    get:
+      summary: Listar comentarios de una tarea
+      tags: [Comentarios]
+      parameters:
+        - name: tareaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Comentarios de la tarea
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Comentario"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      summary: Crear comentario en una tarea
+      tags: [Comentarios]
+      parameters:
+        - name: tareaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioCreate"
+      responses:
+        "201":
+          description: Comentario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/comentarios/comentarios/{id}:
+    put:
+      summary: Editar comentario (ruta según comentarios.routes)
+      tags: [Comentarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ComentarioUpdate"
+      responses:
+        "200":
+          description: Comentario editado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comentario"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/comentarios/{id}:
+    delete:
+      summary: Eliminar comentario (incluye variante corta usada en tus requests)
+      tags: [Comentarios]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Comentario eliminado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+        "400":
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -145,75 +610,217 @@ components:
     Usuario:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        nombre: { type: string }
-        email: { type: string }
+        id:
+          type: string
+          format: uuid
+          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
+        nombre:
+          type: string
+          example: "Ezequiel"
+        email:
+          type: string
+          example: "eze@example.com"
+
     UsuarioCreate:
       type: object
-      required: [nombre, email, password]
+      required: ["nombre", "email", "password"]
       properties:
-        nombre: { type: string }
-        email: { type: string }
-        password: { type: string }
+        nombre:
+          type: string
+          example: "Ezequiel2"
+        email:
+          type: string
+          example: "eze4@example.com.ar"
+        password:
+          type: string
+          example: "123456"
+
     UsuarioLogin:
       type: object
-      required: [email, password]
+      required: ["email", "password"]
       properties:
-        email: { type: string }
-        password: { type: string }
+        email:
+          type: string
+          example: "eze4@example.com.ar"
+        password:
+          type: string
+          example: "123456"
 
     # ---------- Equipos ----------
     Equipo:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        nombre: { type: string }
-        propietarioId: { type: string, format: uuid }
+        id:
+          type: string
+          format: uuid
+          example: "9068b2a3-95fd-4e43-a809-8820ba07d2f8"
+        nombre:
+          type: string
+          example: "Equipo Backend"
+        propietarioId:
+          type: string
+          format: uuid
+          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
         miembros:
           type: array
           items:
-            $ref: '#/components/schemas/Usuario'
+            $ref: "#/components/schemas/Usuario"
+
     EquipoCreate:
       type: object
-      required: [nombre, propietarioId]
+      required: ["nombre", "propietarioId"]
       properties:
-        nombre: { type: string }
-        propietarioId: { type: string, format: uuid }
+        nombre:
+          type: string
+          example: "Equipo Backend"
+        propietarioId:
+          type: string
+          format: uuid
+          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
+
     InvitarMiembro:
       type: object
-      required: [usuarioId, propietarioId]
+      required: ["usuarioId", "propietarioId"]
       properties:
-        usuarioId: { type: string, format: uuid }
-        propietarioId: { type: string, format: uuid }
+        usuarioId:
+          type: string
+          format: uuid
+          example: "76a71a0d-6fa4-421f-9ffd-98bcb6634430"
+        propietarioId:
+          type: string
+          format: uuid
+          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
 
     # ---------- Tareas ----------
     Tarea:
       type: object
       properties:
-        id: { type: string, format: uuid }
-        titulo: { type: string }
-        descripcion: { type: string }
-        estado: { type: string, enum: ["Pendiente","En curso","Terminada","Cancelada"] }
-        prioridad: { type: string, enum: ["Alta","Media","Baja"] }
-        creadorId: { type: string, format: uuid }
-        equipoId: { type: string, format: uuid, nullable: true }
-        fechaCreacion: { type: string, format: date-time }
-        fechaActualizacion: { type: string, format: date-time }
+        id:
+          type: string
+          format: uuid
+        titulo:
+          type: string
+        descripcion:
+          type: string
+        estado:
+          type: string
+          enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
+        prioridad:
+          type: string
+          enum: ["Alta", "Media", "Baja"]
+        creadorId:
+          type: string
+          format: uuid
+        equipoId:
+          type: string
+          format: uuid
+          nullable: true
+        fechaCreacion:
+          type: string
+          format: date-time
+        fechaActualizacion:
+          type: string
+          format: date-time
+
     TareaCreate:
       type: object
-      required: [titulo, creadorId]
+      required: ["titulo", "creadorId"]
       properties:
-        titulo: { type: string }
-        descripcion: { type: string }
-        creadorId: { type: string, format: uuid }
-        equipoId: { type: string, format: uuid }
-        prioridad: { type: string, enum: ["Alta","Media","Baja"] }
-        estado: { type: string, enum: ["Pendiente","En curso","Terminada","Cancelada"] }
+        titulo:
+          type: string
+          example: "Implementar login"
+        descripcion:
+          type: string
+          example: "Crear endpoint de login con JWT"
+        creadorId:
+          type: string
+          format: uuid
+        equipoId:
+          type: string
+          format: uuid
+        prioridad:
+          type: string
+          enum: ["Alta", "Media", "Baja"]
+        estado:
+          type: string
+          enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
+
     TareaEstadoUpdate:
       type: object
-      required: [nuevoEstado, usuarioId]
+      required: ["nuevoEstado", "usuarioId"]
       properties:
         nuevoEstado:
           type: string
-          enum: ["Pendiente","En curso","Terminada","Cancelada"]
-        usuarioId: { type: string, format: uuid }
+          enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
+        usuarioId:
+          type: string
+          format: uuid
+
+    # ---------- Comentarios ----------
+    Comentario:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "584c8205-fd90-4088-a838-6ed5e72a9c79"
+        tareaId:
+          type: string
+          format: uuid
+        autorId:
+          type: string
+          format: uuid
+        contenido:
+          type: string
+        fechaCreacion:
+          type: string
+          format: date-time
+
+    ComentarioCreate:
+      type: object
+      required: ["autorId", "contenido"]
+      properties:
+        autorId:
+          type: string
+          format: uuid
+          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
+        contenido:
+          type: string
+          example: "Este es un comentario de prueba."
+
+    ComentarioUpdate:
+      type: object
+      required: ["contenido"]
+      properties:
+        contenido:
+          type: string
+          example: "Comentario editado."
+
+    # ---------- Utilitarios ----------
+    GenericMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Operación exitosa"
+
+    DeletedResponse:
+      type: object
+      properties:
+        eliminado:
+          type: boolean
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Mensaje de error explicativo"
+
+tags:
+  - name: Status
+  - name: Usuarios
+  - name: Equipos
+  - name: Tareas
+  - name: Comentarios
