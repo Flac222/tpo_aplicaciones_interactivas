@@ -17,15 +17,19 @@ GET {{baseUrl}}/api/status
 
 ### ---------- Usuarios ----------
 
+
+
 ### Registrar usuario
 POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
   "nombre": "Ezequiel2",
-  "email": "eze4@example.com.ar",
+  "email": "eze6@example.com.ar",
   "password": "123456"
 }
+
+
 
 ###
 ### Login (IMPORTANTE: Este paso es el primero)

@@ -10,11 +10,13 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { EquipoPage } from "./pages/EquipoPage";
+
 
 function App() {
     const { theme, toggleTheme } = use(ThemeContext);
     const { isAuthenticated, usuario, logout } = useAuth();
-    
+
     return (
         <BrowserRouter>
             <div className="app" style={{
@@ -33,10 +35,10 @@ function App() {
                         </Link>
                         {isAuthenticated && (
                             <>
-                                <Link to="/feed" className="navbar-link">
-                                    📱 Feed
+                                <Link to="/Equipos" className="navbar-link">
+                                    📱 Equipos
                                 </Link>
-                                <Link to={`/profile/${usuario?.username}`} className="navbar-link">
+                                <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
                                     👤 Perfil
                                 </Link>
                                 <Link to="/settings" className="navbar-link">
@@ -58,7 +60,7 @@ function App() {
 
                         {isAuthenticated ? (
                             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <span className="badge">{usuario?.username}</span>
+                                <span className="badge">{usuario?.nombre}</span>
                                 <button
                                     onClick={logout}
                                     className="btn-danger"
@@ -81,10 +83,18 @@ function App() {
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route
-                        path="/feed"
+                        path="/equipos"
                         element={
                             <ProtectedRoute>
                                 <FeedPage />
+                            </ProtectedRoute>
+                        }
+                    />
+                    <Route
+                        path="/equipo/:id"
+                        element={
+                            <ProtectedRoute>
+                                <EquipoPage />
                             </ProtectedRoute>
                         }
                     />
@@ -106,6 +116,7 @@ function App() {
                     />
                     <Route path="*" element={<NotFoundPage />} />
                 </Routes>
+
 
                 <footer style={{
                     padding: "2rem",

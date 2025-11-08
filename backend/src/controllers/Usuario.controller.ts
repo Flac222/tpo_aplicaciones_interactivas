@@ -5,15 +5,18 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 const usuarioService = new UsuarioService();
 
 export async function crearUsuario(req: Request, res: Response) {
-  const { nombre, email, password } = req.body;
 
+  try {
+  console.log("Request body:", req.body);
+  const { nombre, email, password } = req.body;
+  
   // Regex simple: algo@algo.algo
   const emailRegex = /^\S+@\S+\.\S+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: "Formato de e-mail inválido" });
   }
-
-  try {
+ 
+  
     const usuario = await usuarioService.crearUsuario(nombre, email, password);
     return res.status(201).json(usuario);
   } catch (err: any) {

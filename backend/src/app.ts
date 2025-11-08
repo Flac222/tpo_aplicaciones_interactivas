@@ -12,10 +12,8 @@ import comentarioRoutes from "./routes/comentarios.routes";
 
 export function createApp() {
   const app = express();
-  app.use(cors({
-    origin: 'http://localhost:5173/', // frontend en desarrollo
-  }));
-  app.use(express.json());
+  app.use(cors());
+  app.use(express.json());  
 
   // Swagger UI
   const openapiPath = path.join(__dirname, "../openapi.yaml");

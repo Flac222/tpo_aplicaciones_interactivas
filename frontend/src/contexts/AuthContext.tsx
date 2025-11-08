@@ -2,7 +2,7 @@ import { createContext, useState, ReactNode, useContext } from "react";
 
 interface Usuario {
   id: string;
-  username: string;
+  nombre: string;
   email: string;
 }
 
