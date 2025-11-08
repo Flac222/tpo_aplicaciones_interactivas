@@ -1,14 +1,14 @@
 import { useAuth } from "../contexts/AuthContext";
 
 export function FeedPage() {
-    const { gamer } = useAuth();
+    const { usuario } = useAuth();
 
     return (
         <div className="main-content">
             <div className="card">
-                <h2 className="card-title">📱 Feed de GamerHub</h2>
+                <h2 className="card-title">Feed de Kanban tira piedra</h2>
                 <p style={{ color: "var(--text-secondary)" }}>
-                    ¡Hola {gamer?.username}! Este es el feed donde verás posts de otros gamers.
+                    ¡Hola {usuario?.username}! Este es el feed donde verás tus equipos y tareas.
                 </p>
                 <div style={{
                     marginTop: "2rem",
