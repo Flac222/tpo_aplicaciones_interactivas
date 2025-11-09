@@ -21,7 +21,7 @@ export class TareaService {
     if (equipoId) {
       equipo = await this.equipoRepo.findOne({
         where: { id: equipoId },
-        relations: ["miembros"]    
+        relations: ["miembros"]
       });
       if (!equipo) throw new Error("Equipo no encontrado");
     }
@@ -71,7 +71,9 @@ export class TareaService {
   static async listarPorEquipoYFiltro(
     equipoId: string,
     estado?: EstadoTarea,
-    prioridad?: PrioridadTarea
+    prioridad?: PrioridadTarea,
+    page: number = 1,
+    limit: number = 10
   ) {
     const query = AppDataSource.getRepository(Tarea)
       .createQueryBuilder("tarea")
@@ -81,31 +83,42 @@ export class TareaService {
     if (estado) query.andWhere("tarea.estado = :estado", { estado });
     if (prioridad) query.andWhere("tarea.prioridad = :prioridad", { prioridad });
 
-    return await query.getMany();
+    query.skip((page - 1) * limit).take(limit);
+
+    const [tareas, total] = await query.getManyAndCount();
+
+    return {
+      tareas,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    };
   }
+
 
   async eliminarTareaService(tareaId: string, usuarioId: string): Promise<boolean> {
-  const tarea = await this.tareaRepo.findOne({
-    where: { id: tareaId },
-    relations: ["equipo"]
-  });
+    const tarea = await this.tareaRepo.findOne({
+      where: { id: tareaId },
+      relations: ["equipo"]
+    });
 
-  if (!tarea) throw new Error("Tarea no encontrada");
+    if (!tarea) throw new Error("Tarea no encontrada");
 
-  if (!tarea.equipo) throw new Error("La tarea no pertenece a ningún equipo");
+    if (!tarea.equipo) throw new Error("La tarea no pertenece a ningún equipo");
 
-  const equipo = await this.equipoRepo.findOne({
-    where: { id: tarea.equipo.id },
-    relations: ["propietario"]
-  });
+    const equipo = await this.equipoRepo.findOne({
+      where: { id: tarea.equipo.id },
+      relations: ["propietario"]
+    });
 
-  if (!equipo) throw new Error("Equipo no encontrado");
+    if (!equipo) throw new Error("Equipo no encontrado");
 
-  if (equipo.propietario.id !== usuarioId) {
-    throw new Error("No tienes permisos para eliminar esta tarea");
+    if (equipo.propietario.id !== usuarioId) {
+      throw new Error("No tienes permisos para eliminar esta tarea");
+    }
+
+
+    return await this.TareaRepository.delete(tareaId);
   }
-
-  
-  return await this.TareaRepository.delete(tareaId);
-}
 }

@@ -4,6 +4,8 @@
 @tareaId = 3d424bea-523a-42a6-801f-35f775d17726
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
+
+@email = eze7@example.com.ar
 @token =
 
 ###
@@ -38,7 +40,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze6@example.com.ar",
+  "email": "eze7@example.com.ar",
   "password": "123456"
 }
 
@@ -86,14 +88,14 @@ Authorization: Bearer {{token}}
 
 ###
 ### Obtener Equipos (Requiere Auth)
-GET {{baseUrl}}/api/equipos/equipos/{{userId}}
+GET {{baseUrl}}/api/equipos/equipos/{{user2Id}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 # Nota: Los GET con body son inusuales. 
 # Si el 'userId' ya está en la URL, este body es redundante.
 {
-  "userId": "{{userId}}"
+  "userId": "{{user2Id}}"
 }
 
 ###
@@ -115,7 +117,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "usuarioId": "{{user2Id}}",
+  "correo": "{{email}}",
   "propietarioId": "{{userId}}"
 }
 
@@ -133,7 +135,7 @@ Authorization: Bearer {{token}}
 ### ---------- Tareas ----------
 
 ### Listar tareas por filtro (Requiere Auth)
-GET {{baseUrl}}/api/tareas/{{equipoId}}
+GET {{baseUrl}}/api/tareas/{{equipoId}}?prioridad=Alta&estado=Pendiente&page=2&limit=10
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
