@@ -2,7 +2,7 @@
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { Response } from "express";
 import { EquipoService } from "../services/Equipo.service";
-import { getRepository } from "typeorm";
+import AppDataSource from "../db/data-source";
 import { Usuario } from "../entities/Usuario.entity";
 
 const equipoService = new EquipoService();
@@ -31,7 +31,7 @@ export async function invitarMiembro(req: AuthRequest, res: Response) {
     }
 
     // 2. Buscar al usuario en la base de datos
-    const usuarioRepository = getRepository(Usuario);
+    const usuarioRepository = AppDataSource.getRepository(Usuario);
     const usuarioAInvitar = await usuarioRepository.findOne({ where: { email: correo } });
 
     // 3. Manejar el caso de "Usuario no encontrado"

@@ -1,399 +1,470 @@
-
-import React, { useMemo, useState } from 'react';
+// src/pages/EquipoPage.tsx (o donde lo tengas)
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
 
-// Enums (sin cambios)
-export enum EstadoTarea {
-  PENDIENTE = "Pendiente",
-  EN_CURSO = "En curso",
-  TERMINADA = "Terminada",
-  CANCELADA = "Cancelada"
-}
+// Importar tipos y utilidades
+import { 
+    EstadoTarea, 
+    PrioridadTarea, 
+    Tarea,
+    Comentario, // << Importar Comentario
+    getValidNextStatuses,
+} from '../types/tareas';
 
-export enum PrioridadTarea {
-  ALTA = "Alta",
-  MEDIA = "Media",
-  BAJA = "Baja"
-}
+// Importar Componentes de Presentación
+import { 
+    TareaColumna, 
+    CreateTaskModal,
+    TaskDetailsModal
+} from '../components/TareaComponents';
 
-// Interfaz (sin cambios)
-interface Tarea {
-  id: string;
-  titulo: string;
-  descripcion?: string;
-  estado: EstadoTarea;
-  prioridad: PrioridadTarea;
-}
 
 const BASE_URL = 'http://localhost:3000';
+const MY_USER_ID_PLACEHOLDER = 'usuario-del-token-o-un-id-valido'; // ID de usuario real
 
 export function EquipoPage(): React.ReactElement {
-  // 1. OBTENER DATOS (sin cambios)
-  const { id: equipoId } = useParams();
-  const { token } = useAuth();
+    const { id: equipoId } = useParams();
+    const { token } = useAuth();
+    const currentUserId = MY_USER_ID_PLACEHOLDER;
 
-  // 2. FETCH DE TAREAS (sin cambios)
-  const url = equipoId ? `${BASE_URL}/api/tareas/${equipoId}` : null;
+    // 1. FETCH DE TAREAS (Lógica de datos)
+    const url = equipoId ? `${BASE_URL}/api/tareas/${equipoId}` : null;
+    const fetchOptions: RequestInit = useMemo(() => ({
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+    }), [token]);
+    const { data: tareas, loading, error, refetch } = useFetch<Tarea[]>(url, fetchOptions);
 
-  const fetchOptions: RequestInit = useMemo(() => ({
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-    },
-  }), [token]);
-
-  const { data: tareas, loading, error, refetch } = useFetch<Tarea[]>(url, fetchOptions);
-
-  // 3. ESTADO DE FILTROS E INVITACIÓN (sin cambios)
-  const [filtroEstado, setFiltroEstado] = useState<string>('todos');
-  const [filtroPrioridad, setFiltroPrioridad] = useState<string>('todos');
-  const [correo, setCorreo] = useState('');
-  const [inviteLoading, setInviteLoading] = useState(false);
-
-  // --- MODIFICADO: Estados para el modal de TAREAS ---
-  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [newTaskDesc, setNewTaskDesc] = useState("");
-  const [newTaskPriority, setNewTaskPriority] = useState<PrioridadTarea>(PrioridadTarea.MEDIA);
-  // ¡NUEVO! Estado para el estado de la tarea
-  const [newTaskEstado, setNewTaskEstado] = useState<EstadoTarea>(EstadoTarea.PENDIENTE);
-  const [taskModalLoading, setTaskModalLoading] = useState(false);
-  const [taskModalError, setTaskModalError] = useState<string | null>(null);
-  // --- Fin de modificación ---
-
-
-  // 4. LÓGICA DE FILTRADO (sin cambios)
-  const tareasFiltradas = useMemo(() => {
-    if (!tareas) return [];
+    // 2. ESTADOS
+    const [filtroEstado, setFiltroEstado] = useState<string>('todos');
+    const [filtroPrioridad, setFiltroPrioridad] = useState<string>('todos');
+    const [correo, setCorreo] = useState('');
+    const [inviteLoading, setInviteLoading] = useState(false);
     
-    return tareas.filter(t =>
-      (filtroEstado === 'todos' || t.estado === filtroEstado) &&
-      (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
-    );
-  }, [tareas, filtroEstado, filtroPrioridad]);
+    // Estados para el modal de CREACIÓN de TAREAS
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [newTaskTitle, setNewTaskTitle] = useState("");
+    const [newTaskDesc, setNewTaskDesc] = useState("");
+    const [newTaskPriority, setNewTaskPriority] = useState<PrioridadTarea>(PrioridadTarea.MEDIA);
+    const [newTaskEstado, setNewTaskEstado] = useState<EstadoTarea>(EstadoTarea.PENDIENTE);
+    const [taskModalLoading, setTaskModalLoading] = useState(false);
+    const [taskModalError, setTaskModalError] = useState<string | null>(null);
 
-  // 5. LÓGICA DE INVITACIÓN (sin cambios)
-  const invitarUsuario = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-    if (!correo || !equipoId || inviteLoading) return;
-    setInviteLoading(true);
+    // Estado para el modal de DETALLE
+    const [selectedTask, setSelectedTask] = useState<Tarea | null>(null);
+    const [isUpdatingTask, setIsUpdatingTask] = useState(false);
 
-    try {
-      const res = await fetch(`${BASE_URL}/api/equipos/${equipoId}/invitar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ correo }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        alert('Invitación enviada con éxito');
-        setCorreo('');
-      } else {
-        alert(`Error al invitar: ${data.error || 'Error desconocido'}`);
-      }
-    } catch (err) {
-      alert('Error de red al enviar la invitación.');
-    } finally {
-      setInviteLoading(false);
-    }
-  };
+    const [comentarios, setComentarios] = useState<Comentario[]>([]);
+    const [isCommentsLoading, setIsCommentsLoading] = useState(false);
 
-  // --- MODIFICADO: Función para manejar la creación de la Tarea ---
-  const handleCreateTask = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskTitle.trim()) {
-      setTaskModalError("El título es obligatorio.");
-      return;
-    }
-    if (!equipoId || !token) {
-      setTaskModalError("Error de autenticación o de equipo. Recarga la página.");
-      return;
-    }
+    // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN
+    const tareasFiltradas = useMemo(() => {
+        if (!tareas) return [];
+        return tareas.filter(t =>
+            (filtroEstado === 'todos' || t.estado === filtroEstado) &&
+            (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
+        );
+    }, [tareas, filtroEstado, filtroPrioridad]);
 
-    setTaskModalLoading(true);
-    setTaskModalError(null);
+    const tareasAgrupadas = useMemo(() => {
+        const grupos: Record<EstadoTarea, Tarea[]> = {
+            [EstadoTarea.PENDIENTE]: [],
+            [EstadoTarea.EN_CURSO]: [],
+            [EstadoTarea.TERMINADA]: [],
+            [EstadoTarea.CANCELADA]: [],
+        };
+        tareasFiltradas.forEach(tarea => {
+            grupos[tarea.estado as EstadoTarea].push(tarea);
+        });
+        return grupos;
+    }, [tareasFiltradas]);
 
-    // Basado en tu tareas.controller.ts (función crearTarea)
-    const body = {
-      titulo: newTaskTitle,
-      descripcion: newTaskDesc,
-      prioridad: newTaskPriority,
-      equipoId: equipoId,
-      estado: newTaskEstado, // ¡USA EL NUEVO ESTADO!
+
+    // 4. HANDLERS (Funciones de manejo de API)
+
+    const handleUpdateTaskStatus = async (
+        tareaId: string, 
+        nuevoEstado: EstadoTarea
+    ) => {
+        if (isUpdatingTask || !token || !selectedTask) return;
+
+        const currentStatus = selectedTask.estado;
+        const validStatuses = getValidNextStatuses(currentStatus);
+        
+        if (currentStatus === nuevoEstado) return; 
+
+        if (!validStatuses.includes(nuevoEstado)) {
+            alert(`¡Error! La transición de ${currentStatus} a ${nuevoEstado} no está permitida.`);
+            return;
+        }
+
+        setIsUpdatingTask(true);
+
+        try {
+            const body = {
+                nuevoEstado: nuevoEstado,
+                usuarioId: MY_USER_ID_PLACEHOLDER, 
+            };
+
+            const res = await fetch(`${BASE_URL}/api/tareas/${tareaId}/estado`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error desconocido al actualizar el estado de la tarea');
+            }
+
+            setSelectedTask(prev => prev ? { ...prev, estado: nuevoEstado } : null);
+            refetch(); 
+
+        } catch (err) {
+            alert(`Error al cambiar el estado: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsUpdatingTask(false);
+        }
+    };
+    
+    const invitarUsuario = async (e: React.FormEvent) => {
+        e.preventDefault(); 
+        if (!correo || !equipoId || inviteLoading) return;
+        setInviteLoading(true);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/equipos/${equipoId}/invitar`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ correo }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                alert('Invitación enviada con éxito');
+                setCorreo('');
+            } else {
+                alert(`Error al invitar: ${data.error || 'Error desconocido'}`);
+            }
+        } catch (err) {
+            alert('Error de red al enviar la invitación.');
+        } finally {
+            setInviteLoading(false);
+        }
     };
 
-    try {
-      const res = await fetch(`${BASE_URL}/api/tareas`, { // Ruta POST /api/tareas
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
+    const handleCreateTask = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newTaskTitle.trim()) {
+            setTaskModalError("El título es obligatorio.");
+            return;
+        }
+        if (!equipoId || !token) {
+            setTaskModalError("Error de autenticación o de equipo. Recarga la página.");
+            return;
+        }
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Error desconocido al crear la tarea');
-      }
+        setTaskModalLoading(true);
+        setTaskModalError(null);
 
-      // ¡ÉXITO!
-      setIsTaskModalOpen(false); // Cierra modal
-      refetch();                 // ¡Recarga la lista de tareas!
-      
-      // Limpia el formulario
-      setNewTaskTitle("");
-      setNewTaskDesc("");
-      setNewTaskPriority(PrioridadTarea.MEDIA);
-      setNewTaskEstado(EstadoTarea.PENDIENTE); // Resetea el estado
+        const body = {
+            titulo: newTaskTitle,
+            descripcion: newTaskDesc,
+            prioridad: newTaskPriority,
+            equipoId: equipoId,
+            estado: newTaskEstado, 
+        };
 
-    } catch (err: any) {
-      setTaskModalError(err.message);
-    } finally {
-      setTaskModalLoading(false);
-    }
-  };
+        try {
+            const res = await fetch(`${BASE_URL}/api/tareas`, { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
 
-  // --- MODIFICADO: Función que renderiza el modal de TAREAS ---
-  const renderCreateTaskModal = (): React.ReactNode => {
-    if (!isTaskModalOpen) return null;
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Error desconocido al crear la tarea');
+            }
 
-    return (
-      <div style={{
-        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
-      }}
-      onClick={() => setIsTaskModalOpen(false)}
-      >
-        <div
-          style={{
-            backgroundColor: 'var(--bg-lightest)', color: 'var(--text-primary)',
-            padding: '2rem', borderRadius: '8px',
-            minWidth: '300px', maxWidth: '500px', zIndex: 1001,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <h3 style={{ marginTop: 0 }}>Crear Nueva Tarea</h3>
-          <form onSubmit={handleCreateTask}>
-            {/* Título */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="taskTitle" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                Título de la Tarea:
-              </label>
-              <input
-                id="taskTitle" type="text" value={newTaskTitle}
-                onChange={(e) => setNewTaskTitle(e.target.value)}
-                placeholder="Ej: Implementar login"
-                style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
-                autoFocus
-                required
-              />
-            </div>
+            setIsTaskModalOpen(false); 
+            refetch(); 
+            setNewTaskTitle("");
+            setNewTaskDesc("");
+            setNewTaskPriority(PrioridadTarea.MEDIA);
+            setNewTaskEstado(EstadoTarea.PENDIENTE);
 
-            {/* Descripción */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="taskDesc" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                Descripción (opcional):
-              </label>
-              <textarea
-                id="taskDesc" value={newTaskDesc}
-                onChange={(e) => setNewTaskDesc(e.target.value)}
-                placeholder="Detalles sobre la tarea..."
-                style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box', minHeight: '80px' }}
-              />
-            </div>
+        } catch (err: any) {
+            setTaskModalError(err.message);
+        } finally {
+            setTaskModalLoading(false);
+        }
+    };
 
-            {/* Prioridad */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label htmlFor="taskPriority" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                Prioridad:
-              </label>
-              <select
-                id="taskPriority"
-                value={newTaskPriority}
-                onChange={(e) => setNewTaskPriority(e.target.value as PrioridadTarea)}
-                style={{ width: '100%', padding: '0.5rem' }}
-              >
-                <option value={PrioridadTarea.ALTA}>Alta</option>
-                <option value={PrioridadTarea.MEDIA}>Media</option>
-                <option value={PrioridadTarea.BAJA}>Baja</option>
-              </select>
-            </div>
+    const fetchComentarios = async (tareaId: string) => {
+        if (!token) return;
+        setIsCommentsLoading(true);
+        try {
+            // GET {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
+            const res = await fetch(`${BASE_URL}/api/comentarios/tareas/${tareaId}/comentarios`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-            {/* ¡NUEVO! Selector de Estado */}
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label htmlFor="taskEstado" style={{ display: 'block', marginBottom: '0.5rem' }}>
-                Estado Inicial:
-              </label>
-              <select
-                id="taskEstado"
-                value={newTaskEstado}
-                onChange={(e) => setNewTaskEstado(e.target.value as EstadoTarea)}
-                style={{ width: '100%', padding: '0.5rem' }}
-              >
-                <option value={EstadoTarea.PENDIENTE}>Pendiente</option>
-                <option value={EstadoTarea.EN_CURSO}>En curso</option>
-                <option value={EstadoTarea.TERMINADA}>Terminada</option>
-                <option value={EstadoTarea.CANCELADA}>Cancelada</option>
-              </select>
-            </div>
-            {/* --- Fin de nuevo selector --- */}
+            if (!res.ok) {
+                throw new Error('No se pudieron cargar los comentarios.');
+            }
+            const data: Comentario[] = await res.json();
+            setComentarios(data.sort((a, b) => new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()));
+        } catch (error) {
+            console.error("Error al cargar comentarios:", error);
+            setComentarios([]);
+            alert('Error al cargar comentarios: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+        } finally {
+            setIsCommentsLoading(false);
+        }
+    };
+
+    const handleCreateComment = async (tareaId: string, contenido: string) => {
+        if (!token) return;
+        
+        try {
+            // POST {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
+            const res = await fetch(`${BASE_URL}/api/comentarios/tareas/${tareaId}/comentarios`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ 
+                    contenido,
+                    // Usar el ID del usuario logueado
+                    creadorId: currentUserId 
+                }), 
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error al crear el comentario');
+            }
+            // Recargar la lista de comentarios para ver el nuevo
+            await fetchComentarios(tareaId); 
+
+        } catch (error) {
+            alert('Error al crear el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+            throw error; // Propagar para manejar estado de carga en el formulario
+        }
+    };
+
+    const handleEditComment = async (commentId: string, nuevoContenido: string) => {
+        if (!token) return;
+        
+        try {
+            // PUT {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
+            const res = await fetch(`${BASE_URL}/api/comentarios/comentarios/${commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ contenido: nuevoContenido }), 
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error al editar el comentario');
+            }
             
-            {taskModalError && (
-              <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>
-                {taskModalError}
-              </p>
-            )}
+            // Actualizar el estado local (optimista)
+            setComentarios(prev => prev.map(c => 
+                c.id === commentId ? { ...c, contenido: nuevoContenido } : c
+            ));
 
-            {/* Botones */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              <button
-                type="button" onClick={() => setIsTaskModalOpen(false)}
-                style={{ backgroundColor: 'var(--text-secondary)' }}
-                disabled={taskModalLoading}
-              >
-                Cancelar
-              </button>
-              <button type="submit" disabled={taskModalLoading}>
-                {taskModalLoading ? 'Creando...' : 'Crear Tarea'}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    );
-  };
+        } catch (error) {
+            alert('Error al editar el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+            throw error; 
+        }
+    };
 
-
-  // 6. RENDERIZADO (sin cambios)
-  return (
-    <div className="main-content">
-      {renderCreateTaskModal()}
-
-      <div className="card">
+    const handleDeleteComment = async (commentId: string) => {
+        if (!token) return;
         
-        <h2 className="card-title">Gestión del Equipo</h2>
+        try {
+            // DELETE {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
+            const res = await fetch(`${BASE_URL}/api/comentarios/comentarios/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                // El endpoint solicita { "id": "{{commentId}}" } en el cuerpo
+                // Aunque para un DELETE suele ser redundante si va en la URL, lo incluimos si es estricto:
+                body: JSON.stringify({ id: commentId }),
+            });
 
-        <div style={{
-          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-          flexWrap: 'wrap', gap: '2rem', marginBottom: '2.5rem',
-          padding: '1.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px'
-        }}>
-          
-          <section style={{ flex: '1', minWidth: '250px' }}>
-            <h3>🎯 Filtrar tareas</h3>
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <select
-                aria-label="Filtrar por estado" value={filtroEstado}
-                onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '0.5rem' }}
-              >
-                <option value="todos">Todos los estados</option>
-                <option value={EstadoTarea.PENDIENTE}>Pendiente</option>
-                <option value={EstadoTarea.EN_CURSO}>En curso</option>
-                <option value={EstadoTarea.TERMINADA}>Terminada</option>
-                <option value={EstadoTarea.CANCELADA}>Cancelada</option>
-              </select>
-              
-              <select
-                aria-label="Filtrar por prioridad" value={filtroPrioridad}
-                onChange={e => setFiltroPrioridad(e.target.value)} style={{ padding: '0.5rem' }}
-              >
-                <option value="todos">Todas las prioridades</option>
-                <option value={PrioridadTarea.ALTA}>Alta</option>
-                <option value={PrioridadTarea.MEDIA}>Media</option>
-                <option value={PrioridadTarea.BAJA}>Baja</option>
-              </select>
-            </div>
-          </section>
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Error al eliminar el comentario');
+            }
+            
+            // Actualizar el estado local eliminando el comentario
+            setComentarios(prev => prev.filter(c => c.id !== commentId));
 
-          <section style={{ flex: '1', minWidth: '250px' }}>
-            <h3>📨 Invitar usuario</h3>
-            <form onSubmit={invitarUsuario} style={{ display: 'flex', gap: '0.5rem' }}>
-              <input
-                type="email" placeholder="Correo electrónico del miembro"
-                value={correo} onChange={e => setCorreo(e.target.value)}
-                required style={{ padding: '0.5rem', flex: 1 }}
-              />
-              <button type="submit" disabled={inviteLoading}>
-                {inviteLoading ? 'Enviando...' : 'Invitar'}
-              </button>
-            </form>
-          </section>
-        </div>
+        } catch (error) {
+            alert('Error al eliminar el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
+            throw error; 
+        }
+    };
+    
+    useEffect(() => {
+        if (selectedTask) {
+            fetchComentarios(selectedTask.id);
+        } else {
+            setComentarios([]); // Limpiar comentarios al cerrar el modal
+        }
+    }, [selectedTask, token]);    
 
-        <section>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: '1rem',
-            marginBottom: '1rem'
-          }}>
-            <h3 style={{ margin: 0 }}>📋 Tareas del equipo</h3>
-            <button
-              onClick={() => setIsTaskModalOpen(true)}
-            >
-              + Tarea
-            </button>
-          </div>
-          
-          {loading && <p>Cargando tareas...</p>}
-          
-          {error && (
-            <div style={{ color: 'var(--color-error)' }}>
-              <p>Error al cargar tareas: {error}</p>
-              <button onClick={refetch}>Reintentar</button>
-            </div>
-          )}
+    // 5. RENDERIZADO PRINCIPAL
+    return (
+        <div className="main-content">
+            {/* Componentes de modal importados */}
+            <CreateTaskModal 
+                isTaskModalOpen={isTaskModalOpen}
+                setIsTaskModalOpen={setIsTaskModalOpen}
+                handleCreateTask={handleCreateTask}
+                newTaskTitle={newTaskTitle}
+                setNewTaskTitle={setNewTaskTitle}
+                newTaskDesc={newTaskDesc}
+                setNewTaskDesc={setNewTaskDesc}
+                newTaskPriority={newTaskPriority}
+                setNewTaskPriority={setNewTaskPriority}
+                newTaskEstado={newTaskEstado}
+                setNewTaskEstado={setNewTaskEstado}
+                taskModalLoading={taskModalLoading}
+                taskModalError={taskModalError}
+            />
+            {/* TaskDetailsModal con props de comentarios */}
+            <TaskDetailsModal 
+                selectedTask={selectedTask}
+                setSelectedTask={setSelectedTask}
+                handleUpdateTaskStatus={handleUpdateTaskStatus}
+                isUpdatingTask={isUpdatingTask}
+                
+                // Props de Comentarios
+                comentarios={comentarios}
+                isCommentsLoading={isCommentsLoading}
+                currentUserId={currentUserId}
+                handleCreateComment={handleCreateComment}
+                handleEditComment={handleEditComment}
+                handleDeleteComment={handleDeleteComment}
+            />
 
-          {!loading && !error && tareasFiltradas.length === 0 && (
-            <p style={{ color: 'var(--text-secondary)'}}>
-              {tareas?.length === 0 ? 'Este equipo aún no tiene tareas.' : 'No hay tareas que coincidan con los filtros.'}
-            </p>
-          )}
+            <div className="card">
+                
+                <h2 className="card-title">Gestión del Equipo</h2>
 
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column', 
-            gap: '1rem'
-          }}>
-            {tareasFiltradas.map(t => (
-              <div
-                key={t.id}
-                style={{
-                  padding: '1rem 1.5rem',
-                  borderRadius: '8px',
-                  backgroundColor: 'var(--bg-lightest)',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-                  borderLeft: `5px solid ${getPriorityColor(t.prioridad)}`
-                }}
-              >
-                <h4 style={{ margin: '0 0 0.5rem 0' }}>{t.titulo}</h4>
-                <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.9rem' }}>
-                  <span>Estado: <strong>{t.estado}</strong></span>
-                  <span>Prioridad: <strong>{t.prioridad}</strong></span>
+                {/* Filtros e Invitación (sin cambios) */}
+                <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                    flexWrap: 'wrap', gap: '2rem', marginBottom: '2.5rem',
+                    padding: '1.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px'
+                }}>
+                    
+                    <section style={{ flex: '1', minWidth: '250px' }}>
+                        <h3>🎯 Filtrar tareas</h3>
+                        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            <select
+                                aria-label="Filtrar por estado" value={filtroEstado}
+                                onChange={e => setFiltroEstado(e.target.value)} style={{ padding: '0.5rem' }}
+                            >
+                                <option value="todos">Todos los estados</option>
+                                <option value={EstadoTarea.PENDIENTE}>Pendiente</option>
+                                <option value={EstadoTarea.EN_CURSO}>En curso</option>
+                                <option value={EstadoTarea.TERMINADA}>Terminada</option>
+                                <option value={EstadoTarea.CANCELADA}>Cancelada</option>
+                            </select>
+                            
+                            <select
+                                aria-label="Filtrar por prioridad" value={filtroPrioridad}
+                                onChange={e => setFiltroPrioridad(e.target.value)} style={{ padding: '0.5rem' }}
+                            >
+                                <option value="todos">Todas las prioridades</option>
+                                <option value={PrioridadTarea.ALTA}>Alta</option>
+                                <option value={PrioridadTarea.MEDIA}>Media</option>
+                                <option value={PrioridadTarea.BAJA}>Baja</option>
+                            </select>
+                        </div>
+                    </section>
+
+                    <section style={{ flex: '1', minWidth: '250px' }}>
+                        <h3>📨 Invitar usuario</h3>
+                        <form onSubmit={invitarUsuario} style={{ display: 'flex', gap: '0.5rem' }}>
+                            <input
+                                type="email" placeholder="Correo electrónico del miembro"
+                                value={correo} onChange={e => setCorreo(e.target.value)}
+                                required style={{ padding: '0.5rem', flex: 1 }}
+                            />
+                            <button type="submit" disabled={inviteLoading}>
+                                {inviteLoading ? 'Enviando...' : 'Invitar'}
+                            </button>
+                        </form>
+                    </section>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
-        
-      </div>
-    </div>
-  );
-}
 
-// Función helper (sin cambios)
-function getPriorityColor(prioridad: PrioridadTarea): string {
-  switch (prioridad) {
-    case PrioridadTarea.ALTA: return 'var(--color-error, #E53E3E)';
-    case PrioridadTarea.MEDIA: return 'var(--color-warning, #DD6B20)';
-    case PrioridadTarea.BAJA: return 'var(--color-success, #38A169)';
-    default: return '#CCC';
-  }
+                {/* Sección Kanban */}
+                <section>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        flexWrap: 'wrap',
+                        gap: '1rem',
+                        marginBottom: '1.5rem'
+                    }}>
+                        <h3 style={{ margin: 0 }}>📋 Vista Kanban de Tareas</h3>
+                        <button onClick={() => setIsTaskModalOpen(true)}>+ Tarea</button>
+                    </div>
+                    
+                    {loading && <p>Cargando tareas...</p>}
+                    
+                    {error && (
+                        <div style={{ color: 'var(--color-error)' }}>
+                            <p>Error al cargar tareas: {error}</p>
+                            <button onClick={refetch}>Reintentar</button>
+                        </div>
+                    )}
+
+                    {!loading && !error && (
+                        <div style={{
+                            display: 'flex',
+                            gap: '1rem',
+                            overflowX: 'auto',
+                            paddingBottom: '1rem',
+                            minHeight: '500px'
+                        }}>
+                            {/* Columnas Kanban importadas */}
+                            <TareaColumna estado={EstadoTarea.PENDIENTE} tareas={tareasAgrupadas[EstadoTarea.PENDIENTE]} setSelectedTask={setSelectedTask} />
+                            <TareaColumna estado={EstadoTarea.EN_CURSO} tareas={tareasAgrupadas[EstadoTarea.EN_CURSO]} setSelectedTask={setSelectedTask} />
+                            <TareaColumna estado={EstadoTarea.TERMINADA} tareas={tareasAgrupadas[EstadoTarea.TERMINADA]} setSelectedTask={setSelectedTask} />
+                            <TareaColumna estado={EstadoTarea.CANCELADA} tareas={tareasAgrupadas[EstadoTarea.CANCELADA]} setSelectedTask={setSelectedTask} />
+                        </div>
+                    )}
+                </section>
+                
+            </div>
+        </div>
+    );
 }

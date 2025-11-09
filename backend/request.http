@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3000
 @userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
-@equipoId = 3425891f-327a-47ea-b7a3-2aefe866ee41
+@equipoId = c4c1c0c7-3b10-4ba5-b5fd-66753e980184
 @tareaId = 3d424bea-523a-42a6-801f-35f775d17726
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
@@ -24,8 +24,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "Ezequiel2",
-  "email": "eze8@example.com.ar",
+  "nombre": "jorge",
+  "email": "jorge@example.com.ar",
   "password": "123456"
 }
 
@@ -38,7 +38,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze6@example.com.ar",
+  "email": "eze8@example.com.ar",
   "password": "123456"
 }
 
@@ -86,14 +86,14 @@ Authorization: Bearer {{token}}
 
 ###
 ### Obtener Equipos (Requiere Auth)
-GET {{baseUrl}}/api/equipos/equipos/{{userId}}
+GET {{baseUrl}}/api/equipos/equipos/56fd0d08-6b7b-4712-abca-7ce0066c759a
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 # Nota: Los GET con body son inusuales. 
 # Si el 'userId' ya está en la URL, este body es redundante.
 {
-  "userId": "{{userId}}"
+  "userId": "56fd0d08-6b7b-4712-abca-7ce0066c759a"
 }
 
 ###
@@ -115,8 +115,9 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "usuarioId": "{{user2Id}}",
-  "propietarioId": "{{userId}}"
+  "correo": "nick8@example.com.ar",
+  "id": "c4c1c0c7-3b10-4ba5-b5fd-66753e980184",
+  "propietarioId": "a06450db-5d0c-4895-a1ea-653b2d03ae55"
 }
 
 ###
