@@ -10,7 +10,6 @@ import {
 import { Usuario } from "./Usuario.entity";
 import { Equipo } from "./Equipo.entity";
 import { Comentario } from "./Comentarios.entity";
-// Update the import path to match the actual file name, e.g. "Historiales.entity" if that's correct
 import { Historial } from "./Historial.entity";
 
 export enum EstadoTarea {

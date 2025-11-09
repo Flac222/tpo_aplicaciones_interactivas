@@ -22,26 +22,25 @@ export async function crearTarea(req: AuthRequest, res: Response) {
 }
 
 
-export const listarTareasPorFiltro = async (req: AuthRequest, res: Response) => { 
+export const listarTareasPorFiltro = async (req: AuthRequest, res: Response) => {
   const { equipoId } = req.params;
-  const { estado, prioridad } = req.query; 
-  const usuarioId = req.user!.id; 
+  const { estado, prioridad, page = "1", limit = "10" } = req.query;
+  const usuarioId = req.user!.id;
 
   try {
-    const tareas = await TareaService.listarPorEquipoYFiltro(
+    const tareasPaginadas = await TareaService.listarPorEquipoYFiltro(
       equipoId,
       estado as any,
-      prioridad as any
+      prioridad as any,
+      parseInt(page as string),
+      parseInt(limit as string)
     );
-    res.json(tareas);
+    res.json(tareasPaginadas);
   } catch (error) {
-    if (error instanceof Error) {
-      res.status(400).json({ error: error.message });
-    } else {
-      res.status(400).json({ error: "Unknown error" });
-    }
+    res.status(400).json({ error: error instanceof Error ? error.message : "Unknown error" });
   }
 };
+
 export async function actualizarEstado(req: AuthRequest, res: Response) { 
   try {
     const { id } = req.params;
