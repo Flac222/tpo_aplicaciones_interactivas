@@ -405,10 +405,17 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     selectedTask, 
     setSelectedTask, 
     handleUpdateTaskStatus, 
-    isUpdatingTask 
+    isUpdatingTask,
+    // << FALTAN DESESTRUCTURAR ESTAS PROPS
+    comentarios,
+    isCommentsLoading,
+    currentUserId,
+    handleCreateComment,
+    handleEditComment,
+    handleDeleteComment
 }) => {
     if (!selectedTask) return null;
-
+    
     const currentStatus = selectedTask.estado;
     const validStatuses = getValidNextStatuses(currentStatus);
     const displayStatuses = Array.from(new Set([currentStatus, ...validStatuses]));
@@ -492,9 +499,16 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     {selectedTask.descripcion || 'Sin descripción detallada.'}
                 </div>
                 
-                {/* Comentarios (Futuro) */}
-                <h3 style={{ marginTop: '2rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', fontSize: '1.2rem' }}>Comentarios (Próximamente)</h3>
-                <p style={{ color: 'var(--text-secondary)' }}>Aquí se mostrará el sistema de comentarios.</p>
+                {/* Componente ComentariosSection: */}
+                <ComentariosSection
+                    tareaId={selectedTask.id}
+                    comentarios={comentarios}
+                    currentUserId={currentUserId}
+                    onCreate={handleCreateComment}
+                    onEdit={handleEditComment}
+                    onDelete={handleDeleteComment}
+                    loading={isCommentsLoading}
+                />
             </div>
         </div>
     );

@@ -5,17 +5,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
 
 // Importar tipos y utilidades
-import { 
-    EstadoTarea, 
-    PrioridadTarea, 
+import {
+    EstadoTarea,
+    PrioridadTarea,
     Tarea,
     Comentario, // << Importar Comentario
     getValidNextStatuses,
 } from '../types/tareas';
 
 // Importar Componentes de Presentación
-import { 
-    TareaColumna, 
+import {
+    TareaColumna,
     CreateTaskModal,
     TaskDetailsModal
 } from '../components/TareaComponents';
@@ -45,7 +45,7 @@ export function EquipoPage(): React.ReactElement {
     const [filtroPrioridad, setFiltroPrioridad] = useState<string>('todos');
     const [correo, setCorreo] = useState('');
     const [inviteLoading, setInviteLoading] = useState(false);
-    
+
     // Estados para el modal de CREACIÓN de TAREAS
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState("");
@@ -63,8 +63,10 @@ export function EquipoPage(): React.ReactElement {
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
 
     // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN
+
     const tareasFiltradas = useMemo(() => {
         if (!tareas) return [];
+
         return tareas.filter(t =>
             (filtroEstado === 'todos' || t.estado === filtroEstado) &&
             (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
@@ -88,15 +90,15 @@ export function EquipoPage(): React.ReactElement {
     // 4. HANDLERS (Funciones de manejo de API)
 
     const handleUpdateTaskStatus = async (
-        tareaId: string, 
+        tareaId: string,
         nuevoEstado: EstadoTarea
     ) => {
         if (isUpdatingTask || !token || !selectedTask) return;
 
         const currentStatus = selectedTask.estado;
         const validStatuses = getValidNextStatuses(currentStatus);
-        
-        if (currentStatus === nuevoEstado) return; 
+
+        if (currentStatus === nuevoEstado) return;
 
         if (!validStatuses.includes(nuevoEstado)) {
             alert(`¡Error! La transición de ${currentStatus} a ${nuevoEstado} no está permitida.`);
@@ -108,7 +110,7 @@ export function EquipoPage(): React.ReactElement {
         try {
             const body = {
                 nuevoEstado: nuevoEstado,
-                usuarioId: MY_USER_ID_PLACEHOLDER, 
+                usuarioId: MY_USER_ID_PLACEHOLDER,
             };
 
             const res = await fetch(`${BASE_URL}/api/tareas/${tareaId}/estado`, {
@@ -126,7 +128,7 @@ export function EquipoPage(): React.ReactElement {
             }
 
             setSelectedTask(prev => prev ? { ...prev, estado: nuevoEstado } : null);
-            refetch(); 
+            refetch();
 
         } catch (err) {
             alert(`Error al cambiar el estado: ${err instanceof Error ? err.message : String(err)}`);
@@ -134,9 +136,9 @@ export function EquipoPage(): React.ReactElement {
             setIsUpdatingTask(false);
         }
     };
-    
+
     const invitarUsuario = async (e: React.FormEvent) => {
-        e.preventDefault(); 
+        e.preventDefault();
         if (!correo || !equipoId || inviteLoading) return;
         setInviteLoading(true);
 
@@ -179,11 +181,11 @@ export function EquipoPage(): React.ReactElement {
             descripcion: newTaskDesc,
             prioridad: newTaskPriority,
             equipoId: equipoId,
-            estado: newTaskEstado, 
+            estado: newTaskEstado,
         };
 
         try {
-            const res = await fetch(`${BASE_URL}/api/tareas`, { 
+            const res = await fetch(`${BASE_URL}/api/tareas`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -197,8 +199,8 @@ export function EquipoPage(): React.ReactElement {
                 throw new Error(data.error || 'Error desconocido al crear la tarea');
             }
 
-            setIsTaskModalOpen(false); 
-            refetch(); 
+            setIsTaskModalOpen(false);
+            refetch();
             setNewTaskTitle("");
             setNewTaskDesc("");
             setNewTaskPriority(PrioridadTarea.MEDIA);
@@ -240,7 +242,7 @@ export function EquipoPage(): React.ReactElement {
 
     const handleCreateComment = async (tareaId: string, contenido: string) => {
         if (!token) return;
-        
+
         try {
             // POST {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
             const res = await fetch(`${BASE_URL}/api/comentarios/tareas/${tareaId}/comentarios`, {
@@ -249,11 +251,11 @@ export function EquipoPage(): React.ReactElement {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     contenido,
                     // Usar el ID del usuario logueado
-                    creadorId: currentUserId 
-                }), 
+                    creadorId: currentUserId
+                }),
             });
 
             if (!res.ok) {
@@ -261,7 +263,7 @@ export function EquipoPage(): React.ReactElement {
                 throw new Error(data.error || 'Error al crear el comentario');
             }
             // Recargar la lista de comentarios para ver el nuevo
-            await fetchComentarios(tareaId); 
+            await fetchComentarios(tareaId);
 
         } catch (error) {
             alert('Error al crear el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
@@ -271,7 +273,7 @@ export function EquipoPage(): React.ReactElement {
 
     const handleEditComment = async (commentId: string, nuevoContenido: string) => {
         if (!token) return;
-        
+
         try {
             // PUT {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
             const res = await fetch(`${BASE_URL}/api/comentarios/comentarios/${commentId}`, {
@@ -280,28 +282,28 @@ export function EquipoPage(): React.ReactElement {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify({ contenido: nuevoContenido }), 
+                body: JSON.stringify({ contenido: nuevoContenido }),
             });
 
             if (!res.ok) {
                 const data = await res.json();
                 throw new Error(data.error || 'Error al editar el comentario');
             }
-            
+
             // Actualizar el estado local (optimista)
-            setComentarios(prev => prev.map(c => 
+            setComentarios(prev => prev.map(c =>
                 c.id === commentId ? { ...c, contenido: nuevoContenido } : c
             ));
 
         } catch (error) {
             alert('Error al editar el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
-            throw error; 
+            throw error;
         }
     };
 
     const handleDeleteComment = async (commentId: string) => {
         if (!token) return;
-        
+
         try {
             // DELETE {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
             const res = await fetch(`${BASE_URL}/api/comentarios/comentarios/${commentId}`, {
@@ -319,29 +321,29 @@ export function EquipoPage(): React.ReactElement {
                 const data = await res.json();
                 throw new Error(data.error || 'Error al eliminar el comentario');
             }
-            
+
             // Actualizar el estado local eliminando el comentario
             setComentarios(prev => prev.filter(c => c.id !== commentId));
 
         } catch (error) {
             alert('Error al eliminar el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
-            throw error; 
+            throw error;
         }
     };
-    
+
     useEffect(() => {
         if (selectedTask) {
             fetchComentarios(selectedTask.id);
         } else {
             setComentarios([]); // Limpiar comentarios al cerrar el modal
         }
-    }, [selectedTask, token]);    
+    }, [selectedTask, token]);
 
     // 5. RENDERIZADO PRINCIPAL
     return (
         <div className="main-content">
             {/* Componentes de modal importados */}
-            <CreateTaskModal 
+            <CreateTaskModal
                 isTaskModalOpen={isTaskModalOpen}
                 setIsTaskModalOpen={setIsTaskModalOpen}
                 handleCreateTask={handleCreateTask}
@@ -357,12 +359,12 @@ export function EquipoPage(): React.ReactElement {
                 taskModalError={taskModalError}
             />
             {/* TaskDetailsModal con props de comentarios */}
-            <TaskDetailsModal 
+            <TaskDetailsModal
                 selectedTask={selectedTask}
                 setSelectedTask={setSelectedTask}
                 handleUpdateTaskStatus={handleUpdateTaskStatus}
                 isUpdatingTask={isUpdatingTask}
-                
+
                 // Props de Comentarios
                 comentarios={comentarios}
                 isCommentsLoading={isCommentsLoading}
@@ -373,7 +375,7 @@ export function EquipoPage(): React.ReactElement {
             />
 
             <div className="card">
-                
+
                 <h2 className="card-title">Gestión del Equipo</h2>
 
                 {/* Filtros e Invitación (sin cambios) */}
@@ -382,7 +384,7 @@ export function EquipoPage(): React.ReactElement {
                     flexWrap: 'wrap', gap: '2rem', marginBottom: '2.5rem',
                     padding: '1.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px'
                 }}>
-                    
+
                     <section style={{ flex: '1', minWidth: '250px' }}>
                         <h3>🎯 Filtrar tareas</h3>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -396,7 +398,7 @@ export function EquipoPage(): React.ReactElement {
                                 <option value={EstadoTarea.TERMINADA}>Terminada</option>
                                 <option value={EstadoTarea.CANCELADA}>Cancelada</option>
                             </select>
-                            
+
                             <select
                                 aria-label="Filtrar por prioridad" value={filtroPrioridad}
                                 onChange={e => setFiltroPrioridad(e.target.value)} style={{ padding: '0.5rem' }}
@@ -437,9 +439,9 @@ export function EquipoPage(): React.ReactElement {
                         <h3 style={{ margin: 0 }}>📋 Vista Kanban de Tareas</h3>
                         <button onClick={() => setIsTaskModalOpen(true)}>+ Tarea</button>
                     </div>
-                    
+
                     {loading && <p>Cargando tareas...</p>}
-                    
+
                     {error && (
                         <div style={{ color: 'var(--color-error)' }}>
                             <p>Error al cargar tareas: {error}</p>
@@ -463,7 +465,7 @@ export function EquipoPage(): React.ReactElement {
                         </div>
                     )}
                 </section>
-                
+
             </div>
         </div>
     );
