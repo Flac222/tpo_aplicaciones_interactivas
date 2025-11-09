@@ -50,7 +50,7 @@ export function EquipoPage(): React.ReactElement {
   // 3. ESTADO DE FILTROS E INVITACIÓN (sin cambios)
   const [filtroEstado, setFiltroEstado] = useState<string>('todos');
   const [filtroPrioridad, setFiltroPrioridad] = useState<string>('todos');
-  const [correo, setCorreo] = useState<string | null>(null);
+  const [correo, setCorreo] = useState('');
   const [inviteLoading, setInviteLoading] = useState(false);
 
   // --- MODIFICADO: Estados para el modal de TAREAS ---
@@ -90,7 +90,7 @@ export function EquipoPage(): React.ReactElement {
       const data = await res.json();
       if (res.ok) {
         alert('Invitación enviada con éxito');
-        setCorreo(null);
+        setCorreo('');
       } else {
         alert(`Error al invitar: ${data.error || 'Error desconocido'}`);
       }
