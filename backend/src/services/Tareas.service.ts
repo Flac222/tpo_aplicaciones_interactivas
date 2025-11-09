@@ -68,33 +68,35 @@ export class TareaService {
     return tarea;
   }
 
-  static async listarPorEquipoYFiltro(
-    equipoId: string,
-    estado?: EstadoTarea,
-    prioridad?: PrioridadTarea,
-    page: number = 1,
-    limit: number = 10
-  ) {
-    const query = AppDataSource.getRepository(Tarea)
-      .createQueryBuilder("tarea")
-      .leftJoinAndSelect("tarea.equipo", "equipo")
-      .where("equipo.id = :equipoId", { equipoId });
+static async listarPorEquipoYFiltro(
+  equipoId: string,
+  estado?: EstadoTarea,
+  prioridad?: PrioridadTarea,
+  page: number = 1,
+  limit: number = 10
+) {
+  const query = AppDataSource.getRepository(Tarea)
+    .createQueryBuilder("tarea")
+    .leftJoinAndSelect("tarea.equipo", "equipo")
+    .leftJoinAndSelect("tarea.historial", "historial") 
+    .where("equipo.id = :equipoId", { equipoId });
 
-    if (estado) query.andWhere("tarea.estado = :estado", { estado });
-    if (prioridad) query.andWhere("tarea.prioridad = :prioridad", { prioridad });
+  if (estado) query.andWhere("tarea.estado = :estado", { estado });
+  if (prioridad) query.andWhere("tarea.prioridad = :prioridad", { prioridad });
 
-    query.skip((page - 1) * limit).take(limit);
+  query.skip((page - 1) * limit).take(limit);
 
-    const [tareas, total] = await query.getManyAndCount();
+  const [tareas, total] = await query.getManyAndCount();
 
-    return {
-      tareas,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit)
-    };
-  }
+  return {
+    tareas,
+    total,
+    page,
+    limit,
+    totalPages: Math.ceil(total / limit)
+  };
+}
+
 
 
   async eliminarTareaService(tareaId: string, usuarioId: string): Promise<boolean> {
