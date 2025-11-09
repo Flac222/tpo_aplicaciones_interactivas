@@ -24,16 +24,31 @@ export interface Tarea {
     // Puedes añadir mas campos aquí (ej: asignadoA, fechaCreacion)
 }
 
+// DESPUÉS (types/tareas.ts)
+export interface UsuarioComentario {
+    id: string;
+    nombre: string;
+    email: string;
+    // La contraseña es un detalle sensible, 
+    // pero la incluimos si el back la retorna:
+    password: string; 
+}
 
-// **NUEVA INTERFAZ DE COMENTARIO**
 export interface Comentario {
     id: string;
     contenido: string;
-    creadorId: string; // El ID del usuario que creó el comentario
-    fechaCreacion: string; // O Date, dependiendo de cómo lo manejes
-    tareaId: string;
-    // Opcional: información del creador para mostrar en la UI
-    creadorNombre?: string; 
+    autor: UsuarioComentario; // <-- CAMBIO: De 'creador' a 'autor'
+    tarea: {
+        id: string;
+        titulo: string;
+        descripcion: string;
+        estado: string;
+        prioridad: string;
+        fechaCreacion: Date;
+        fechaActualizacion: Date;
+    };
+    fecha: string; // <-- CAMBIO: De 'fechaCreacion' a 'fecha'
+    fechaActualizacion: string;
 }
 
 // Constantes y Helpers

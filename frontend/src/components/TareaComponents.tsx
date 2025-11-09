@@ -5,7 +5,7 @@ import {
     EstadoTarea, 
     PrioridadTarea, 
     Tarea, 
-    Comentario, // << Importado
+    Comentario, // Asumiendo que la interfaz Comentario ya tiene 'autor' y 'fecha'
     estadoConfig, 
     getPriorityColor, 
     getValidNextStatuses 
@@ -50,8 +50,13 @@ interface ComentariosSectionProps {
     loading: boolean;
 }
 
+// ----------------------------------------------------
+// Componente: ComentarioCard
+// ----------------------------------------------------
 const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, onEdit, onDelete }) => {
-    const isOwner = comentario.creadorId === currentUserId;
+    // La comprobación del dueño está bien
+    const isOwner = comentario.autor.id === currentUserId; 
+    
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(comentario.contenido);
     const [loading, setLoading] = useState(false);
@@ -66,7 +71,7 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
             await onEdit(comentario.id, editContent);
             setIsEditing(false);
         } catch (e) {
-            // Manejado por el handler principal, aquí solo mostramos un error local si es necesario
+             // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -78,7 +83,7 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         try {
             await onDelete(comentario.id);
         } catch (e) {
-            // ...
+             // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -88,9 +93,11 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
     return (
         <div style={{ borderLeft: '3px solid var(--color-primary)', padding: '0.5rem 1rem', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
             <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
-                {isOwner ? 'Tú' : (comentario.creadorNombre || `Usuario ${comentario.creadorId}`)} 
+                {/* La lógica de mostrar 'Tú' y 'comentario.autor.nombre' está CORRECTA */}
+                {isOwner ? 'Tú' : (comentario.autor.nombre || `Usuario ${comentario.autor.id}`)} 
                 <small style={{ fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '10px' }}>
-                    {new Date(comentario.fechaCreacion).toLocaleString()}
+                    {/* ❌ CORRECCIÓN CRÍTICA: Cambiado de 'comentario.fechaCreacion' a 'comentario.fecha' */}
+                    {new Date(comentario.fecha).toLocaleString()}
                 </small>
             </p>
             
@@ -113,7 +120,7 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
 
             {isOwner && !isEditing && (
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '5px', marginTop: '0.5rem' }}>
-                    <button onClick={() => setIsEditing(true)} disabled={loading} style={{ background: 'var(--color-warning)', padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}>Editar</button>
+                    <button onClick={() => { setIsEditing(true); setEditContent(comentario.contenido); }} disabled={loading} style={{ background: 'var(--color-warning)', padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}>Editar</button>
                     <button onClick={handleDelete} disabled={loading} style={{ background: 'var(--color-error)', padding: '0.2rem 0.5rem', fontSize: '0.8rem' }}>Eliminar</button>
                 </div>
             )}
@@ -121,7 +128,9 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
     );
 };
 
-// Componente de Formulario de Creación de Comentarios
+// ----------------------------------------------------
+// Componente: ComentarioForm (sin cambios)
+// ----------------------------------------------------
 const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionProps['onCreate'], loading: boolean }> = ({ taskId, onCreate, loading }) => {
     const [content, setContent] = useState('');
     const [localLoading, setLocalLoading] = useState(false);
@@ -161,7 +170,9 @@ const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionPro
 };
 
 
-// Componente de la Sección de Comentarios
+// ----------------------------------------------------
+// Componente: ComentariosSection (sin cambios)
+// ----------------------------------------------------
 export const ComentariosSection: React.FC<ComentariosSectionProps> = ({ 
     tareaId, 
     comentarios, 
@@ -201,6 +212,8 @@ export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
     );
 };
 
+// ... (TareaCard y TareaColumna sin cambios)
+
 export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask }) => (
     <div
         key={tarea.id}
@@ -231,7 +244,7 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask }) 
     </div>
 );
 
-// Componente para renderizar la Columna Kanban
+// ... (TareaColumna sin cambios)
 interface TareaColumnaProps {
     estado: EstadoTarea;
     tareas: Tarea[];
@@ -281,8 +294,7 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
     );
 };
 
-
-// Componente Modal de Creación de Tareas
+// ... (CreateTaskModal sin cambios)
 interface CreateTaskModalProps {
     isTaskModalOpen: boolean;
     setIsTaskModalOpen: (isOpen: boolean) => void;
@@ -400,13 +412,15 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
 };
 
 
-// Componente Modal de Detalle de Tareas
+// ----------------------------------------------------
+// Componente: TaskDetailsModal
+// ----------------------------------------------------
 export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({ 
     selectedTask, 
     setSelectedTask, 
     handleUpdateTaskStatus, 
     isUpdatingTask,
-    // << FALTAN DESESTRUCTURAR ESTAS PROPS
+    // Desestructurar todas las props de comentarios aquí
     comentarios,
     isCommentsLoading,
     currentUserId,
@@ -442,9 +456,9 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                     <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{selectedTask.titulo}</h2>
                     <button 
-                      onClick={() => setSelectedTask(null)} 
-                      style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}
-                      disabled={isUpdatingTask}
+                        onClick={() => setSelectedTask(null)} 
+                        style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}
+                        disabled={isUpdatingTask}
                     >
                         &times;
                     </button>

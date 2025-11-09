@@ -20,22 +20,24 @@ import {
 
 
 const BASE_URL = 'http://localhost:3000';
-const MY_USER_ID_PLACEHOLDER = 'usuario-del-token-o-un-id-valido'; 
 
 // << Interfaz de Paginación (igual que antes) >>
 interface PaginacionTareas {
-  tareas: Tarea[];
-  total: number;
-  page: number;
-  totalPages: number;
-  limit: number;
+    tareas: Tarea[];
+    total: number;
+    page: number;
+    totalPages: number;
+    limit: number;
 }
 
 
 export function EquipoPage(): React.ReactElement {
     const { id: equipoId } = useParams();
-    const { token } = useAuth();
-    const currentUserId = MY_USER_ID_PLACEHOLDER;
+    // 💡 CAMBIO 1: Desestructuramos el objeto 'usuario' del contexto de Auth
+    const { token, usuario } = useAuth(); 
+    
+    // 💡 CAMBIO 2: Obtenemos el ID real del usuario logueado
+    const currentUserId = usuario?.id || ''; 
 
     // << Estados (igual que antes) >>
     const [filtroEstado, setFiltroEstado] = useState<string>('todos');
@@ -60,23 +62,53 @@ export function EquipoPage(): React.ReactElement {
     const [comentarios, setComentarios] = useState<Comentario[]>([]);
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
 
-    // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN
+    // --- BLOQUE DE FETCH Y DEPENDENCIAS (sin cambios) ---
+    const url = useMemo(() => {
+        if (!equipoId) return '';
+        
+        const params = new URLSearchParams();
+        params.append('page', page.toString());
+        params.append('limit', limit.toString());
+        
+        if (filtroEstado !== 'todos') {
+            params.append('estado', filtroEstado);
+        }
+        if (filtroPrioridad !== 'todos') {
+            params.append('prioridad', filtroPrioridad);
+        }
+
+        return `${BASE_URL}/api/tareas/${equipoId}?${params.toString()}`;
+    }, [equipoId, page, limit, filtroEstado, filtroPrioridad]);
+
+    const fetchOptions: RequestInit = useMemo(() => ({
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+    }), [token]);
+
+    const { 
+        data: paginacion, 
+        loading, 
+        error, 
+        refetch 
+    } = useFetch<PaginacionTareas>(url, fetchOptions);
+
+    // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN (sin cambios)
     const tareasFiltradas = useMemo(() => {
-        if (!tareas) return [];
+        const tareas = paginacion?.tareas; 
+        
+        if (!Array.isArray(tareas)) {
+            return [];
+        }
+
         return tareas.filter(t =>
             (filtroEstado === 'todos' || t.estado === filtroEstado) &&
             (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
         );
-    }, [tareas, filtroEstado, filtroPrioridad]);
+    }, [paginacion, filtroEstado, filtroPrioridad]);
 
-    const { 
-      data: paginacion, 
-      loading, 
-      error, 
-      refetch 
-    } = useFetch<PaginacionTareas>(url, fetchOptions);
-
-    // << Lógica de Agrupación (igual que antes) >>
     const tareasAgrupadas = useMemo(() => {
         const grupos: Record<EstadoTarea, Tarea[]> = {
             [EstadoTarea.PENDIENTE]: [],
@@ -85,18 +117,18 @@ export function EquipoPage(): React.ReactElement {
             [EstadoTarea.CANCELADA]: [],
         };
         
-        if (paginacion?.tareas) {
-          paginacion.tareas.forEach(tarea => {
-              if (grupos[tarea.estado as EstadoTarea]) {
-                 grupos[tarea.estado as EstadoTarea].push(tarea);
-              }
-          });
+        if (tareasFiltradas) {
+            tareasFiltradas.forEach(tarea => {
+                if (grupos[tarea.estado as EstadoTarea]) {
+                   grupos[tarea.estado as EstadoTarea].push(tarea);
+                }
+            });
         }
         return grupos;
-    }, [paginacion]);
+    }, [tareasFiltradas]);
 
     
-    // << Handlers (igual que antes) >>
+    // --- Handlers ---
     const handleEstadoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setFiltroEstado(e.target.value);
       setPage(1); 
@@ -107,11 +139,6 @@ export function EquipoPage(): React.ReactElement {
       setPage(1); 
     };
     
-    // ... (handleUpdateTaskStatus, invitarUsuario, handleCreateTask)
-    // ... (fetchComentarios, handleCreateComment, handleEditComment, handleDeleteComment)
-    // ... (TODOS ESTOS HANDLERS PERMANECEN EXACTAMENTE IGUALES, NO LOS BORRES)
-    // ... (Pego solo los que tenías por si acaso, pero no cambiaron)
-
     const handleUpdateTaskStatus = async (
         tareaId: string,
         nuevoEstado: EstadoTarea
@@ -130,7 +157,7 @@ export function EquipoPage(): React.ReactElement {
         try {
             const body = {
                 nuevoEstado: nuevoEstado,
-                usuarioId: MY_USER_ID_PLACEHOLDER,
+                usuarioId: currentUserId, // Usando el ID real
             };
             const res = await fetch(`${BASE_URL}/api/tareas/${tareaId}/estado`, {
                 method: 'PUT',
@@ -239,7 +266,12 @@ export function EquipoPage(): React.ReactElement {
                 throw new Error('No se pudieron cargar los comentarios.');
             }
             const data: Comentario[] = await res.json();
-            setComentarios(data.sort((a, b) => new Date(a.fechaCreacion).getTime() - new Date(b.fechaCreacion).getTime()));
+            
+            // 💡 AJUSTE DE FECHA: Usamos 'a.fecha' y 'b.fecha' para ordenar
+            setComentarios(data.sort((a, b) => 
+                new Date(a.fecha).getTime() - new Date(b.fecha).getTime()
+            ));
+
         } catch (error) {
             console.error("Error al cargar comentarios:", error);
             setComentarios([]);
@@ -250,7 +282,7 @@ export function EquipoPage(): React.ReactElement {
     };
 
     const handleCreateComment = async (tareaId: string, contenido: string) => {
-        if (!token) return;
+        if (!token || !currentUserId) return; 
         
         try {
             const res = await fetch(`${BASE_URL}/api/comentarios/tareas/${tareaId}/comentarios`, {
@@ -261,7 +293,7 @@ export function EquipoPage(): React.ReactElement {
                 },
                 body: JSON.stringify({
                     contenido,
-                    // Usar el ID del usuario logueado
+                    // 💡 Se mantiene 'creadorId' asumiendo que el endpoint POST espera esto
                     creadorId: currentUserId 
                 }), 
             });
@@ -295,7 +327,6 @@ export function EquipoPage(): React.ReactElement {
                 throw new Error(data.error || 'Error al editar el comentario');
             }
             
-            // Actualizar el estado local (optimista)
             setComentarios(prev => prev.map(c => 
                 c.id === commentId ? { ...c, contenido: nuevoContenido } : c
             ));
@@ -322,7 +353,6 @@ export function EquipoPage(): React.ReactElement {
                 throw new Error(data.error || 'Error al eliminar el comentario');
             }
             
-            // Actualizar el estado local eliminando el comentario
             setComentarios(prev => prev.filter(c => c.id !== commentId));
         } catch (error) {
             alert('Error al eliminar el comentario: ' + (error instanceof Error ? error.message : 'Error desconocido'));
@@ -331,12 +361,13 @@ export function EquipoPage(): React.ReactElement {
     };
 
     useEffect(() => {
-        if (selectedTask) {
+        // Aseguramos que solo haga fetch si hay una tarea seleccionada Y un token
+        if (selectedTask && token) { 
             fetchComentarios(selectedTask.id);
         } else {
             setComentarios([]);
         }
-    }, [selectedTask, token]);    
+    }, [selectedTask, token]);    
 
     // 5. RENDERIZADO PRINCIPAL
     return (
@@ -367,7 +398,8 @@ export function EquipoPage(): React.ReactElement {
                 // Props de Comentarios
                 comentarios={comentarios}
                 isCommentsLoading={isCommentsLoading}
-                currentUserId={currentUserId}
+                // Pasamos el ID real del usuario logueado
+                currentUserId={currentUserId} 
                 handleCreateComment={handleCreateComment}
                 handleEditComment={handleEditComment}
                 handleDeleteComment={handleDeleteComment}
@@ -377,7 +409,7 @@ export function EquipoPage(): React.ReactElement {
 
                 <h2 className="card-title">Gestión del Equipo</h2>
 
-                {/* << Filtros (Handlers actualizados) e Invitación (sin cambios) >> */}
+                {/* Controles de Filtros e Invitación */}
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
                     flexWrap: 'wrap', gap: '2rem', marginBottom: '2.5rem',
@@ -389,12 +421,11 @@ export function EquipoPage(): React.ReactElement {
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
                             <select
                                 aria-label="Filtrar por estado" value={filtroEstado}
-                                onChange={handleEstadoChange} // << USAR HANDLER
+                                onChange={handleEstadoChange} 
                                 style={{ padding: '0.5rem' }}
                             >
                                 <option value="todos">Todos los estados</option>
                                 <option value={EstadoTarea.PENDIENTE}>Pendiente</option>
-                                {/* ... más opciones ... */}
                                 <option value={EstadoTarea.EN_CURSO}>En curso</option>
                                 <option value={EstadoTarea.TERMINADA}>Terminada</option>
                                 <option value={EstadoTarea.CANCELADA}>Cancelada</option>
@@ -402,12 +433,11 @@ export function EquipoPage(): React.ReactElement {
 
                             <select
                                 aria-label="Filtrar por prioridad" value={filtroPrioridad}
-                                onChange={handlePrioridadChange} // << USAR HANDLER
+                                onChange={handlePrioridadChange} 
                                 style={{ padding: '0.5rem' }}
                             >
                                 <option value="todos">Todas las prioridades</option>
                                 <option value={PrioridadTarea.ALTA}>Alta</option>
-                                {/* ... más opciones ... */}
                                 <option value={PrioridadTarea.MEDIA}>Media</option>
                                 <option value={PrioridadTarea.BAJA}>Baja</option>
                             </select>
@@ -416,7 +446,6 @@ export function EquipoPage(): React.ReactElement {
 
                     <section style={{ flex: '1', minWidth: '250px' }}>
                         <h3>📨 Invitar usuario</h3>
-                        {/* ... (Formulario de invitación sin cambios) ... */}
                         <form onSubmit={invitarUsuario} style={{ display: 'flex', gap: '0.5rem' }}>
                             <input
                                 type="email" placeholder="Correo electrónico del miembro"
@@ -455,7 +484,7 @@ export function EquipoPage(): React.ReactElement {
 
                     {!loading && !error && (
                         <>
-                            {/* << Columnas Kanban >> */}
+                            {/* Columnas Kanban */}
                             <div style={{
                                 display: 'flex',
                                 gap: '1rem',
@@ -469,14 +498,13 @@ export function EquipoPage(): React.ReactElement {
                                 <TareaColumna estado={EstadoTarea.CANCELADA} tareas={tareasAgrupadas[EstadoTarea.CANCELADA]} setSelectedTask={setSelectedTask} />
                             </div>
 
-                            {/* << 2. CONTROLES DE PAGINACIÓN (MOVIDOS AQUÍ) >> */}
-                            {/* Quité los 'style' para que uses tu CSS con la clase */}
+                            {/* Controles de Paginación */}
                             <div className="pagination-controls" style={{ 
                                 display: 'flex', 
                                 justifyContent: 'center', 
                                 gap: '1rem', 
                                 alignItems: 'center', 
-                                margin: '2rem 0 1rem 0' // Un poco de espacio
+                                margin: '2rem 0 1rem 0'
                             }}>
                                 <button 
                                     onClick={() => setPage(p => p - 1)} 
