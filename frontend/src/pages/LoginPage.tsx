@@ -6,7 +6,7 @@ export function LoginPage() {
     const { isAuthenticated } = useAuth();
 
     if (isAuthenticated) {
-        return <Navigate to="/feed" replace />;
+        return <Navigate to="/equipos" replace />;
     }
 
     return (

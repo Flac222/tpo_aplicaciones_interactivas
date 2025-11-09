@@ -1,8 +1,8 @@
 @baseUrl = http://localhost:3000
-@userId = 9aba693f-2414-402a-9ecd-d3f8479a1b4c
-@equipoId = 9068b2a3-95fd-4e43-a809-8820ba07d2f8
-@tareaId = dd496250-8ade-41c4-890b-2cbf11efc12f
-@user2Id = 76a71a0d-6fa4-421f-9ffd-98bcb6634430
+@userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
+@equipoId = 3425891f-327a-47ea-b7a3-2aefe866ee41
+@tareaId = 3d424bea-523a-42a6-801f-35f775d17726
+@user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
 @token =
 
@@ -25,7 +25,7 @@ Content-Type: application/json
 
 {
   "nombre": "Ezequiel2",
-  "email": "eze6@example.com.ar",
+  "email": "eze8@example.com.ar",
   "password": "123456"
 }
 
@@ -38,7 +38,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze4@example.com.ar",
+  "email": "eze6@example.com.ar",
   "password": "123456"
 }
 
