@@ -7,7 +7,6 @@ import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { FeedPage } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { SettingsPage } from "./pages/SettingsPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
@@ -40,10 +39,7 @@ function App() {
                                 </Link>
                                 <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
                                     👤 Perfil
-                                </Link>
-                                <Link to="/settings" className="navbar-link">
-                                    ⚙️ Config
-                                </Link>
+                                </Link>                   
                             </>
                         )}
 
@@ -106,15 +102,6 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
-                    <Route
-                        path="/settings"
-                        element={
-                            <ProtectedRoute>
-                                <SettingsPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
 
 
