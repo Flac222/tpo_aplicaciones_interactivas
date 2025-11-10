@@ -9,6 +9,7 @@ import {
 import { Equipo } from "./Equipo.entity";
 import { Tarea } from "./Tareas.entity";
 import { Comentario } from "./Comentarios.entity";
+import { Etiqueta } from "./Etiqueta.entity"; 
 
 @Entity()
 export class Usuario {
@@ -38,4 +39,7 @@ export class Usuario {
 
   @OneToMany(() => Comentario, comentario => comentario.autor)
   comentarios!: Comentario[];
+
+  @OneToMany(() => Etiqueta, (etiqueta) => etiqueta.creador)
+  etiquetasCreadas!: Etiqueta[];
 }

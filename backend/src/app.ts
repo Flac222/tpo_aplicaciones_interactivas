@@ -9,6 +9,7 @@ import equipoRoutes from "./routes/Equipos.routes";
 import tareaRoutes from "./routes/Tareas.routes";
 import statusRouter from "./routes/status.routes";
 import comentarioRoutes from "./routes/comentarios.routes";
+import etiquetasRoutes from "./routes/etiquetas.routes";
 
 export function createApp() {
   const app = express();
@@ -24,6 +25,7 @@ export function createApp() {
   app.use("/api/equipos", equipoRoutes);
   app.use("/api/tareas", tareaRoutes);
   app.use("/api/comentarios", comentarioRoutes);
+  app.use("/api/etiquetas", etiquetasRoutes);
 
   // Siempre servir al front en vite
   const distPath = path.join(__dirname, "../client/dist"); // adjust if your frontend folder is elsewhere

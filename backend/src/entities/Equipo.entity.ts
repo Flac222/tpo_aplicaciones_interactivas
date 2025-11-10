@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { Usuario } from "./Usuario.entity";
 import { Tarea } from "./Tareas.entity";
+import {Etiqueta} from "./Etiqueta.entity";
 
 @Entity()
 export class Equipo {
@@ -25,4 +26,7 @@ export class Equipo {
 
   @OneToMany(() => Tarea, tarea => tarea.equipo)
   tareas!: Tarea[];
+
+  @OneToMany(() => Etiqueta, (etiqueta) => etiqueta.equipo)
+  etiquetas!: Etiqueta[];
 }

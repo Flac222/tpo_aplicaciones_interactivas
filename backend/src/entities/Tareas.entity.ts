@@ -11,6 +11,7 @@ import { Usuario } from "./Usuario.entity";
 import { Equipo } from "./Equipo.entity";
 import { Comentario } from "./Comentarios.entity";
 import { Historial } from "./Historial.entity";
+import { TareaEtiqueta } from "./TareasEtiqueta.entity";
 
 export enum EstadoTarea {
   PENDIENTE = "Pendiente",
@@ -50,6 +51,9 @@ export class Tarea {
 
   @OneToMany(() => Comentario, comentario => comentario.tarea)
   comentarios!: Comentario[];
+
+  @OneToMany(() => TareaEtiqueta, (tareaEtiqueta) => tareaEtiqueta.tarea)
+  etiquetasAsignadas!: TareaEtiqueta[];
 
   @OneToMany(() => Historial, historial => historial.tarea)
   historial!: Historial[];

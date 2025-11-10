@@ -42,10 +42,7 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### <--- ¡¡ESTA LÍNEA ES LA SOLUCIÓN!!
-
-# Captura el token de la respuesta de login
-# Asume que la respuesta es un JSON como: { "token": "tu_jwt_aqui" }
+###
 @token = {{loginRequest.response.body.token}}
 
 # (Opcional) Puedes imprimir el token para verificarlo
@@ -71,7 +68,7 @@ Authorization: Bearer {{token}}
 {
   "id": "{{userId}}"
 }
-
+###
 
 ### ---------- Equipos ----------
 
@@ -223,3 +220,65 @@ Authorization: Bearer {{token}}
 {
   "id": "{{commentId}}"
 }
+###
+### ---------- Etiquetas ----------
+
+# Nota: Todas estas rutas usan /api/etiquetas/ ya que así lo definiste en createApp():
+# app.use("/api/etiquetas", etiquetasRoutes); 
+
+
+### 1. Crear Etiqueta (Requiere Auth y ser Miembro del equipo)
+# POST /api/equipos/:equipoId/etiquetas  =>  /api/etiquetas/equipos/:equipoId/etiquetas
+### 1. Crear Etiqueta (PRUEBA FINAL LIMPIA)
+
+# @etiquetaNombre = "Urgente"
+ 
+@nuevaEtiquetaId = c557451b-5217-4731-8781-96598c7e2ea9
+
+POST {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "No urgente" 
+}
+
+### <-- Asegúrate que no haya NADA aquí
+
+### 2. Listar Etiquetas de un Equipo (Requiere Auth y ser Miembro)
+# GET /api/equipos/:equipoId/etiquetas
+GET {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 3. Asignar Etiqueta a una Tarea (Requiere Auth y ser Miembro)
+# POST /api/tareas/:tareaId/etiquetas/:etiquetaId  =>  /api/etiquetas/tareas/:tareaId/etiquetas/:etiquetaId
+POST {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 4. Actualizar Etiqueta (Requiere Auth y ser CREADOR)
+# PATCH /api/etiquetas/:etiquetaId
+PATCH {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Prioridad-Alta-Editada"
+}
+
+
+### 5. Remover Etiqueta de Tarea (Requiere Auth y ser Miembro)
+# DELETE /api/tareas/:tareaId/etiquetas/:etiquetaId
+DELETE {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 6. Eliminar Etiqueta (Requiere Auth y ser CREADOR)
+# DELETE /api/etiquetas/:etiquetaId
+DELETE {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
