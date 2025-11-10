@@ -1,6 +1,4 @@
-// src/pages/EquipoPage.tsx
 
-// ... (todos los imports igual que antes)
 import React, { useMemo, useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -20,6 +18,13 @@ import {
 
 
 const BASE_URL = 'http://localhost:3000';
+
+// << Interfaz de Etiqueta >>
+interface Etiqueta { // Definimos la interfaz para las etiquetas
+    id: string;
+    nombre: string;
+    equipoId: string;
+}
 
 // << Interfaz de Paginación (igual que antes) >>
 interface PaginacionTareas {
@@ -42,6 +47,8 @@ export function EquipoPage(): React.ReactElement {
     // << Estados (igual que antes) >>
     const [filtroEstado, setFiltroEstado] = useState<string>('todos');
     const [filtroPrioridad, setFiltroPrioridad] = useState<string>('todos');
+    // 💡 NUEVO ESTADO: Filtro por etiqueta
+    const [filtroEtiqueta, setFiltroEtiqueta] = useState<string>('todos'); 
     const [page, setPage] = useState(1);
     const [limit] = useState(10); 
     
@@ -61,8 +68,17 @@ export function EquipoPage(): React.ReactElement {
     const [isUpdatingTask, setIsUpdatingTask] = useState(false);
     const [comentarios, setComentarios] = useState<Comentario[]>([]);
     const [isCommentsLoading, setIsCommentsLoading] = useState(false);
+    
+    // 💡 NUEVOS ESTADOS para la creación de Etiquetas
+    const [newLabelName, setNewLabelName] = useState('');
+    const [isLabelModalOpen, setIsLabelModalOpen] = useState(false);
+    const [labelLoading, setLabelLoading] = useState(false);
+    const [labelError, setLabelError] = useState<string | null>(null);
 
-    // --- BLOQUE DE FETCH Y DEPENDENCIAS (sin cambios) ---
+
+    // --- BLOQUE DE FETCH Y DEPENDENCIAS ---
+    
+    // 💡 CAMBIO: Lógica para obtener la URL de las Tareas (ahora incluye filtroEtiqueta)
     const url = useMemo(() => {
         if (!equipoId) return '';
         
@@ -76,9 +92,13 @@ export function EquipoPage(): React.ReactElement {
         if (filtroPrioridad !== 'todos') {
             params.append('prioridad', filtroPrioridad);
         }
+        // 💡 NUEVO FILTRO EN LA URL
+        if (filtroEtiqueta !== 'todos') {
+            params.append('etiquetaId', filtroEtiqueta); 
+        }
 
         return `${BASE_URL}/api/tareas/${equipoId}?${params.toString()}`;
-    }, [equipoId, page, limit, filtroEstado, filtroPrioridad]);
+    }, [equipoId, page, limit, filtroEstado, filtroPrioridad, filtroEtiqueta]); // Añadimos la dependencia
 
     const fetchOptions: RequestInit = useMemo(() => ({
         method: 'GET',
@@ -95,17 +115,33 @@ export function EquipoPage(): React.ReactElement {
         refetch 
     } = useFetch<PaginacionTareas>(url, fetchOptions);
 
-    // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN (sin cambios)
+    // 💡 NUEVO FETCH: Obtener la lista de etiquetas
+    const etiquetasUrl = useMemo(() => {
+        if (!equipoId) return '';
+        return `${BASE_URL}/api/etiquetas/equipos/${equipoId}/etiquetas`;
+    }, [equipoId]);
+
+    const {
+        data: etiquetas = [], // Inicializamos con un array vacío
+        refetch: refetchEtiquetas
+    } = useFetch<Etiqueta[]>(etiquetasUrl, fetchOptions);
+
+    // 3. LÓGICA DE FILTRADO Y AGRUPACIÓN (el filtro de etiqueta en `url` ya lo maneja el backend)
     const tareasFiltradas = useMemo(() => {
         const tareas = paginacion?.tareas; 
         
         if (!Array.isArray(tareas)) {
             return [];
         }
-
+        // Nota: Solo se necesita filtrar lo que no se incluyó en el fetch principal.
+        // Los filtros de estado y prioridad ya se manejaban aquí, los mantendremos por coherencia, 
+        // aunque ahora también se envían al backend. La lógica de filtro por etiqueta 
+        // se asume manejada totalmente en el backend vía `etiquetaId` en la URL.
+        
         return tareas.filter(t =>
             (filtroEstado === 'todos' || t.estado === filtroEstado) &&
             (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
+            // Ya NO necesitamos filtrar por etiqueta aquí, ya que la API lo hace.
         );
     }, [paginacion, filtroEstado, filtroPrioridad]);
 
@@ -120,7 +156,7 @@ export function EquipoPage(): React.ReactElement {
         if (tareasFiltradas) {
             tareasFiltradas.forEach(tarea => {
                 if (grupos[tarea.estado as EstadoTarea]) {
-                   grupos[tarea.estado as EstadoTarea].push(tarea);
+                    grupos[tarea.estado as EstadoTarea].push(tarea);
                 }
             });
         }
@@ -138,7 +174,55 @@ export function EquipoPage(): React.ReactElement {
       setFiltroPrioridad(e.target.value);
       setPage(1); 
     };
+
+    // 💡 NUEVO HANDLER: Cambiar el filtro de etiqueta
+    const handleLabelFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setFiltroEtiqueta(e.target.value);
+        setPage(1); 
+    };
     
+    // 💡 NUEVO HANDLER: Crear etiqueta
+    const handleCreateLabel = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newLabelName.trim()) {
+            setLabelError("El nombre de la etiqueta es obligatorio.");
+            return;
+        }
+        if (!equipoId || !token) {
+            setLabelError("Error de autenticación o de equipo. Recarga la página.");
+            return;
+        }
+
+        setLabelLoading(true);
+        setLabelError(null);
+
+        try {
+            const res = await fetch(`${BASE_URL}/api/etiquetas/equipos/${equipoId}/etiquetas`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({ nombre: newLabelName }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Error desconocido al crear la etiqueta');
+            }
+
+            setIsLabelModalOpen(false); 
+            refetchEtiquetas(); // Refrescar la lista de etiquetas
+            setNewLabelName("");
+            alert(`Etiqueta "${newLabelName}" creada con éxito.`);
+
+        } catch (err: any) {
+            setLabelError(err.message);
+        } finally {
+            setLabelLoading(false);
+        }
+    };
+
     const handleUpdateTaskStatus = async (
         tareaId: string,
         nuevoEstado: EstadoTarea
@@ -367,11 +451,50 @@ export function EquipoPage(): React.ReactElement {
         } else {
             setComentarios([]);
         }
-    }, [selectedTask, token]);    
+    }, [selectedTask, token]); 
+    
+    // 💡 NUEVO EFECTO: Mostrar/Ocultar Modal de Etiqueta
+    const closeLabelModal = () => {
+        setIsLabelModalOpen(false);
+        setNewLabelName('');
+        setLabelError(null);
+    };
 
     // 5. RENDERIZADO PRINCIPAL
     return (
         <div className="main-content">
+            {/* Modal para CREAR ETIQUETA */}
+            {isLabelModalOpen && (
+                <div className="modal" style={{ 
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', 
+                    backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', 
+                    justifyContent: 'center', alignItems: 'center', zIndex: 1000 
+                }}>
+                    <div className="card" style={{ padding: '2rem', width: '90%', maxWidth: '400px' }}>
+                        <h3>Crear Nueva Etiqueta</h3>
+                        <form onSubmit={handleCreateLabel} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <input
+                                type="text"
+                                placeholder="Nombre de la etiqueta (ej: Bug, Frontend)"
+                                value={newLabelName}
+                                onChange={e => setNewLabelName(e.target.value)}
+                                required
+                                style={{ padding: '0.5rem' }}
+                            />
+                            {labelError && <p style={{ color: 'var(--color-error)' }}>{labelError}</p>}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                                <button type="button" onClick={closeLabelModal} disabled={labelLoading} className="secondary">
+                                    Cancelar
+                                </button>
+                                <button type="submit" disabled={labelLoading}>
+                                    {labelLoading ? 'Creando...' : 'Crear'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            
             {/* Componentes de modal importados */}
             <CreateTaskModal 
                 isTaskModalOpen={isTaskModalOpen}
@@ -394,7 +517,6 @@ export function EquipoPage(): React.ReactElement {
                 setSelectedTask={setSelectedTask}
                 handleUpdateTaskStatus={handleUpdateTaskStatus}
                 isUpdatingTask={isUpdatingTask}
-
                 // Props de Comentarios
                 comentarios={comentarios}
                 isCommentsLoading={isCommentsLoading}
@@ -416,9 +538,11 @@ export function EquipoPage(): React.ReactElement {
                     padding: '1.5rem', backgroundColor: 'var(--bg-tertiary)', borderRadius: '8px'
                 }}>
 
-                    <section style={{ flex: '1', minWidth: '250px' }}>
+                    <section style={{ flex: '1.5', minWidth: '350px' }}>
                         <h3>🎯 Filtrar tareas</h3>
                         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                            
+                            {/* Filtro por Estado */}
                             <select
                                 aria-label="Filtrar por estado" value={filtroEstado}
                                 onChange={handleEstadoChange} 
@@ -431,6 +555,7 @@ export function EquipoPage(): React.ReactElement {
                                 <option value={EstadoTarea.CANCELADA}>Cancelada</option>
                             </select>
 
+                            {/* Filtro por Prioridad */}
                             <select
                                 aria-label="Filtrar por prioridad" value={filtroPrioridad}
                                 onChange={handlePrioridadChange} 
@@ -441,6 +566,21 @@ export function EquipoPage(): React.ReactElement {
                                 <option value={PrioridadTarea.MEDIA}>Media</option>
                                 <option value={PrioridadTarea.BAJA}>Baja</option>
                             </select>
+                            
+                            {/* 💡 NUEVO FILTRO: Por Etiqueta */}
+                            <select
+                                aria-label="Filtrar por etiqueta" value={filtroEtiqueta}
+                                onChange={handleLabelFilterChange} 
+                                style={{ padding: '0.5rem' }}
+                            >
+                                <option value="todos">Todas las etiquetas</option>
+                                {(etiquetas ?? []).map(label => (
+                                    <option key={label.id} value={label.id}>{label.nombre}</option>
+                                ))}
+                            </select>
+                            <button onClick={() => setIsLabelModalOpen(true)} className="secondary" style={{ whiteSpace: 'nowrap' }}>
+                                + Etiqueta
+                            </button>
                         </div>
                     </section>
 
