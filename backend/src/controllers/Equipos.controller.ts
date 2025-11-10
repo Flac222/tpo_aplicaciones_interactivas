@@ -73,11 +73,31 @@ export async function listarEquiposUsuario(req: AuthRequest, res: Response) {
 export async function salirEquipo(req: AuthRequest, res: Response) {
   try {
     const { id: equipoId } = req.params;
-    const userId = req.user!.id; 
+    const authenticatedUserId = req.user!.id; // El usuario que hace la petición
+    
+    // 💡 NUEVO: Obtener el ID del miembro a remover del cuerpo de la solicitud.
+    // Si req.body.userId existe, ese es el miembro a remover.
+    // Si no existe, significa que el usuario autenticado (authenticatedUserId) está intentando salirse a sí mismo.
+    const memberIdToRemove = req.body.userId || authenticatedUserId; 
 
-    const equipo = await equipoService.salirEquipo(userId, equipoId);
-    res.json({ message: "Saliste del equipo con éxito", equipo });
+    // 💡 Cambio: Pasar el authenticatedUserId (el que hace la acción) y el memberIdToRemove (el afectado).
+    // Tu service usará esta información para diferenciar entre auto-salida y remoción por propietario.
+    const equipo = await equipoService.salirEquipo(
+      authenticatedUserId, 
+      equipoId, 
+      memberIdToRemove // Tercer argumento requerido por el service
+    );
+    
+    // Mensaje dinámico basado en la acción
+    const isSelfExit = authenticatedUserId === memberIdToRemove;
+    const message = isSelfExit 
+      ? "Saliste del equipo con éxito" 
+      : "Miembro removido del equipo con éxito";
+      
+    res.json({ message, equipo });
+    
   } catch (err: any) {
+    // Si el service lanza un error (ej: "No tienes permiso...", "El propietario no puede salir..."), lo capturamos.
     res.status(400).json({ error: err.message });
   }
 }
