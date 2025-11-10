@@ -8,6 +8,22 @@ import jwt from "jsonwebtoken";
 export class UsuarioService {
   private usuarioRepo = AppDataSource.getRepository(Usuario);
   private usuarioCustomRepo = new UsuarioRepository();
+  // ... importaciones
+// ...
+
+
+
+  // 💡 NUEVO MÉTODO: Obtener usuario por ID
+  async obtenerUsuarioPorId(id: string) {
+    const usuario = await this.usuarioRepo.findOne({
+      where: { id },
+      // ⚠️ Importante: Excluye la contraseña de la respuesta
+      select: ["id", "nombre", "email"], 
+    });
+    if (!usuario) throw new Error("Usuario no encontrado.");
+    return usuario;
+  }
+
 
   async crearUsuario(nombre: string, email: string, password: string) {
     const existe = await this.usuarioRepo.findOneBy({ email });
@@ -25,7 +41,7 @@ export class UsuarioService {
     const valido = await bcrypt.compare(password, usuario.password);
     if (!valido) throw new Error("Contraseña incorrecta");
 
-    const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET!, { expiresIn: "1d" });
+    const token = jwt.sign({ id: usuario.id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
     return { usuario, token };
   }
 

@@ -16,11 +16,13 @@ export async function authMiddleware(req: AuthRequest, res: Response, next: Next
 
   try {
    
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number };
+// 🛑 CAMBIO CLAVE: Usa { id: string } si tu ID de usuario es string/UUID
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string }; 
 
- 
-    const usuarioRepo = AppDataSource.getRepository(Usuario);
-    const usuario = await usuarioRepo.findOne({ where: { id: String(decoded.id) } });
+    // Ahora no necesitas String() si ya sabes que es string, pero lo mantendremos para seguridad:
+    const usuarioRepo = AppDataSource.getRepository(Usuario);
+    // Corregimos la línea de búsqueda para ser más limpia (ya que decoded.id es un string)
+    const usuario = await usuarioRepo.findOne({ where: { id: decoded.id } });
 
     if (!usuario) return res.status(401).json({ error: "Usuario no encontrado" });
 
