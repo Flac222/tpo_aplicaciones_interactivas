@@ -1,14 +1,15 @@
 // src/components/TareaComponents.tsx
 import React, { useState } from 'react';
 
-import { 
-    EstadoTarea, 
-    PrioridadTarea, 
-    Tarea, 
+import {
+    EstadoTarea,
+    PrioridadTarea,
+    Tarea,
     Comentario, // Asumiendo que la interfaz Comentario ya tiene 'autor' y 'fecha'
-    estadoConfig, 
-    getPriorityColor, 
-    getValidNextStatuses 
+    RegistroHistorial,
+    estadoConfig,
+    getPriorityColor,
+    getValidNextStatuses
 } from '../types/tareas';
 
 // Definición de Props para el modal de detalle
@@ -17,7 +18,7 @@ interface TaskDetailsModalProps {
     setSelectedTask: (task: Tarea | null) => void;
     handleUpdateTaskStatus: (tareaId: string, nuevoEstado: EstadoTarea) => Promise<void>;
     isUpdatingTask: boolean;
-    
+
     // **NUEVAS PROPS DE COMENTARIOS**
     comentarios: Comentario[];
     isCommentsLoading: boolean;
@@ -50,13 +51,98 @@ interface ComentariosSectionProps {
     loading: boolean;
 }
 
+interface RegistroHistorialProps {
+    registro: RegistroHistorial;
+}
+
+const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) => {
+    
+    const fechaFormateada = new Date(registro.fecha).toLocaleString();
+
+    // Creamos una variable de usuario segura
+    const usuario = registro.usuario;
+
+    // 💡 Paso 1: Debugging temporal para ver los valores
+    // console.log("Registro:", registro);
+    // console.log("Usuario.nombre:", usuario?.nombre);
+    // console.log("Usuario.email:", usuario?.email);
+
+    let nombreMostrar = 'Sistema / Usuario Desconocido'; // Fallback por defecto
+
+    if (usuario) {
+        // Asignar el nombre si existe y no es una cadena vacía
+        if (usuario.nombre && usuario.nombre.trim() !== '') {
+            nombreMostrar = usuario.nombre;
+        // Si el nombre falla, usar el email si existe y no es una cadena vacía
+        } else if (usuario.email && usuario.email.trim() !== '') {
+            nombreMostrar = usuario.email;
+        } else {
+            // Si el objeto usuario existe, pero nombre y email están vacíos.
+            nombreMostrar = 'Usuario (sin datos de identificación)'; 
+        }
+    }
+
+
+    return (
+        <div style={{
+            display: 'flex',
+            borderBottom: '1px dotted var(--border-color)',
+            padding: '0.5rem 0',
+            fontSize: '0.9rem',
+            color: 'var(--text-secondary)'
+        }}>
+            <div style={{ flex: '0 0 120px', color: 'var(--color-primary)', fontWeight: 'bold' }}>
+                {fechaFormateada}
+            </div>
+            <div style={{ flexGrow: 1 }}>
+                <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
+                    {/* Utilizamos la variable calculada (ya verificada): */}
+                    {nombreMostrar}
+                </span>{' '}
+                ha realizado el cambio: <span style={{ fontStyle: 'italic' }}>{registro.cambio}</span>
+            </div>
+        </div>
+    );
+};
+
+// ----------------------------------------------------
+// Componente: HistorialSection (NUEVO)
+// ----------------------------------------------------
+interface HistorialSectionProps {
+    historial: RegistroHistorial[];
+}
+
+export const HistorialSection: React.FC<HistorialSectionProps> = ({ historial }) => {
+    // Para mostrar el historial del más reciente al más antiguo
+    const historialOrdenado = [...historial].sort((a, b) =>
+        new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+    );
+
+    return (
+        <section style={{ marginTop: '2rem' }}>
+            <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', fontSize: '1.2rem' }}>
+                ⏳ Historial de Actividad ({historial.length})
+            </h3>
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {historialOrdenado.length === 0 ? (
+                    <p style={{ color: 'var(--text-secondary)' }}>No hay registros de historial para esta tarea.</p>
+                ) : (
+                    historialOrdenado.map(registro => (
+                        <RegistroHistorialCard key={registro.id} registro={registro} />
+                    ))
+                )}
+            </div>
+        </section>
+    );
+};
+
 // ----------------------------------------------------
 // Componente: ComentarioCard
 // ----------------------------------------------------
 const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, onEdit, onDelete }) => {
     // La comprobación del dueño está bien
-    const isOwner = comentario.autor.id === currentUserId; 
-    
+    const isOwner = comentario.autor.id === currentUserId;
+
     const [isEditing, setIsEditing] = useState(false);
     const [editContent, setEditContent] = useState(comentario.contenido);
     const [loading, setLoading] = useState(false);
@@ -69,9 +155,9 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         setLoading(true);
         try {
             await onEdit(comentario.id, editContent);
-            setIsEditing(false);
+            setIsEditing(false); 
         } catch (e) {
-             // El error se propaga
+            // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -83,7 +169,7 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         try {
             await onDelete(comentario.id);
         } catch (e) {
-             // El error se propaga
+            // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -94,13 +180,13 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         <div style={{ borderLeft: '3px solid var(--color-primary)', padding: '0.5rem 1rem', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
             <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
                 {/* La lógica de mostrar 'Tú' y 'comentario.autor.nombre' está CORRECTA */}
-                {isOwner ? 'Tú' : (comentario.autor.nombre || `Usuario ${comentario.autor.id}`)} 
+                {isOwner ? 'Tú' : (comentario.autor.nombre || `Usuario ${comentario.autor.id}`)}
                 <small style={{ fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '10px' }}>
                     {/* ❌ CORRECCIÓN CRÍTICA: Cambiado de 'comentario.fechaCreacion' a 'comentario.fecha' */}
                     {new Date(comentario.fecha).toLocaleString()}
                 </small>
             </p>
-            
+
             {isEditing ? (
                 <>
                     <textarea
@@ -138,12 +224,12 @@ const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionPro
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!content.trim() || localLoading) return;
-        
+
         setLocalLoading(true);
         try {
             await onCreate(taskId, content.trim());
             setContent(''); // Limpiar si fue exitoso
-        } catch(e) {
+        } catch (e) {
             // El error se muestra en la página principal, solo manejamos el estado aquí.
         } finally {
             setLocalLoading(false);
@@ -173,14 +259,14 @@ const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionPro
 // ----------------------------------------------------
 // Componente: ComentariosSection (sin cambios)
 // ----------------------------------------------------
-export const ComentariosSection: React.FC<ComentariosSectionProps> = ({ 
-    tareaId, 
-    comentarios, 
-    currentUserId, 
-    onCreate, 
-    onEdit, 
-    onDelete, 
-    loading 
+export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
+    tareaId,
+    comentarios,
+    currentUserId,
+    onCreate,
+    onEdit,
+    onDelete,
+    loading
 }) => {
 
     return (
@@ -198,9 +284,9 @@ export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
                     <p style={{ color: 'var(--text-secondary)' }}>Sé el primero en comentar.</p>
                 ) : (
                     comentarios.map(c => (
-                        <ComentarioCard 
-                            key={c.id} 
-                            comentario={c} 
+                        <ComentarioCard
+                            key={c.id}
+                            comentario={c}
                             currentUserId={currentUserId}
                             onEdit={onEdit}
                             onDelete={onDelete}
@@ -217,7 +303,7 @@ export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
 export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask }) => (
     <div
         key={tarea.id}
-        onClick={() => setSelectedTask(tarea)} 
+        onClick={() => setSelectedTask(tarea)}
         style={{
             padding: '1rem',
             borderRadius: '8px',
@@ -252,9 +338,9 @@ interface TareaColumnaProps {
 }
 export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setSelectedTask }) => {
     const config = estadoConfig[estado];
-    
+
     return (
-        <div style={{ 
+        <div style={{
             flex: '1 1 24%',
             minWidth: '250px',
             backgroundColor: 'var(--bg-tertiary)',
@@ -264,8 +350,8 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
             flexDirection: 'column',
             boxShadow: '0 0 10px rgba(0,0,0,0.05)'
         }}>
-            <h3 style={{ 
-                margin: '0 0 1rem 0', 
+            <h3 style={{
+                margin: '0 0 1rem 0',
                 color: config.color,
                 borderBottom: `2px solid ${config.color}`,
                 paddingBottom: '0.5rem',
@@ -275,12 +361,12 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
             }}>
                 {config.icon} {config.title} ({tareas.length})
             </h3>
-            
-            <div style={{ 
-                flexGrow: 1, 
-                overflowY: 'auto', 
-                minHeight: '100px', 
-                paddingRight: '5px' 
+
+            <div style={{
+                flexGrow: 1,
+                overflowY: 'auto',
+                minHeight: '100px',
+                paddingRight: '5px'
             }}>
                 {tareas.length === 0 ? (
                     <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
@@ -321,7 +407,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
         }}
-        onClick={() => props.setIsTaskModalOpen(false)}
+            onClick={() => props.setIsTaskModalOpen(false)}
         >
             <div
                 style={{
@@ -387,7 +473,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                             <option value={EstadoTarea.CANCELADA}>Cancelada</option>
                         </select>
                     </div>
-                    
+
                     {props.taskModalError && (
                         <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>{props.taskModalError}</p>
                     )}
@@ -415,10 +501,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
 // ----------------------------------------------------
 // Componente: TaskDetailsModal
 // ----------------------------------------------------
-export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({ 
-    selectedTask, 
-    setSelectedTask, 
-    handleUpdateTaskStatus, 
+export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
+    selectedTask,
+    setSelectedTask,
+    handleUpdateTaskStatus,
     isUpdatingTask,
     // Desestructurar todas las props de comentarios aquí
     comentarios,
@@ -429,7 +515,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     handleDeleteComment
 }) => {
     if (!selectedTask) return null;
-    
+
     const currentStatus = selectedTask.estado;
     const validStatuses = getValidNextStatuses(currentStatus);
     const displayStatuses = Array.from(new Set([currentStatus, ...validStatuses]));
@@ -441,7 +527,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000,
         }}
-        onClick={() => setSelectedTask(null)}
+            onClick={() => setSelectedTask(null)}
         >
             <div
                 style={{
@@ -452,21 +538,22 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
+
                 {/* Encabezado y Botón de Cerrar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                     <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{selectedTask.titulo}</h2>
-                    <button 
-                        onClick={() => setSelectedTask(null)} 
+                    <button
+                        onClick={() => setSelectedTask(null)}
                         style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--text-secondary)' }}
                         disabled={isUpdatingTask}
                     >
                         &times;
                     </button>
                 </div>
-                
+
                 {/* Detalles y Edición de Estado */}
                 <div style={{ marginBottom: '2rem', backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '4px', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-                    
+
                     {/* Prioridad (solo lectura) */}
                     <div style={{ flex: 1, minWidth: '150px' }}>
                         <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Prioridad:</p>
@@ -491,9 +578,9 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                 disabled={isUpdatingTask || isReadOnly}
                             >
                                 {displayStatuses.map(estado => (
-                                    <option 
-                                        key={estado} 
-                                        value={estado} 
+                                    <option
+                                        key={estado}
+                                        value={estado}
                                         // Deshabilita estados que no son ni el actual ni los válidos (si el navegador lo permite)
                                         disabled={estado !== currentStatus && !validStatuses.includes(estado)}
                                     >
@@ -502,7 +589,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                 ))}
                             </select>
                         )}
-                        
+
                         {isUpdatingTask && <small style={{ color: estadoConfig[currentStatus as EstadoTarea].color, display: 'block', marginTop: '5px' }}>Actualizando...</small>}
                     </div>
                 </div>
@@ -512,7 +599,13 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <div style={{ whiteSpace: 'pre-wrap', minHeight: '50px', color: selectedTask.descripcion ? 'inherit' : 'var(--text-secondary)' }}>
                     {selectedTask.descripcion || 'Sin descripción detallada.'}
                 </div>
-                
+
+                {/* 1. SECCIÓN DE HISTORIAL (NUEVA POSICIÓN) */}
+                <HistorialSection
+                    // La propiedad 'historial' viene directamente de selectedTask
+                    historial={selectedTask.historial || []}
+                />
+
                 {/* Componente ComentariosSection: */}
                 <ComentariosSection
                     tareaId={selectedTask.id}

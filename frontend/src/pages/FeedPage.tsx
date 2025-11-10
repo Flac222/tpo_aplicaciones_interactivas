@@ -1,35 +1,35 @@
-import React, { useMemo, useState, useCallback } from 'react'; 
+import React, { useMemo, useState, useCallback } from 'react';
 import { useAuth } from "../contexts/AuthContext";
 import { useFetch } from "../hooks/useFetch";
 import { Link } from "react-router-dom";
 
 
 interface Miembro {
-  id: string;
-  nombre: string;
-  email?: string;
+  id: string;
+  nombre: string;
+  email?: string;
 }
 
 
 interface Propietario extends Miembro {
-    email?: string;
-    password?: string; 
+  email?: string;
+  password?: string;
 }
 
 interface Equipo {
-  id: string;
-  nombre: string;
-  // ¡CAMBIO AQUÍ! Ahora es un objeto Propietario, no un string
-  propietario: Propietario;
-  miembros: Miembro[];
+  id: string;
+  nombre: string;
+  // ¡CAMBIO AQUÍ! Ahora es un objeto Propietario, no un string
+  propietario: Propietario;
+  miembros: Miembro[];
 }
-const BASE_URL = "http://localhost:3000"; 
+const BASE_URL = "http://localhost:3000";
 
 export function FeedPage(): React.ReactElement {
   // 1. Contexto y Opciones de Fetch (sin cambios)
   const { usuario } = useAuth();
   const userId = usuario?.id;
-  const userToken = useAuth().token; 
+  const userToken = useAuth().token;
 
   const url = userId ? `${BASE_URL}/api/equipos/equipos/${userId}` : null;
 
@@ -59,19 +59,19 @@ export function FeedPage(): React.ReactElement {
   const [newTeamName, setNewTeamName] = useState("");
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
-  
+
   // --- ¡NUEVO! Estados para la GESTIÓN de miembros ---
-  
+
   // Reemplaza 'expandedTeamId'. Almacena el equipo que estamos viendo en el modal.
-  const [viewingTeam, setViewingTeam] = useState<Equipo | null>(null); 
-  
+  const [viewingTeam, setViewingTeam] = useState<Equipo | null>(null);
+
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
-  
+
   // --- Función handleCreateTeam (sin cambios) ---
   const handleCreateTeam = async (e: React.FormEvent) => {
-    e.preventDefault(); 
+    e.preventDefault();
     if (!newTeamName.trim()) {
       setModalError("El nombre del equipo no puede estar vacío.");
       return;
@@ -89,18 +89,18 @@ export function FeedPage(): React.ReactElement {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userToken}`,
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           nombre: newTeamName,
-          propietarioId: userId 
+          propietarioId: userId
         }),
       });
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Error al crear el equipo');
       }
-      setIsModalOpen(false); 
-      setNewTeamName("");    
-      refetch();              
+      setIsModalOpen(false);
+      setNewTeamName("");
+      refetch();
     } catch (err: any) {
       setModalError(err.message);
     } finally {
@@ -120,7 +120,7 @@ export function FeedPage(): React.ReactElement {
     }
 
     setRemovingMemberId(miembroId);
-    setListError(null); 
+    setListError(null);
 
     try {
       const res = await fetch(`${BASE_URL}/api/equipos/${equipoId}/salir`, {
@@ -129,7 +129,7 @@ export function FeedPage(): React.ReactElement {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${userToken}`,
         },
-        body: JSON.stringify({ userId: miembroId }), 
+        body: JSON.stringify({ userId: miembroId }),
       });
 
       const data = await res.json();
@@ -164,7 +164,7 @@ export function FeedPage(): React.ReactElement {
     if (loading) {
       return <p>Cargando equipos...</p>;
     }
-    
+
     // Mostramos el error de la lista (al eliminar) aquí para visibilidad
     if (listError) {
       return (
@@ -194,7 +194,7 @@ export function FeedPage(): React.ReactElement {
           return (
             <Link
               key={equipo.id}
-              to={`/equipo/${equipo.id}`} 
+              to={`/equipo/${equipo.id}`}
               style={{
                 textDecoration: 'none',
                 color: 'inherit',
@@ -223,11 +223,11 @@ export function FeedPage(): React.ReactElement {
                   👥
                 </button>
               </div>
-              
+
               <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: 0 }}>
                 Haz clic para gestionar este equipo
               </p>
-              
+
               {/* Ya NO mostramos la lista de miembros aquí */}
 
             </Link>
@@ -246,7 +246,7 @@ export function FeedPage(): React.ReactElement {
         backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex',
         justifyContent: 'center', alignItems: 'center', zIndex: 1000,
       }}
-      onClick={() => setIsModalOpen(false)}
+        onClick={() => setIsModalOpen(false)}
       >
         <div
           style={{
@@ -306,7 +306,7 @@ export function FeedPage(): React.ReactElement {
         backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex',
         justifyContent: 'center', alignItems: 'center', zIndex: 1000,
       }}
-      onClick={() => setViewingTeam(null)} // Cierra al hacer clic fuera
+        onClick={() => setViewingTeam(null)} // Cierra al hacer clic fuera
       >
         {/* Contenido del Modal */}
         <div
@@ -326,11 +326,11 @@ export function FeedPage(): React.ReactElement {
             <ul style={{ listStyleType: 'none', margin: 0, padding: 0 }}>
               {viewingTeam.miembros.length > 0 ? (
                 viewingTeam.miembros.map((miembro) => (
-                  <li 
+                  <li
                     key={miembro.id}
                     style={{
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
+                      display: 'flex',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '0.5rem 0.25rem',
                       borderBottom: '1px solid var(--bg-tertiary)'
@@ -339,7 +339,8 @@ export function FeedPage(): React.ReactElement {
                     <span>{miembro.nombre} {miembro.id === userId ? '(Tú)' : ''}</span>
 
                     {/* --- ¡NUEVO! Lógica de remover movida aquí --- */}
-                    {isOwner && userId !== miembro.id && (
+
+                    {isOwner && miembro.id !== viewingTeam.propietario.id && (
                       <button
                         title="Remover miembro"
                         onClick={() => handleRemoveMember(viewingTeam.id, miembro.id)}
@@ -389,7 +390,7 @@ export function FeedPage(): React.ReactElement {
             ✨ Crear Nuevo Equipo
           </button>
         </div>
-        
+
         <p style={{ color: "var(--text-secondary)" }}>
           ¡Hola {usuario?.nombre || 'usuario'}!
         </p>

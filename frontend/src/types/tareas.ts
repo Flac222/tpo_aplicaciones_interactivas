@@ -18,10 +18,16 @@ export enum PrioridadTarea {
 export interface Tarea {
     id: string;
     titulo: string;
-    descripcion?: string;
+    descripcion: string;
     estado: EstadoTarea;
     prioridad: PrioridadTarea;
-    // Puedes añadir mas campos aquí (ej: asignadoA, fechaCreacion)
+    equipo: {
+        id: string;
+        nombre: string;
+    };
+    historial: RegistroHistorial[]; // <-- NUEVA PROPIEDAD
+    fechaCreacion: string;
+    fechaActualizacion: string;
 }
 
 // DESPUÉS (types/tareas.ts)
@@ -49,6 +55,20 @@ export interface Comentario {
     };
     fecha: string; // <-- CAMBIO: De 'fechaCreacion' a 'fecha'
     fechaActualizacion: string;
+}
+
+export interface UsuarioHistorial {
+    id: string;
+    nombre: string;
+    email: string;
+    password: string; 
+}
+
+export interface RegistroHistorial {
+    id: string;
+    usuario: UsuarioHistorial; // El usuario que realizó el cambio
+    cambio: string; // Descripción del cambio (e.g., "Estado cambiado de X a Y")
+    fecha: string; // Fecha del cambio
 }
 
 // Constantes y Helpers
@@ -92,3 +112,4 @@ export function getValidNextStatuses(currentStatus: EstadoTarea): EstadoTarea[] 
             return [];
     }
 }
+
