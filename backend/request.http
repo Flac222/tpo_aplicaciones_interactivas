@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:3000
-@userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
-@equipoId = 3425891f-327a-47ea-b7a3-2aefe866ee41
-@tareaId = 3d424bea-523a-42a6-801f-35f775d17726
+@userId = 29532732-be83-4147-a2fd-a5e652453b09
+@equipoId = 3370e078-499f-40b8-9fd4-aab939438581
+@tareaId = de3b8c7e-b2d0-4bb2-8390-949b330903b5
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
 @token =

@@ -78,7 +78,9 @@ static async listarPorEquipoYFiltro(
   const query = AppDataSource.getRepository(Tarea)
     .createQueryBuilder("tarea")
     .leftJoinAndSelect("tarea.equipo", "equipo")
-    .leftJoinAndSelect("tarea.historial", "historial") 
+    .leftJoinAndSelect("tarea.historial", "historial")
+    // AGREGAR ESTA LÍNEA para cargar el usuario asociado a cada historial
+    .leftJoinAndSelect("historial.usuario", "usuario") // 'historial' es el alias del join anterior
     .where("equipo.id = :equipoId", { equipoId });
 
   if (estado) query.andWhere("tarea.estado = :estado", { estado });
