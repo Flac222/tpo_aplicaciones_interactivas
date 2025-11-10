@@ -50,11 +50,12 @@ export class EquipoService {
 // Y que tienes acceso a tu usuarioRepo.
 
 async salirEquipo(authenticatedUserId: string, equipoId: string, memberIdToRemove: string) {
+  console.log("niggers", equipoId);
     const equipo = await this.equipoRepo.findById(equipoId);
-    
     if (!equipo) throw new Error("Equipo no encontrado");
 
-    const usuarioARemover = await this.usuarioRepo.findById(memberIdToRemove); 
+    const usuarioARemover = await this.usuarioRepo.findById(memberIdToRemove);
+    
     if (!usuarioARemover) throw new Error("Usuario a remover no encontrado.");
 
     if (!equipo.miembros.find((m) => m.id === usuarioARemover.id)) {

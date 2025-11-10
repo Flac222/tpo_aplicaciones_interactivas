@@ -20,7 +20,7 @@ router.post("/:id/invitar", authMiddleware,  invitarMiembro);
 router.get("/equipos/:userId", authMiddleware, listarEquiposUsuario);
 
 
-router.post("/:userid/salir", authMiddleware, salirEquipo);
+router.post("/:equipoid/salir", authMiddleware, salirEquipo);
 
 
 router.delete("/:id", authMiddleware, borrarEquipo);

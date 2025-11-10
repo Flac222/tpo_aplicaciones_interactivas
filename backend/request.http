@@ -24,8 +24,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "Ezequiel2",
-  "email": "eze8@example.com.ar",
+  "nombre": "SuperNigger",
+  "email": "nigger@example.com.ar",
   "password": "123456"
 }
 
@@ -73,15 +73,18 @@ Authorization: Bearer {{token}}
 ### ---------- Equipos ----------
 
 ### Salir del equipo (Requiere Auth)
-POST {{baseUrl}}/api/equipos/{{equipoId}}/salir
+POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/salir
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "userId": "{{user2Id}}"
+  "userId": "d3d8acd9-6397-41d6-bcda-60568c7c01f6"
 }
 
 ###
+
+
+
 ### Obtener Equipos (Requiere Auth)
 GET {{baseUrl}}/api/equipos/equipos/{{userId}}
 Content-Type: application/json
@@ -107,13 +110,13 @@ Authorization: Bearer {{token}}
 
 ###
 ### Invitar miembro al equipo (Requiere Auth)
-POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
+POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/invitar
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "usuarioId": "{{user2Id}}",
-  "propietarioId": "{{userId}}"
+  "correo": "nigger@example.com.ar",
+  "propietarioId": "a06450db-5d0c-4895-a1ea-653b2d03ae55"
 }
 
 ###

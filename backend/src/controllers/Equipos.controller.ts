@@ -69,7 +69,7 @@ export async function listarEquiposUsuario(req: AuthRequest, res: Response) {
 
 export async function salirEquipo(req: AuthRequest, res: Response) {
   try {
-    const { id: equipoId } = req.params;
+    const { equipoid: equipoId } = req.params;
     const authenticatedUserId = req.user!.id; 
 
     const memberIdToRemove = req.body.userId || authenticatedUserId; 
