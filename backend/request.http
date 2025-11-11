@@ -288,7 +288,7 @@ Authorization: Bearer {{token}}
 
 ### 7. Listar Etiquetas de una Tarea (Requiere Auth y ser Miembro)
 
-GET {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas
+GET {{baseUrl}}/api/etiquetas/tareas/534f614a-0163-48ba-a8bb-05ec07238da9/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

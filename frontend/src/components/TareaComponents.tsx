@@ -1,5 +1,5 @@
 // src/components/TareaComponents.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import {
     EstadoTarea,
@@ -9,8 +9,11 @@ import {
     RegistroHistorial,
     estadoConfig,
     getPriorityColor,
-    getValidNextStatuses
+    getValidNextStatuses,
+    Etiqueta
 } from '../types/tareas';
+
+const BASE_URL = 'http://localhost:3000';
 
 // Definición de Props para el modal de detalle
 interface TaskDetailsModalProps {
@@ -26,12 +29,22 @@ interface TaskDetailsModalProps {
     handleCreateComment: (tareaId: string, contenido: string) => Promise<void>;
     handleEditComment: (commentId: string, nuevoContenido: string) => Promise<void>;
     handleDeleteComment: (commentId: string) => Promise<void>;
+    allLabels: Etiqueta[];
+    currentTaskLabels: Etiqueta[];
+    labelsLoading: boolean;
+    handleUpdateTaskLabels: (tareaId: string, newLabelIds: string[]) => Promise<void>;
+    isUpdatingLabels: boolean;
 }
 
 // Componente para renderizar la Tarjeta de Tarea
 interface TareaCardProps {
     tarea: Tarea;
     setSelectedTask: (tarea: Tarea) => void;
+    token: string; // 💡 NUEVO: El token de autenticación es necesario para el fetch
+}
+
+interface EtiquetaDisplayProps {
+    etiquetas: Etiqueta[];
 }
 
 interface ComentarioProps {
@@ -56,7 +69,7 @@ interface RegistroHistorialProps {
 }
 
 const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) => {
-    
+
     const fechaFormateada = new Date(registro.fecha).toLocaleString();
 
     // Creamos una variable de usuario segura
@@ -73,12 +86,12 @@ const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) =
         // Asignar el nombre si existe y no es una cadena vacía
         if (usuario.nombre && usuario.nombre.trim() !== '') {
             nombreMostrar = usuario.nombre;
-        // Si el nombre falla, usar el email si existe y no es una cadena vacía
+            // Si el nombre falla, usar el email si existe y no es una cadena vacía
         } else if (usuario.email && usuario.email.trim() !== '') {
             nombreMostrar = usuario.email;
         } else {
             // Si el objeto usuario existe, pero nombre y email están vacíos.
-            nombreMostrar = 'Usuario (sin datos de identificación)'; 
+            nombreMostrar = 'Usuario (sin datos de identificación)';
         }
     }
 
@@ -155,7 +168,7 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         setLoading(true);
         try {
             await onEdit(comentario.id, editContent);
-            setIsEditing(false); 
+            setIsEditing(false);
         } catch (e) {
             // El error se propaga
         } finally {
@@ -298,45 +311,151 @@ export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
     );
 };
 
-// ... (TareaCard y TareaColumna sin cambios)
 
-export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask }) => (
-    <div
-        key={tarea.id}
-        onClick={() => setSelectedTask(tarea)}
-        style={{
-            padding: '1rem',
-            borderRadius: '8px',
-            backgroundColor: 'var(--bg-lightest)',
-            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-            borderLeft: `5px solid ${getPriorityColor(tarea.prioridad)}`,
-            marginBottom: '10px',
-            cursor: 'pointer',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-        }}
-        onMouseEnter={(e) => {
-            (e.currentTarget.style.transform = 'translateY(-2px)');
-            (e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)');
-        }}
-        onMouseLeave={(e) => {
-            (e.currentTarget.style.transform = 'translateY(0)');
-            (e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)');
-        }}
-    >
-        <h4 style={{ margin: '0 0 0.5rem 0' }}>{tarea.titulo}</h4>
-        <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-            <span>Prioridad: <strong>{tarea.prioridad}</strong></span>
+export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, token }) => {
+    // 💡 HACEMOS taskLabels robusto: inicializa con el prop o un array vacío.
+    const [taskLabels, setTaskLabels] = useState<Etiqueta[]>(tarea.etiquetas ?? []);
+    const [loadingLabels, setLoadingLabels] = useState(false);
+    // 💡 NUEVO ESTADO: Bandera para saber si ya consultamos las etiquetas, incluso si el resultado fue vacío.
+    const [hasFetchedLabels, setHasFetchedLabels] = useState(false);
+
+    useEffect(() => {
+        // 1. CONDICIÓN DE ESCAPE PRINCIPAL: Si ya las trajimos (estén vacías o llenas), salimos.
+        if (hasFetchedLabels) {
+            return;
+        }
+
+        // 2. CONDICIÓN DE INICIO: Solo si el token existe y la tarea no tiene etiquetas pre-cargadas.
+        const needsFetching = token && tarea.id && (!tarea.etiquetas || tarea.etiquetas.length === 0);
+
+        if (needsFetching) {
+            // Se debe establecer loading aquí para evitar un loop de fetch
+            if (!loadingLabels) { 
+                setLoadingLabels(true);
+            }
+            
+            const fetchTaskLabels = async () => {
+                try {
+                    const res = await fetch(`${BASE_URL}/api/etiquetas/tareas/${tarea.id}/etiquetas`, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    });
+                    
+                    if (!res.ok) {
+                        console.error(`Error ${res.status} al cargar etiquetas para tarea ${tarea.id}`);
+                        setTaskLabels([]);
+                    } else {
+                        const data: Etiqueta[] = await res.json();
+                        setTaskLabels(data); 
+                    }
+
+                } catch (error) {
+                    console.error("Fallo el fetch de etiquetas:", error);
+                    setTaskLabels([]);
+                } finally {
+                    // 💡 CRUCIAL: Marcamos que la consulta ha terminado (exitosa o fallida).
+                    setHasFetchedLabels(true); 
+                    setLoadingLabels(false);
+                }
+            };
+
+            fetchTaskLabels();
+        } 
+        
+        // 3. Si la tarea ya traía etiquetas desde el inicio, también marcamos como "fetched"
+        if (tarea.etiquetas && tarea.etiquetas.length > 0) {
+             setHasFetchedLabels(true);
+        }
+
+    // Dependencias: token y el ID de la tarea
+    }, [tarea.id, token, tarea.etiquetas]);
+
+    return (
+        <div
+            key={tarea.id}
+            onClick={() => setSelectedTask(tarea)}
+            style={{
+                padding: '1rem',
+                borderRadius: '8px',
+                backgroundColor: 'var(--bg-lightest)',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                borderLeft: `5px solid ${getPriorityColor(tarea.prioridad)}`,
+                marginBottom: '10px',
+                cursor: 'pointer',
+                transition: 'transform 0.2s, box-shadow 0.2s',
+            }}
+            onMouseEnter={(e) => {
+                (e.currentTarget.style.transform = 'translateY(-2px)');
+                (e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)');
+            }}
+            onMouseLeave={(e) => {
+                (e.currentTarget.style.transform = 'translateY(0)');
+                (e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)');
+            }}
+        >
+            <h4 style={{ margin: '0 0 0.5rem 0' }}>{tarea.titulo}</h4>
+            <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                <span>Prioridad: <strong>{tarea.prioridad}</strong></span>
+            </div>
+            <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
+                {loadingLabels 
+                    ? <small style={{ fontStyle: 'italic' }}>Cargando etiquetas...</small>
+                    // Solo renderiza EtiquetaDisplay si ya terminamos de consultar (hasFetchedLabels es true)
+                    : (hasFetchedLabels || taskLabels.length > 0) 
+                        ? <EtiquetaDisplay etiquetas={taskLabels}/>
+                        : null // O puedes poner: <small>Sin etiquetas</small>
+                }
+            </div>
+            {/* 💡 NUEVO: Mostrar las etiquetas asociadas a la tarea */}
+
         </div>
-    </div>
-);
+    )
+};
+
+export const EtiquetaDisplay: React.FC<EtiquetaDisplayProps> = ({ etiquetas }) => {
+    // 1. Manejo de nulo/vacío
+    if (!etiquetas || etiquetas.length === 0) {
+        return null; // O <></> (fragmento vacío)
+    }
+    
+    return (
+        <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '4px', // Espacio entre etiquetas
+        }}>
+            {/* 2. Mapeo y renderizado de cada etiqueta */}
+            {etiquetas.map(etiqueta => (
+                <span 
+                    key={etiqueta.id} 
+                    style={{
+                        // 💡 ESTILOS CRUCIALES:
+                        backgroundColor: 'var(--color-primary-light)', // Color de fondo visible
+                        color: '#000', // Color de texto
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.7rem',
+                        fontWeight: 'bold'
+                    }}
+                >
+                    {etiqueta.nombre}
+                </span>
+            ))}
+        </div>
+    );
+};
 
 // ... (TareaColumna sin cambios)
 interface TareaColumnaProps {
     estado: EstadoTarea;
     tareas: Tarea[];
     setSelectedTask: (tarea: Tarea) => void;
+    token: string;
 }
-export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setSelectedTask }) => {
+export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setSelectedTask, token}) => {
     const config = estadoConfig[estado];
 
     return (
@@ -373,7 +492,12 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
                         No hay tareas con estos filtros.
                     </p>
                 ) : (
-                    tareas.map(t => <TareaCard key={t.id} tarea={t} setSelectedTask={setSelectedTask} />)
+                    tareas.map(t => <TareaCard
+                        key={t.id}
+                        tarea={t}
+                        setSelectedTask={setSelectedTask}
+                        token={token} // <-- ESTO ES CRUCIAL
+                    />)
                 )}
             </div>
         </div>
@@ -396,10 +520,21 @@ interface CreateTaskModalProps {
     setNewTaskEstado: (e: EstadoTarea) => void;
     taskModalLoading: boolean;
     taskModalError: string | null;
+    // 💡 NUEVAS PROPS DE ETIQUETAS
+    allLabels: Etiqueta[]; // Todas las etiquetas disponibles
+    newTaskLabels: string[]; // IDs de etiquetas seleccionadas
+    setNewTaskLabels: (labels: string[]) => void; // Setter para IDs de etiquetas
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
     if (!props.isTaskModalOpen) return null;
+
+    const handleLabelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        // Obtenemos un array de los IDs seleccionados
+        const selectedOptions = Array.from(e.target.selectedOptions);
+        const selectedIds = selectedOptions.map(option => option.value);
+        props.setNewTaskLabels(selectedIds);
+    };
 
     return (
         <div style={{
@@ -419,60 +554,84 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
             >
                 <h3 style={{ marginTop: 0 }}>Crear Nueva Tarea</h3>
                 <form onSubmit={props.handleCreateTask}>
-                    {/* Título */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label htmlFor="taskTitle" style={{ display: 'block', marginBottom: '0.5rem' }}>Título de la Tarea:</label>
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label htmlFor="taskTitle" style={{ display: 'block', marginBottom: '0.5rem' }}>Título:</label>
                         <input
-                            id="taskTitle" type="text" value={props.newTaskTitle}
+                            id="taskTitle"
+                            type="text"
+                            value={props.newTaskTitle}
                             onChange={(e) => props.setNewTaskTitle(e.target.value)}
-                            placeholder="Ej: Implementar login"
-                            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
-                            autoFocus
                             required
+                            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
+                            placeholder="Nombre corto de la tarea"
                         />
                     </div>
 
-                    {/* Descripción */}
-                    <div style={{ marginBottom: '1rem' }}>
+                    {/* 2. Descripción */}
+                    <div style={{ marginBottom: '1.5rem' }}>
                         <label htmlFor="taskDesc" style={{ display: 'block', marginBottom: '0.5rem' }}>Descripción (opcional):</label>
                         <textarea
-                            id="taskDesc" value={props.newTaskDesc}
+                            id="taskDesc"
+                            value={props.newTaskDesc}
                             onChange={(e) => props.setNewTaskDesc(e.target.value)}
-                            placeholder="Detalles sobre la tarea..."
-                            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box', minHeight: '80px' }}
+                            style={{ width: '100%', padding: '0.5rem', minHeight: '80px', boxSizing: 'border-box' }}
+                            placeholder="Detalles de la tarea"
                         />
                     </div>
 
-                    {/* Prioridad */}
-                    <div style={{ marginBottom: '1rem' }}>
+                    {/* 3. Prioridad */}
+                    <div style={{ marginBottom: '1.5rem' }}>
                         <label htmlFor="taskPriority" style={{ display: 'block', marginBottom: '0.5rem' }}>Prioridad:</label>
                         <select
                             id="taskPriority"
                             value={props.newTaskPriority}
                             onChange={(e) => props.setNewTaskPriority(e.target.value as PrioridadTarea)}
-                            style={{ width: '100%', padding: '0.5rem' }}
+                            required
+                            style={{ padding: '0.5rem' }}
                         >
-                            <option value={PrioridadTarea.ALTA}>Alta</option>
-                            <option value={PrioridadTarea.MEDIA}>Media</option>
-                            <option value={PrioridadTarea.BAJA}>Baja</option>
+                            {Object.values(PrioridadTarea).map(p => (
+                                <option key={p} value={p}>{p}</option>
+                            ))}
                         </select>
                     </div>
 
-                    {/* Estado Inicial */}
+                    {/* 4. Estado Inicial */}
                     <div style={{ marginBottom: '1.5rem' }}>
                         <label htmlFor="taskEstado" style={{ display: 'block', marginBottom: '0.5rem' }}>Estado Inicial:</label>
                         <select
                             id="taskEstado"
                             value={props.newTaskEstado}
                             onChange={(e) => props.setNewTaskEstado(e.target.value as EstadoTarea)}
-                            style={{ width: '100%', padding: '0.5rem' }}
+                            required
+                            style={{ padding: '0.5rem' }}
                         >
-                            <option value={EstadoTarea.PENDIENTE}>Pendiente</option>
-                            <option value={EstadoTarea.EN_CURSO}>En curso</option>
-                            <option value={EstadoTarea.TERMINADA}>Terminada</option>
-                            <option value={EstadoTarea.CANCELADA}>Cancelada</option>
+                            {Object.values(EstadoTarea).map(e => (
+                                <option key={e} value={e}>{e}</option>
+                            ))}
                         </select>
                     </div>
+
+                    {/* 💡 NUEVO SELECTOR DE ETIQUETAS MÚLTIPLES */}
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <label htmlFor="taskLabels" style={{ display: 'block', marginBottom: '0.5rem' }}>Etiquetas (Selección múltiple, opcional):</label>
+                        <select
+                            id="taskLabels"
+                            multiple // Habilitar selección múltiple
+                            value={props.newTaskLabels}
+                            onChange={handleLabelChange}
+                            style={{ width: '100%', padding: '0.5rem', minHeight: '100px', boxSizing: 'border-box' }}
+                        >
+                            {props.allLabels.map(label => (
+                                <option key={label.id} value={label.id}>{label.nombre}</option>
+                            ))}
+                        </select>
+                        {props.allLabels.length === 0 && (
+                            <small style={{ color: 'var(--text-secondary)', marginTop: '5px', display: 'block' }}>
+                                No hay etiquetas disponibles. Crea una en la página del equipo.
+                            </small>
+                        )}
+                    </div>
+
 
                     {props.taskModalError && (
                         <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>{props.taskModalError}</p>
@@ -512,7 +671,12 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     currentUserId,
     handleCreateComment,
     handleEditComment,
-    handleDeleteComment
+    handleDeleteComment,
+    allLabels,
+    currentTaskLabels,
+    labelsLoading,
+    handleUpdateTaskLabels,
+    isUpdatingLabels,
 }) => {
     if (!selectedTask) return null;
 
@@ -520,6 +684,38 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     const validStatuses = getValidNextStatuses(currentStatus);
     const displayStatuses = Array.from(new Set([currentStatus, ...validStatuses]));
     const isReadOnly = currentStatus === EstadoTarea.CANCELADA;
+    const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+    const [labelUpdateError, setLabelUpdateError] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (currentTaskLabels) {
+            setSelectedLabelIds(currentTaskLabels.map(label => label.id));
+        }
+    }, [currentTaskLabels]); // Dependencia: las etiquetas cargadas
+
+    const handleLabelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedOptions = Array.from(e.target.selectedOptions);
+        const selectedIds = selectedOptions.map(option => option.value);
+        setSelectedLabelIds(selectedIds);
+    };
+
+    const saveLabelChanges = async () => {
+        setLabelUpdateError(null);
+
+        // Comprobar si hay cambios reales
+        const originalIds = (currentTaskLabels || []).map(l => l.id).sort();
+        const newIds = [...selectedLabelIds].sort();
+
+        if (JSON.stringify(originalIds) === JSON.stringify(newIds)) {
+            return; // No hay cambios
+        }
+
+        try {
+            await handleUpdateTaskLabels(selectedTask.id, selectedLabelIds);
+        } catch (error) {
+            setLabelUpdateError(error instanceof Error ? error.message : 'Error al guardar');
+        }
+    };
 
     return (
         <div style={{
@@ -599,6 +795,45 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <div style={{ whiteSpace: 'pre-wrap', minHeight: '50px', color: selectedTask.descripcion ? 'inherit' : 'var(--text-secondary)' }}>
                     {selectedTask.descripcion || 'Sin descripción detallada.'}
                 </div>
+
+                <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '2rem', fontSize: '1.2rem' }}>
+                    🏷️ Etiquetas
+                </h3>
+
+                {labelsLoading ? (
+                    <p style={{ color: 'var(--text-secondary)' }}>Cargando etiquetas...</p>
+                ) : (
+                    <div style={{ marginBottom: '1.5rem' }}>
+                        <select
+                            id="taskLabelsEdit"
+                            multiple
+                            value={selectedLabelIds}
+                            onChange={handleLabelChange}
+                            style={{ width: '100%', padding: '0.5rem', minHeight: '100px', boxSizing: 'border-box' }}
+                            disabled={isUpdatingLabels || isReadOnly}
+                        >
+                            {allLabels.map(label => (
+                                <option key={label.id} value={label.id}>{label.nombre}</option>
+                            ))}
+                        </select>
+                        {allLabels.length === 0 && (
+                            <small style={{ color: 'var(--text-secondary)', marginTop: '5px', display: 'block' }}>
+                                No hay etiquetas disponibles en este equipo.
+                            </small>
+                        )}
+
+                        {/* Botón de Guardar para Etiquetas */}
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                            <button
+                                onClick={saveLabelChanges}
+                                disabled={isUpdatingLabels || isReadOnly}
+                            >
+                                {isUpdatingLabels ? 'Guardando...' : 'Guardar Etiquetas'}
+                            </button>
+                        </div>
+                        {labelUpdateError && <p style={{ color: 'var(--color-error)', fontSize: '0.9rem', textAlign: 'right' }}>{labelUpdateError}</p>}
+                    </div>
+                )}
 
                 {/* 1. SECCIÓN DE HISTORIAL (NUEVA POSICIÓN) */}
                 <HistorialSection

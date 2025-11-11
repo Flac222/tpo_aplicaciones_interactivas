@@ -14,7 +14,12 @@ export enum PrioridadTarea {
     BAJA = "Baja"
 }
 
-// Interfaz
+export interface Etiqueta { 
+    id: string;
+    nombre: string;
+    equipoId: string;
+}
+
 export interface Tarea {
     id: string;
     titulo: string;
@@ -28,6 +33,7 @@ export interface Tarea {
     historial: RegistroHistorial[]; // <-- NUEVA PROPIEDAD
     fechaCreacion: string;
     fechaActualizacion: string;
+    etiquetas: Etiqueta[]; 
 }
 
 // DESPUÉS (types/tareas.ts)
