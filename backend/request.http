@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:3000
 @userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
 @equipoId = b0eacabe-e0b2-4d9e-b48f-5620d8db4876
-@tareaId = de3b8c7e-b2d0-4bb2-8390-949b330903b5
+@tareaId = e25e7d93-f698-4cea-917a-960eb71414e8
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
 @token =
@@ -236,7 +236,7 @@ Authorization: Bearer {{token}}
 
 # @etiquetaNombre = "Urgente"
  
-@nuevaEtiquetaId = c557451b-5217-4731-8781-96598c7e2ea9
+@nuevaEtiquetaId = 56571552-dbdd-4b1b-8bb7-634e2a562c1b
 
 POST {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
 Content-Type: application/json
@@ -285,3 +285,11 @@ Authorization: Bearer {{token}}
 DELETE {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
+
+### 7. Listar Etiquetas de una Tarea (Requiere Auth y ser Miembro)
+
+GET {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###------------- backend/src/routes/etiquetas.routes.ts ----------

@@ -40,4 +40,8 @@ router.delete(
   controller.removerEtiqueta.bind(controller)
 );
 
+router.get(
+    "/tareas/:tareaId/etiquetas",
+    controller.getEtiquetasByTarea.bind(controller) // Añadida la nueva función
+);
 export default router;

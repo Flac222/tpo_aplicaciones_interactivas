@@ -167,4 +167,39 @@ export class EtiquetasService {
     // 3. Eliminar la relación
     await this.tareaEtiquetaRepo.delete(tareaId, etiquetaId);
   }
+  // ** 7. OBTENER ETIQUETAS ASIGNADAS A TAREA (GET /api/tareas/:tareaId/etiquetas) **
+    async getEtiquetasByTarea(tareaId: string, usuarioId: string): Promise<Etiqueta[]> {
+        // 1. Obtener Tarea (debe incluir la relación con el equipo)
+        // NOTA: Asumimos que TareaRepository.findById() ahora incluye la relación 'equipo'.
+        const tarea = await this.tareaRepo.findById(tareaId) as any; 
+        
+        if (!tarea || !tarea.equipo) {
+            throw new ServiceError("Tarea no encontrada o no pertenece a un equipo.", 404);
+        }
+
+        const equipoId = tarea.equipo.id;
+
+        // 2. ** VALIDACIÓN DE MEMBRESÍA ** (Usuario debe pertenecer al equipo para ver las etiquetas)
+        const esMiembro = await this.esMiembro(equipoId, usuarioId);
+        if (!esMiembro) {
+            throw new ServiceError("Acceso denegado. El usuario no es miembro del equipo de la tarea.", 403);
+        }
+
+        // 3. Obtener las relaciones TareaEtiqueta para esa tarea
+        const relaciones = await this.tareaEtiquetaRepo.findByTareaId(tareaId);
+
+        if (relaciones.length === 0) {
+            return []; // No hay etiquetas asignadas
+        }
+
+        // 4. Extraer las IDs de las etiquetas
+        const etiquetaIds = relaciones.map(rel => rel.etiquetaId);
+
+        // 5. Obtener los detalles completos de las etiquetas
+        // NOTA: Asumimos que EtiquetasRepository tiene un método para obtener por lista de IDs
+        const etiquetas = await this.etiquetaRepo.findByIds(etiquetaIds);
+
+        return etiquetas;
+    }
+
 }

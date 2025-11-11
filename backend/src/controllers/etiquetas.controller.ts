@@ -123,4 +123,17 @@ export class EtiquetasController {
       return this.handleError(res, error);
     }
   }
+  async getEtiquetasByTarea(req: AuthRequest, res: Response): Promise<Response> {
+        try {
+            const { tareaId } = req.params;
+            // ✅ CORRECTO: Obtener el ID del usuario autenticado
+            const usuarioId = req.user!.id; 
+
+            const etiquetas = await this.service.getEtiquetasByTarea(tareaId, usuarioId);
+            return res.status(200).json(etiquetas);
+        } catch (error: any) {
+            return this.handleError(res, error);
+        }
+    }
+
 }
