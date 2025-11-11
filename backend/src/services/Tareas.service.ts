@@ -79,8 +79,8 @@ static async listarPorEquipoYFiltro(
     .createQueryBuilder("tarea")
     .leftJoinAndSelect("tarea.equipo", "equipo")
     .leftJoinAndSelect("tarea.historial", "historial")
-    // AGREGAR ESTA LÍNEA para cargar el usuario asociado a cada historial
-    .leftJoinAndSelect("historial.usuario", "usuario") // 'historial' es el alias del join anterior
+  
+    .leftJoinAndSelect("historial.usuario", "usuario")
     .where("equipo.id = :equipoId", { equipoId });
 
   if (estado) query.andWhere("tarea.estado = :estado", { estado });

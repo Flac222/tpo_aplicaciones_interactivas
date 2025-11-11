@@ -40,7 +40,7 @@ interface TaskDetailsModalProps {
 interface TareaCardProps {
     tarea: Tarea;
     setSelectedTask: (tarea: Tarea) => void;
-    token: string; // 💡 NUEVO: El token de autenticación es necesario para el fetch
+    token: string; // 💡 El token de autenticación es necesario para el fetch
 }
 
 interface EtiquetaDisplayProps {
@@ -68,29 +68,109 @@ interface RegistroHistorialProps {
     registro: RegistroHistorial;
 }
 
+// ----------------------------------------------------
+// Componentes de Edición de Etiquetas
+// ----------------------------------------------------
+interface LabelActionSectionProps {
+    allLabels?: Etiqueta[];
+    currentTaskLabels: Etiqueta[];
+    onAction: (labelId: string, operation: 'add' | 'remove') => Promise<void>;
+    isUpdatingLabels: boolean;
+    onClose: () => void;
+}
+
+const AddLabelsSection: React.FC<LabelActionSectionProps> = ({ allLabels = [], currentTaskLabels, onAction, isUpdatingLabels, onClose }) => {
+    const assignedIds = currentTaskLabels.map(l => l.id);
+    const availableToAdd = allLabels.filter(label => !assignedIds.includes(label.id));
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <h5 style={{ margin: 0, fontSize: '1rem' }}>Selecciona etiquetas para **agregar**:</h5>
+                <button onClick={onClose} style={{ background: 'var(--text-secondary)' }}>Cerrar</button>
+            </div>
+            <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', padding: '0.5rem', backgroundColor: 'var(--bg-secondary)' }}>
+                {availableToAdd.length === 0 ? (
+                    <small style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>Todas las etiquetas del equipo ya están asignadas.</small>
+                ) : (
+                    availableToAdd.map(label => (
+                        <div
+                            key={label.id}
+                            onClick={() => !isUpdatingLabels && onAction(label.id, 'add')}
+                            style={{ 
+                                cursor: isUpdatingLabels ? 'wait' : 'pointer', 
+                                padding: '5px', margin: '2px 0', borderRadius: '4px', 
+                                backgroundColor: 'var(--bg-lightest)', 
+                                border: '1px solid var(--color-primary)', 
+                                transition: 'background-color 0.1s', 
+                                opacity: isUpdatingLabels ? 0.6 : 1 
+                            }}
+                            onMouseEnter={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
+                            onMouseLeave={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--bg-lightest)')}
+                        >
+                            {label.nombre}
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+const RemoveLabelsSection: React.FC<LabelActionSectionProps> = ({ currentTaskLabels, onAction, isUpdatingLabels, onClose }) => {
+    const availableToRemove = currentTaskLabels;
+
+    return (
+        <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <h5 style={{ margin: 0, fontSize: '1rem' }}>Selecciona etiquetas para **remover**:</h5>
+                <button onClick={onClose} style={{ background: 'var(--text-secondary)' }}>Cerrar</button>
+            </div>
+            <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--border-color)', padding: '0.5rem', backgroundColor: 'var(--bg-secondary)' }}>
+                {availableToRemove.length === 0 ? (
+                    <small style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>Esta tarea no tiene etiquetas para remover.</small>
+                ) : (
+                    availableToRemove.map(label => (
+                        <div
+                            key={label.id}
+                            onClick={() => !isUpdatingLabels && onAction(label.id, 'remove')}
+                            style={{ 
+                                cursor: isUpdatingLabels ? 'wait' : 'pointer', 
+                                padding: '5px', margin: '2px 0', borderRadius: '4px', 
+                                backgroundColor: 'var(--color-warning-light)', 
+                                border: '1px solid var(--color-warning)', 
+                                fontWeight: 'bold', 
+                                transition: 'background-color 0.1s', 
+                                opacity: isUpdatingLabels ? 0.6 : 1 
+                            }}
+                            onMouseEnter={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-error-light)')}
+                            onMouseLeave={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-warning-light)')}
+                        >
+                            {label.nombre} (Click para remover)
+                        </div>
+                    ))
+                )}
+            </div>
+        </div>
+    );
+};
+
+// ----------------------------------------------------
+// ... (Otros componentes sin cambios relevantes de estilo de botones)
+// ----------------------------------------------------
+
 const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) => {
 
     const fechaFormateada = new Date(registro.fecha).toLocaleString();
-
-    // Creamos una variable de usuario segura
     const usuario = registro.usuario;
-
-    // 💡 Paso 1: Debugging temporal para ver los valores
-    // console.log("Registro:", registro);
-    // console.log("Usuario.nombre:", usuario?.nombre);
-    // console.log("Usuario.email:", usuario?.email);
-
-    let nombreMostrar = 'Sistema / Usuario Desconocido'; // Fallback por defecto
+    let nombreMostrar = 'Sistema / Usuario Desconocido'; 
 
     if (usuario) {
-        // Asignar el nombre si existe y no es una cadena vacía
         if (usuario.nombre && usuario.nombre.trim() !== '') {
             nombreMostrar = usuario.nombre;
-            // Si el nombre falla, usar el email si existe y no es una cadena vacía
         } else if (usuario.email && usuario.email.trim() !== '') {
             nombreMostrar = usuario.email;
         } else {
-            // Si el objeto usuario existe, pero nombre y email están vacíos.
             nombreMostrar = 'Usuario (sin datos de identificación)';
         }
     }
@@ -109,7 +189,6 @@ const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) =
             </div>
             <div style={{ flexGrow: 1 }}>
                 <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
-                    {/* Utilizamos la variable calculada (ya verificada): */}
                     {nombreMostrar}
                 </span>{' '}
                 ha realizado el cambio: <span style={{ fontStyle: 'italic' }}>{registro.cambio}</span>
@@ -118,15 +197,11 @@ const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) =
     );
 };
 
-// ----------------------------------------------------
-// Componente: HistorialSection (NUEVO)
-// ----------------------------------------------------
 interface HistorialSectionProps {
     historial: RegistroHistorial[];
 }
 
 export const HistorialSection: React.FC<HistorialSectionProps> = ({ historial }) => {
-    // Para mostrar el historial del más reciente al más antiguo
     const historialOrdenado = [...historial].sort((a, b) =>
         new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
     );
@@ -149,11 +224,7 @@ export const HistorialSection: React.FC<HistorialSectionProps> = ({ historial })
     );
 };
 
-// ----------------------------------------------------
-// Componente: ComentarioCard
-// ----------------------------------------------------
 const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, onEdit, onDelete }) => {
-    // La comprobación del dueño está bien
     const isOwner = comentario.autor.id === currentUserId;
 
     const [isEditing, setIsEditing] = useState(false);
@@ -170,7 +241,6 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
             await onEdit(comentario.id, editContent);
             setIsEditing(false);
         } catch (e) {
-            // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -182,7 +252,6 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
         try {
             await onDelete(comentario.id);
         } catch (e) {
-            // El error se propaga
         } finally {
             setLoading(false);
         }
@@ -192,10 +261,8 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
     return (
         <div style={{ borderLeft: '3px solid var(--color-primary)', padding: '0.5rem 1rem', marginBottom: '1rem', backgroundColor: 'var(--bg-secondary)', borderRadius: '4px' }}>
             <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
-                {/* La lógica de mostrar 'Tú' y 'comentario.autor.nombre' está CORRECTA */}
                 {isOwner ? 'Tú' : (comentario.autor.nombre || `Usuario ${comentario.autor.id}`)}
                 <small style={{ fontWeight: 'normal', color: 'var(--text-secondary)', marginLeft: '10px' }}>
-                    {/* ❌ CORRECCIÓN CRÍTICA: Cambiado de 'comentario.fechaCreacion' a 'comentario.fecha' */}
                     {new Date(comentario.fecha).toLocaleString()}
                 </small>
             </p>
@@ -227,9 +294,6 @@ const ComentarioCard: React.FC<ComentarioProps> = ({ comentario, currentUserId, 
     );
 };
 
-// ----------------------------------------------------
-// Componente: ComentarioForm (sin cambios)
-// ----------------------------------------------------
 const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionProps['onCreate'], loading: boolean }> = ({ taskId, onCreate, loading }) => {
     const [content, setContent] = useState('');
     const [localLoading, setLocalLoading] = useState(false);
@@ -241,9 +305,8 @@ const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionPro
         setLocalLoading(true);
         try {
             await onCreate(taskId, content.trim());
-            setContent(''); // Limpiar si fue exitoso
+            setContent('');
         } catch (e) {
-            // El error se muestra en la página principal, solo manejamos el estado aquí.
         } finally {
             setLocalLoading(false);
         }
@@ -269,9 +332,6 @@ const ComentarioForm: React.FC<{ taskId: string, onCreate: ComentariosSectionPro
 };
 
 
-// ----------------------------------------------------
-// Componente: ComentariosSection (sin cambios)
-// ----------------------------------------------------
 export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
     tareaId,
     comentarios,
@@ -313,23 +373,18 @@ export const ComentariosSection: React.FC<ComentariosSectionProps> = ({
 
 
 export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, token }) => {
-    // 💡 HACEMOS taskLabels robusto: inicializa con el prop o un array vacío.
     const [taskLabels, setTaskLabels] = useState<Etiqueta[]>(tarea.etiquetas ?? []);
     const [loadingLabels, setLoadingLabels] = useState(false);
-    // 💡 NUEVO ESTADO: Bandera para saber si ya consultamos las etiquetas, incluso si el resultado fue vacío.
     const [hasFetchedLabels, setHasFetchedLabels] = useState(false);
 
     useEffect(() => {
-        // 1. CONDICIÓN DE ESCAPE PRINCIPAL: Si ya las trajimos (estén vacías o llenas), salimos.
         if (hasFetchedLabels) {
             return;
         }
 
-        // 2. CONDICIÓN DE INICIO: Solo si el token existe y la tarea no tiene etiquetas pre-cargadas.
         const needsFetching = token && tarea.id && (!tarea.etiquetas || tarea.etiquetas.length === 0);
 
         if (needsFetching) {
-            // Se debe establecer loading aquí para evitar un loop de fetch
             if (!loadingLabels) { 
                 setLoadingLabels(true);
             }
@@ -356,7 +411,6 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
                     console.error("Fallo el fetch de etiquetas:", error);
                     setTaskLabels([]);
                 } finally {
-                    // 💡 CRUCIAL: Marcamos que la consulta ha terminado (exitosa o fallida).
                     setHasFetchedLabels(true); 
                     setLoadingLabels(false);
                 }
@@ -365,12 +419,9 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
             fetchTaskLabels();
         } 
         
-        // 3. Si la tarea ya traía etiquetas desde el inicio, también marcamos como "fetched"
         if (tarea.etiquetas && tarea.etiquetas.length > 0) {
              setHasFetchedLabels(true);
         }
-
-    // Dependencias: token y el ID de la tarea
     }, [tarea.id, token, tarea.etiquetas]);
 
     return (
@@ -400,45 +451,53 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
             <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 <span>Prioridad: <strong>{tarea.prioridad}</strong></span>
             </div>
-            <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-                {loadingLabels 
-                    ? <small style={{ fontStyle: 'italic' }}>Cargando etiquetas...</small>
-                    // Solo renderiza EtiquetaDisplay si ya terminamos de consultar (hasFetchedLabels es true)
-                    : (hasFetchedLabels || taskLabels.length > 0) 
-                        ? <EtiquetaDisplay etiquetas={taskLabels}/>
-                        : null // O puedes poner: <small>Sin etiquetas</small>
-                }
+            
+            <div style={{ 
+                display: 'flex', 
+                alignItems: 'flex-start', 
+                flexDirection: 'column', 
+                gap: '0.2rem', 
+                fontSize: '0.8rem', 
+                color: 'var(--text-secondary)', 
+                marginTop: '0.5rem' 
+            }}>
+                <span style={{ fontWeight: 'bold' }}>Etiquetas:</span>
+                <div style={{ marginTop: '0.2rem' }}>
+                    {loadingLabels 
+                        ? <small style={{ fontStyle: 'italic' }}>Cargando etiquetas...</small>
+                        : (hasFetchedLabels || taskLabels.length > 0) 
+                            ? <EtiquetaDisplay etiquetas={taskLabels}/>
+                            : <small style={{ fontStyle: 'italic' }}>Sin etiquetas</small>
+                    }
+                </div>
             </div>
-            {/* 💡 NUEVO: Mostrar las etiquetas asociadas a la tarea */}
-
         </div>
     )
 };
 
 export const EtiquetaDisplay: React.FC<EtiquetaDisplayProps> = ({ etiquetas }) => {
-    // 1. Manejo de nulo/vacío
     if (!etiquetas || etiquetas.length === 0) {
-        return null; // O <></> (fragmento vacío)
+        return null;
     }
     
     return (
         <div style={{ 
             display: 'flex', 
             flexWrap: 'wrap', 
-            gap: '4px', // Espacio entre etiquetas
+            gap: '6px', 
         }}>
-            {/* 2. Mapeo y renderizado de cada etiqueta */}
             {etiquetas.map(etiqueta => (
                 <span 
                     key={etiqueta.id} 
                     style={{
-                        // 💡 ESTILOS CRUCIALES:
-                        backgroundColor: 'var(--color-primary-light)', // Color de fondo visible
-                        color: '#000', // Color de texto
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        fontWeight: 'bold'
+                        backgroundColor: 'var(--color-primary-light)', 
+                        color: 'var(--text-primary)', 
+                        border: '1px solid var(--color-primary)', 
+                        padding: '3px 8px', 
+                        borderRadius: '12px', 
+                        fontSize: '0.75rem', 
+                        fontWeight: 'bold',
+                        whiteSpace: 'nowrap'
                     }}
                 >
                     {etiqueta.nombre}
@@ -448,7 +507,6 @@ export const EtiquetaDisplay: React.FC<EtiquetaDisplayProps> = ({ etiquetas }) =
     );
 };
 
-// ... (TareaColumna sin cambios)
 interface TareaColumnaProps {
     estado: EstadoTarea;
     tareas: Tarea[];
@@ -496,7 +554,7 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
                         key={t.id}
                         tarea={t}
                         setSelectedTask={setSelectedTask}
-                        token={token} // <-- ESTO ES CRUCIAL
+                        token={token} 
                     />)
                 )}
             </div>
@@ -504,7 +562,7 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
     );
 };
 
-// ... (CreateTaskModal sin cambios)
+
 interface CreateTaskModalProps {
     isTaskModalOpen: boolean;
     setIsTaskModalOpen: (isOpen: boolean) => void;
@@ -521,20 +579,28 @@ interface CreateTaskModalProps {
     taskModalLoading: boolean;
     taskModalError: string | null;
     // 💡 NUEVAS PROPS DE ETIQUETAS
-    allLabels: Etiqueta[]; // Todas las etiquetas disponibles
-    newTaskLabels: string[]; // IDs de etiquetas seleccionadas
-    setNewTaskLabels: (labels: string[]) => void; // Setter para IDs de etiquetas
+    allLabels: Etiqueta[];
+    newTaskLabels: string[];
+    setNewTaskLabels: (labels: string[]) => void;
 }
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
     if (!props.isTaskModalOpen) return null;
 
-    const handleLabelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        // Obtenemos un array de los IDs seleccionados
-        const selectedOptions = Array.from(e.target.selectedOptions);
-        const selectedIds = selectedOptions.map(option => option.value);
-        props.setNewTaskLabels(selectedIds);
+    // 💡 Lógica para manejo de etiquetas con doble click
+    const selectedLabels = props.allLabels.filter(label => props.newTaskLabels.includes(label.id));
+    const availableLabels = props.allLabels.filter(label => !props.newTaskLabels.includes(label.id));
+
+    const handleSelectLabel = (labelId: string) => {
+        if (!props.newTaskLabels.includes(labelId)) {
+            props.setNewTaskLabels([...props.newTaskLabels, labelId]);
+        }
     };
+
+    const handleDeselectLabel = (labelId: string) => {
+        props.setNewTaskLabels(props.newTaskLabels.filter(id => id !== labelId));
+    };
+
 
     return (
         <div style={{
@@ -548,7 +614,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                 style={{
                     backgroundColor: 'var(--bg-lightest)', color: 'var(--text-primary)',
                     padding: '2rem', borderRadius: '8px',
-                    minWidth: '300px', maxWidth: '500px', zIndex: 1001,
+                    minWidth: '300px', maxWidth: '600px', zIndex: 1001,
+                    maxHeight: '90vh', overflowY: 'auto'
                 }}
                 onClick={(e) => e.stopPropagation()}
             >
@@ -567,7 +634,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                         />
                     </div>
 
-                    {/* 2. Descripción */}
                     <div style={{ marginBottom: '1.5rem' }}>
                         <label htmlFor="taskDesc" style={{ display: 'block', marginBottom: '0.5rem' }}>Descripción (opcional):</label>
                         <textarea
@@ -579,57 +645,98 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                         />
                     </div>
 
-                    {/* 3. Prioridad */}
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label htmlFor="taskPriority" style={{ display: 'block', marginBottom: '0.5rem' }}>Prioridad:</label>
-                        <select
-                            id="taskPriority"
-                            value={props.newTaskPriority}
-                            onChange={(e) => props.setNewTaskPriority(e.target.value as PrioridadTarea)}
-                            required
-                            style={{ padding: '0.5rem' }}
-                        >
-                            {Object.values(PrioridadTarea).map(p => (
-                                <option key={p} value={p}>{p}</option>
-                            ))}
-                        </select>
+                    <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        
+                        <div style={{ flex: 1 }}>
+                            <label htmlFor="taskPriority" style={{ display: 'block', marginBottom: '0.5rem' }}>Prioridad:</label>
+                            <select
+                                id="taskPriority"
+                                value={props.newTaskPriority}
+                                onChange={(e) => props.setNewTaskPriority(e.target.value as PrioridadTarea)}
+                                required
+                                style={{ padding: '0.5rem', width: '100%', boxSizing: 'border-box' }}
+                            >
+                                {Object.values(PrioridadTarea).map(p => (
+                                    <option key={p} value={p}>{p}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ flex: 1 }}>
+                            <label htmlFor="taskEstado" style={{ display: 'block', marginBottom: '0.5rem' }}>Estado Inicial:</label>
+                            <select
+                                id="taskEstado"
+                                value={props.newTaskEstado}
+                                onChange={(e) => props.setNewTaskEstado(e.target.value as EstadoTarea)}
+                                required
+                                style={{ padding: '0.5rem', width: '100%', boxSizing: 'border-box' }}
+                            >
+                                {Object.values(EstadoTarea).map(e => (
+                                    <option key={e} value={e}>{e}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
-                    {/* 4. Estado Inicial */}
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label htmlFor="taskEstado" style={{ display: 'block', marginBottom: '0.5rem' }}>Estado Inicial:</label>
-                        <select
-                            id="taskEstado"
-                            value={props.newTaskEstado}
-                            onChange={(e) => props.setNewTaskEstado(e.target.value as EstadoTarea)}
-                            required
-                            style={{ padding: '0.5rem' }}
-                        >
-                            {Object.values(EstadoTarea).map(e => (
-                                <option key={e} value={e}>{e}</option>
-                            ))}
-                        </select>
-                    </div>
+                    <div style={{ marginBottom: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '4px', padding: '1rem' }}>
+                        <h4 style={{ margin: '0 0 1rem 0', borderBottom: '1px dotted var(--border-color)', paddingBottom: '0.5rem', fontSize: '1.1rem' }}>🏷️ Etiquetas (Doble Click para Seleccionar)</h4>
 
-                    {/* 💡 NUEVO SELECTOR DE ETIQUETAS MÚLTIPLES */}
-                    <div style={{ marginBottom: '1.5rem' }}>
-                        <label htmlFor="taskLabels" style={{ display: 'block', marginBottom: '0.5rem' }}>Etiquetas (Selección múltiple, opcional):</label>
-                        <select
-                            id="taskLabels"
-                            multiple // Habilitar selección múltiple
-                            value={props.newTaskLabels}
-                            onChange={handleLabelChange}
-                            style={{ width: '100%', padding: '0.5rem', minHeight: '100px', boxSizing: 'border-box' }}
-                        >
-                            {props.allLabels.map(label => (
-                                <option key={label.id} value={label.id}>{label.nombre}</option>
-                            ))}
-                        </select>
-                        {props.allLabels.length === 0 && (
-                            <small style={{ color: 'var(--text-secondary)', marginTop: '5px', display: 'block' }}>
-                                No hay etiquetas disponibles. Crea una en la página del equipo.
-                            </small>
-                        )}
+                        <div style={{ display: 'flex', gap: '1rem' }}>
+                            {/* Etiquetas Disponibles */}
+                            <div style={{ flex: 1 }}>
+                                <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Disponibles ({availableLabels.length}):</p>
+                                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--text-secondary)', padding: '0.5rem', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
+                                    {availableLabels.length === 0 ? (
+                                        <small style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>No hay etiquetas para agregar.</small>
+                                    ) : (
+                                        availableLabels.map(label => (
+                                            <div
+                                                key={label.id}
+                                                onDoubleClick={() => handleSelectLabel(label.id)}
+                                                style={{ 
+                                                    cursor: 'pointer', padding: '5px', margin: '2px 0', 
+                                                    borderRadius: '4px', backgroundColor: 'var(--bg-lightest)', 
+                                                    border: '1px solid var(--text-secondary)', 
+                                                    transition: 'background-color 0.1s' 
+                                                }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-lightest)')}
+                                            >
+                                                {label.nombre}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Etiquetas Seleccionadas */}
+                            <div style={{ flex: 1 }}>
+                                <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Seleccionadas ({selectedLabels.length}):</p>
+                                <div style={{ maxHeight: '150px', overflowY: 'auto', border: '1px solid var(--text-secondary)', padding: '0.5rem', borderRadius: '4px', backgroundColor: 'var(--bg-secondary)' }}>
+                                    {selectedLabels.length === 0 ? (
+                                        <small style={{ fontStyle: 'italic', color: 'var(--text-secondary)' }}>Doble click en las disponibles para agregar.</small>
+                                    ) : (
+                                        selectedLabels.map(label => (
+                                            <div
+                                                key={label.id}
+                                                onDoubleClick={() => handleDeselectLabel(label.id)}
+                                                style={{ 
+                                                    cursor: 'pointer', padding: '5px', margin: '2px 0', 
+                                                    borderRadius: '4px', backgroundColor: 'var(--color-primary-light)', 
+                                                    border: '1px solid var(--color-primary)', 
+                                                    fontWeight: 'bold', 
+                                                    transition: 'background-color 0.1s' 
+                                                }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-warning-light)')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
+                                            >
+                                                {label.nombre} (X)
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -637,7 +744,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                         <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>{props.taskModalError}</p>
                     )}
 
-                    {/* Botones */}
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                         <button
                             type="button" onClick={() => props.setIsTaskModalOpen(false)}
@@ -665,7 +771,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     setSelectedTask,
     handleUpdateTaskStatus,
     isUpdatingTask,
-    // Desestructurar todas las props de comentarios aquí
     comentarios,
     isCommentsLoading,
     currentUserId,
@@ -684,38 +789,41 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     const validStatuses = getValidNextStatuses(currentStatus);
     const displayStatuses = Array.from(new Set([currentStatus, ...validStatuses]));
     const isReadOnly = currentStatus === EstadoTarea.CANCELADA;
+    
     const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
+    const [isAddingLabels, setIsAddingLabels] = useState(false);
+    const [isRemovingLabels, setIsRemovingLabels] = useState(false);
     const [labelUpdateError, setLabelUpdateError] = useState<string | null>(null);
 
     useEffect(() => {
         if (currentTaskLabels) {
             setSelectedLabelIds(currentTaskLabels.map(label => label.id));
         }
-    }, [currentTaskLabels]); // Dependencia: las etiquetas cargadas
+    }, [currentTaskLabels]);
 
-    const handleLabelChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const selectedOptions = Array.from(e.target.selectedOptions);
-        const selectedIds = selectedOptions.map(option => option.value);
-        setSelectedLabelIds(selectedIds);
-    };
+    const handleLabelAction = async (labelId: string, operation: 'add' | 'remove') => {
+        if (!selectedTask || isUpdatingLabels) return;
 
-    const saveLabelChanges = async () => {
         setLabelUpdateError(null);
+        let newLabelIds = [...selectedLabelIds];
 
-        // Comprobar si hay cambios reales
-        const originalIds = (currentTaskLabels || []).map(l => l.id).sort();
-        const newIds = [...selectedLabelIds].sort();
-
-        if (JSON.stringify(originalIds) === JSON.stringify(newIds)) {
-            return; // No hay cambios
+        if (operation === 'add' && !newLabelIds.includes(labelId)) {
+            newLabelIds.push(labelId);
+        } else if (operation === 'remove' && newLabelIds.includes(labelId)) {
+            newLabelIds = newLabelIds.filter(id => id !== labelId);
+        } else {
+            return;
         }
 
         try {
-            await handleUpdateTaskLabels(selectedTask.id, selectedLabelIds);
+            await handleUpdateTaskLabels(selectedTask.id, newLabelIds);
+            setSelectedLabelIds(newLabelIds); 
+            
         } catch (error) {
             setLabelUpdateError(error instanceof Error ? error.message : 'Error al guardar');
         }
     };
+
 
     return (
         <div style={{
@@ -735,7 +843,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 onClick={(e) => e.stopPropagation()}
             >
 
-                {/* Encabezado y Botón de Cerrar */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
                     <h2 style={{ margin: 0, fontSize: '1.5rem' }}>{selectedTask.titulo}</h2>
                     <button
@@ -747,16 +854,13 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     </button>
                 </div>
 
-                {/* Detalles y Edición de Estado */}
                 <div style={{ marginBottom: '2rem', backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '4px', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
 
-                    {/* Prioridad (solo lectura) */}
                     <div style={{ flex: 1, minWidth: '150px' }}>
                         <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Prioridad:</p>
                         <span style={{ color: getPriorityColor(selectedTask.prioridad) }}>{selectedTask.prioridad}</span>
                     </div>
 
-                    {/* Selector de Estado (Editable/Readonly) */}
                     <div style={{ flex: 1, minWidth: '150px' }}>
                         <label htmlFor="taskStateSelect" style={{ display: 'block', margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>
                             Estado Actual:
@@ -777,7 +881,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                     <option
                                         key={estado}
                                         value={estado}
-                                        // Deshabilita estados que no son ni el actual ni los válidos (si el navegador lo permite)
                                         disabled={estado !== currentStatus && !validStatuses.includes(estado)}
                                     >
                                         {estado}
@@ -790,7 +893,6 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                     </div>
                 </div>
 
-                {/* Descripción */}
                 <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', fontSize: '1.2rem' }}>Descripción</h3>
                 <div style={{ whiteSpace: 'pre-wrap', minHeight: '50px', color: selectedTask.descripcion ? 'inherit' : 'var(--text-secondary)' }}>
                     {selectedTask.descripcion || 'Sin descripción detallada.'}
@@ -799,49 +901,73 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '2rem', fontSize: '1.2rem' }}>
                     🏷️ Etiquetas
                 </h3>
-
+                
                 {labelsLoading ? (
                     <p style={{ color: 'var(--text-secondary)' }}>Cargando etiquetas...</p>
                 ) : (
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <select
-                            id="taskLabelsEdit"
-                            multiple
-                            value={selectedLabelIds}
-                            onChange={handleLabelChange}
-                            style={{ width: '100%', padding: '0.5rem', minHeight: '100px', boxSizing: 'border-box' }}
-                            disabled={isUpdatingLabels || isReadOnly}
-                        >
-                            {allLabels.map(label => (
-                                <option key={label.id} value={label.id}>{label.nombre}</option>
-                            ))}
-                        </select>
-                        {allLabels.length === 0 && (
-                            <small style={{ color: 'var(--text-secondary)', marginTop: '5px', display: 'block' }}>
-                                No hay etiquetas disponibles en este equipo.
-                            </small>
-                        )}
-
-                        {/* Botón de Guardar para Etiquetas */}
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                            <button
-                                onClick={saveLabelChanges}
-                                disabled={isUpdatingLabels || isReadOnly}
-                            >
-                                {isUpdatingLabels ? 'Guardando...' : 'Guardar Etiquetas'}
-                            </button>
+                        
+                        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Etiquetas Actuales:</p>
+                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginBottom: '1rem', minHeight: '30px' }}>
+                            <EtiquetaDisplay etiquetas={currentTaskLabels} />
                         </div>
-                        {labelUpdateError && <p style={{ color: 'var(--color-error)', fontSize: '0.9rem', textAlign: 'right' }}>{labelUpdateError}</p>}
+
+                        {/* 💡 CAMBIO: Contenedor para centrar los botones y darles margen */}
+                        <div style={{ 
+                            display: 'flex', 
+                            justifyContent: 'center', 
+                            marginTop: '1.5rem',     
+                            marginBottom: '1rem'     
+                        }}>
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <button 
+                                    onClick={() => { setIsAddingLabels(true); setIsRemovingLabels(false); setLabelUpdateError(null); }}
+                                    disabled={isReadOnly || isUpdatingLabels}
+                                    // Usa el color primario (el salmón que asumes)
+                                >
+                                    ➕ Agregar Etiquetas
+                                </button>
+                                <button 
+                                    onClick={() => { setIsRemovingLabels(true); setIsAddingLabels(false); setLabelUpdateError(null); }}
+                                    disabled={isReadOnly || isUpdatingLabels || currentTaskLabels.length === 0}
+                                    // Se eliminó el background 'warning' para que use el color primario (salmón)
+                                >
+                                    ➖ Remover Etiquetas
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {/* Secciones condicionales para la gestión */}
+                        {(isAddingLabels || isRemovingLabels) && (
+                            <div style={{ marginTop: '1rem', padding: '1rem', border: '1px dashed var(--border-color)', borderRadius: '4px' }}>
+                                {isAddingLabels && (
+                                    <AddLabelsSection
+                                        allLabels={allLabels}
+                                        currentTaskLabels={currentTaskLabels}
+                                        onAction={handleLabelAction}
+                                        isUpdatingLabels={isUpdatingLabels}
+                                        onClose={() => setIsAddingLabels(false)}
+                                    />
+                                )}
+                                {isRemovingLabels && (
+                                    <RemoveLabelsSection
+                                        currentTaskLabels={currentTaskLabels}
+                                        onAction={handleLabelAction}
+                                        isUpdatingLabels={isUpdatingLabels}
+                                        onClose={() => setIsRemovingLabels(false)}
+                                    />
+                                )}
+                                {isUpdatingLabels && <p style={{ color: 'var(--color-primary)', fontStyle: 'italic' }}>Guardando cambio...</p>}
+                                {labelUpdateError && <p style={{ color: 'var(--color-error)' }}>Error: {labelUpdateError}</p>}
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {/* 1. SECCIÓN DE HISTORIAL (NUEVA POSICIÓN) */}
                 <HistorialSection
-                    // La propiedad 'historial' viene directamente de selectedTask
                     historial={selectedTask.historial || []}
                 />
 
-                {/* Componente ComentariosSection: */}
                 <ComentariosSection
                     tareaId={selectedTask.id}
                     comentarios={comentarios}
