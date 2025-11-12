@@ -1,0 +1,295 @@
+@baseUrl = http://localhost:3000
+@userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
+@equipoId = b0eacabe-e0b2-4d9e-b48f-5620d8db4876
+@tareaId = e25e7d93-f698-4cea-917a-960eb71414e8
+@user2Id = 03990375-c525-46d4-a406-5b05cb757865
+@commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
+@token =
+
+###
+### Swagger UI
+GET {{baseUrl}}/docs
+
+
+### Estado del sistema
+GET {{baseUrl}}/api/status
+
+
+### ---------- Usuarios ----------
+
+
+
+### Registrar usuario
+POST {{baseUrl}}/api/users/register
+Content-Type: application/json
+
+{
+  "nombre": "SuperNigger",
+  "email": "nigger@example.com.ar",
+  "password": "123456"
+}
+
+
+
+###
+### Login (IMPORTANTE: Este paso es el primero)
+# @name loginRequest
+POST {{baseUrl}}/api/users/login
+Content-Type: application/json
+
+{
+  "email": "eze6@example.com.ar",
+  "password": "1234567"
+}
+
+###
+@token = {{loginRequest.response.body.token}}
+
+# (Opcional) Puedes imprimir el token para verificarlo
+# @tokenPreview = {{token}}
+###
+### Actualizar usuario (Requiere Auth)
+PUT {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "EzequielPepe",
+  "email": "eze4@example.com.ar",
+  "password": "123456"
+}
+
+###
+### Borrar usuario (Requiere Auth)
+DELETE {{baseUrl}}/api/users/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": "{{userId}}"
+}
+###
+
+### ---------- Equipos ----------
+
+### Salir del equipo (Requiere Auth)
+POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/salir
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "d3d8acd9-6397-41d6-bcda-60568c7c01f6"
+}
+
+###
+
+
+
+### Obtener Equipos (Requiere Auth)
+GET {{baseUrl}}/api/equipos/equipos/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+# Nota: Los GET con body son inusuales. 
+# Si el 'userId' ya está en la URL, este body es redundante.
+{
+  "userId": "{{userId}}"
+}
+
+###
+### Crear equipo (Requiere Auth)
+POST {{baseUrl}}/api/equipos/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre": "Equipo Backend",
+  "propietarioId": "{{userId}}" 
+
+}
+
+###
+### Invitar miembro al equipo (Requiere Auth)
+POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/invitar
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "correo": "nigger@example.com.ar",
+  "propietarioId": "a06450db-5d0c-4895-a1ea-653b2d03ae55"
+}
+
+###
+### Borrar equipo (Requiere Auth)
+DELETE {{baseUrl}}/api/equipos/{{equipoId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "userId": "{{userId}}"
+}
+
+
+### ---------- Tareas ----------
+
+### Listar tareas por filtro (Requiere Auth)
+GET {{baseUrl}}/api/tareas/{{equipoId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+# Nota: Los GET con body son inusuales. 
+# Es mejor pasar filtros como query params, ej:
+# GET {{baseUrl}}/api/tareas/{{equipoId}}?prioridad=Alta&estado=Pendiente
+{
+  "equipoId": "{{equipoId}}",
+  "prioridad": "Alta",
+  "estado": "Pendiente"
+}
+
+###
+### Crear tarea (Requiere Auth)
+POST {{baseUrl}}/api/tareas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "titulo": "Implementar login",
+  "descripcion": "Crear endpoint de login con JWT",
+  "equipoId": "{{equipoId}}",
+  "prioridad": "Alta",
+  "estado": "Pendiente"
+}
+
+###
+### Cambiar estado de tarea (Requiere Auth)
+PUT {{baseUrl}}/api/tareas/{{tareaId}}/estado
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nuevoEstado": "En curso",
+  "usuarioId": "{{userId}}"
+}
+
+###
+### Eliminar tarea (Requiere Auth)
+DELETE {{baseUrl}}/api/tareas/{{tareaId}}/{{userId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "tareaId": "{{tareaId}}",
+  "usuarioId": "{{userId}}"
+}
+
+### ---------- Comentarios ----------
+
+### Listar comentarios de una tarea (Requiere Auth)
+GET {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "tareaId": "{{tareaId}}"
+}
+
+###
+### Crear comentario en una tarea (Requiere Auth)
+POST {{baseUrl}}/api/comentarios/tareas/{{tareaId}}/comentarios
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "contenido": "Este es un comentario de prueba.",
+  "creadorId": "{{userId}}"
+}
+
+###
+### Editar comentario (Requiere Auth)
+PUT {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "contenido": "Comentario editado."
+}
+
+###
+### Eliminar comentario (Requiere Auth)
+DELETE {{baseUrl}}/api/comentarios/comentarios/{{commentId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "id": "{{commentId}}"
+}
+###
+### ---------- Etiquetas ----------
+
+# Nota: Todas estas rutas usan /api/etiquetas/ ya que así lo definiste en createApp():
+# app.use("/api/etiquetas", etiquetasRoutes); 
+
+
+### 1. Crear Etiqueta (Requiere Auth y ser Miembro del equipo)
+# POST /api/equipos/:equipoId/etiquetas  =>  /api/etiquetas/equipos/:equipoId/etiquetas
+### 1. Crear Etiqueta (PRUEBA FINAL LIMPIA)
+
+# @etiquetaNombre = "Urgente"
+ 
+@nuevaEtiquetaId = 56571552-dbdd-4b1b-8bb7-634e2a562c1b
+
+POST {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "No urgente" 
+}
+
+### <-- Asegúrate que no haya NADA aquí
+
+### 2. Listar Etiquetas de un Equipo (Requiere Auth y ser Miembro)
+# GET /api/equipos/:equipoId/etiquetas
+GET {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 3. Asignar Etiqueta a una Tarea (Requiere Auth y ser Miembro)
+# POST /api/tareas/:tareaId/etiquetas/:etiquetaId  =>  /api/etiquetas/tareas/:tareaId/etiquetas/:etiquetaId
+POST {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 4. Actualizar Etiqueta (Requiere Auth y ser CREADOR)
+# PATCH /api/etiquetas/:etiquetaId
+PATCH {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "nombre": "Prioridad-Alta-Editada"
+}
+
+
+### 5. Remover Etiqueta de Tarea (Requiere Auth y ser Miembro)
+# DELETE /api/tareas/:tareaId/etiquetas/:etiquetaId
+DELETE {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### 6. Eliminar Etiqueta (Requiere Auth y ser CREADOR)
+# DELETE /api/etiquetas/:etiquetaId
+DELETE {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+### 7. Listar Etiquetas de una Tarea (Requiere Auth y ser Miembro)
+
+GET {{baseUrl}}/api/etiquetas/tareas/534f614a-0163-48ba-a8bb-05ec07238da9/etiquetas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+###------------- backend/src/routes/etiquetas.routes.ts ----------
