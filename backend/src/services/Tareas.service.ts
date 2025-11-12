@@ -17,9 +17,7 @@ export class TareaService {
   private historialRepo = AppDataSource.getRepository(Historial);
   private tareaEtiquetaRepo = AppDataSource.getRepository(TareaEtiqueta);
 
-  /**
-   * 1. Cambiamos la firma de la función para aceptar los nuevos argumentos
-   */
+ 
   async crearTarea(
     datosTarea: {
       titulo: string;
@@ -29,41 +27,38 @@ export class TareaService {
       prioridad?: string;
     },
     creadorId: string,
-    etiquetasId?: string[] // 👈 Recibimos el array de IDs (puede ser undefined)
+    etiquetasId?: string[]
   ) {
 
-    /**
-     * 2. Usamos una transacción para asegurar la integridad de los datos
-     */
+   
     return AppDataSource.manager.transaction(async (transactionalEntityManager) => {
 
-      // Obtenemos los repositorios que SÍ van a escribir en la transacción
+
       const tareaRepo = transactionalEntityManager.getRepository(Tarea);
       const historialRepo = transactionalEntityManager.getRepository(Historial);
       const tareaEtiquetaRepo = transactionalEntityManager.getRepository(TareaEtiqueta);
 
-      // 3. Validamos creador y equipo (podemos usar los repos de 'this' para leer)
+     
       const creador = await this.usuarioRepo.findOneBy({ id: creadorId });
       if (!creador) throw new Error("Usuario no encontrado");
 
       const equipo = await this.equipoRepo.findOneBy({ id: datosTarea.equipoId });
       if (!equipo) throw new Error("Equipo no encontrado");
 
-      // 4. Creamos la entidad Tarea
+      
       const tarea = tareaRepo.create({
         titulo: datosTarea.titulo,
         descripcion: datosTarea.descripcion,
         creador: creador,
-        equipo: equipo, // Asignamos la entidad 'equipo' completa
+        equipo: equipo, 
         estado: (datosTarea.estado as EstadoTarea) || EstadoTarea.PENDIENTE,
         prioridad: (datosTarea.prioridad as PrioridadTarea) || PrioridadTarea.MEDIA
       });
 
-      // 5. Guardamos la Tarea (usando la transacción)
-      // Esto es vital para que 'tarea.id' se genere
+     
       const tareaGuardada = await tareaRepo.save(tarea);
 
-      // 6. Creamos y guardamos el Historial (usando la transacción)
+      
       const historial = historialRepo.create({
         tarea: tareaGuardada,
         usuario: creador,
@@ -71,27 +66,23 @@ export class TareaService {
       });
       await historialRepo.save(historial);
 
-      /**
-       * 7. Lógica para guardar etiquetas (¡LA PARTE CLAVE!)
-       * Verificamos si 'etiquetasId' existe y si tiene elementos.
-       * Si el usuario no seleccionó etiquetas, 'etiquetasId' será [] o undefined,
-       * por lo que este bloque se omitirá (que es lo que quieres).
-       */
+   
+      
       if (etiquetasId && etiquetasId.length > 0) {
 
-        // Creamos las entidades de la tabla intermedia
+      
         const nuevasAsignaciones = etiquetasId.map(idDeEtiqueta => {
           return tareaEtiquetaRepo.create({
-            tareaId: tareaGuardada.id, // ID de la tarea que acabamos de guardar
-            etiquetaId: idDeEtiqueta,   // ID de la etiqueta del bucle
+            tareaId: tareaGuardada.id, 
+            etiquetaId: idDeEtiqueta,   
           });
         });
 
-        // Guardamos todas las asignaciones (usando la transacción)
+
         await tareaEtiquetaRepo.save(nuevasAsignaciones);
       }
 
-      // 8. Devolvemos la tarea creada
+
       return tareaGuardada;
     });
   }
@@ -123,7 +114,7 @@ export class TareaService {
     prioridad?: PrioridadTarea,
     page: number = 1,
     limit: number = 10,
-    // 💡 CAMBIO: Añadimos los nuevos parámetros opcionales
+   
     etiquetaId?: string,
     q?: string
   ) {
@@ -133,8 +124,7 @@ export class TareaService {
       .leftJoinAndSelect("tarea.historial", "historial")
       .leftJoinAndSelect("historial.usuario", "usuario")
 
-      // 💡 CAMBIO 1: Carga anticipada de etiquetas
-      // Cargamos la relación intermedia Y la entidad Etiqueta final
+  
       .leftJoinAndSelect("tarea.etiquetasAsignadas", "tareaEtiqueta")
       .leftJoinAndSelect("tareaEtiqueta.etiqueta", "etiqueta")
 
@@ -143,57 +133,54 @@ export class TareaService {
     if (estado) query.andWhere("tarea.estado = :estado", { estado });
     if (prioridad) query.andWhere("tarea.prioridad = :prioridad", { prioridad });
 
-    // 💡 CAMBIO 2: Filtro por texto (búsqueda 'q')
+   
     if (q) {
-      // Usamos LOWER para búsqueda case-insensitive (funciona en Postgres, MySQL, etc.)
+    
       query.andWhere(
         "(LOWER(tarea.titulo) LIKE LOWER(:q) OR LOWER(tarea.descripcion) LIKE LOWER(:q))",
-        { q: `%${q}%` } // % son wildcards
+        { q: `%${q}%` }
       );
     }
 
-    // 💡 CAMBIO 3: Filtro por Etiqueta (usando subquery)
+    
     if (etiquetaId) {
-      // Añadimos un filtro que dice: "donde el ID de la tarea exista en
-      // esta subconsulta que busca en TareaEtiqueta"
+    
       query.andWhere(qb => {
         const subQuery = qb.subQuery()
           .select("te.tareaId")
-          .from(TareaEtiqueta, "te") // Usamos la Entidad
+          .from(TareaEtiqueta, "te") 
           .where("te.etiquetaId = :etiquetaId")
           .getQuery();
         return "tarea.id IN " + subQuery;
-      }).setParameter("etiquetaId", etiquetaId); // Asignamos el parámetro a la query principal
+      }).setParameter("etiquetaId", etiquetaId); 
     }
 
-    // Paginación y orden (buena práctica añadir un orden)
+  
     query.orderBy("tarea.fechaCreacion", "DESC")
       .skip((page - 1) * limit)
       .take(limit);
 
     const [tareas, total] = await query.getManyAndCount();
 
-    // 💡 CAMBIO 4: Transformación de la respuesta
-    // El frontend (TareaCard) espera 'tarea.etiquetas: Etiqueta[]'
-    // pero la BD nos dio 'tarea.etiquetasAsignadas: TareaEtiqueta[]'
+ 
 
     const tareasTransformadas = tareas.map(tarea => {
-      // Mapeamos la data de la tabla intermedia a un array plano de Etiqueta
+     
       const etiquetas = tarea.etiquetasAsignadas
-        ? tarea.etiquetasAsignadas.map(te => te.etiqueta).filter(Boolean) // filter(Boolean) por si alguna relación está rota
+        ? tarea.etiquetasAsignadas.map(te => te.etiqueta).filter(Boolean) 
         : [];
 
-      // Devolvemos la tarea con el formato que espera el frontend
+      
       return {
         ...tarea,
-        etiquetas: etiquetas, // Array de Etiqueta (lo que TareaCard espera)
-        etiquetasAsignadas: undefined, // Opcional: limpiar para no enviar data extra
+        etiquetas: etiquetas, 
+        etiquetasAsignadas: undefined, 
       };
     });
 
 
     return {
-      tareas: tareasTransformadas, // 👈 Enviamos las tareas transformadas
+      tareas: tareasTransformadas, 
       total,
       page,
       limit,

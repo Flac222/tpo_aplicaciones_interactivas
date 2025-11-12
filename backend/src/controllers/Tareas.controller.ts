@@ -7,24 +7,23 @@ const tareaService = new TareaService();
 
 export async function crearTarea(req: AuthRequest, res: Response) {
   try {
-    // 1. Desestructuramos *todo* del body, incluyendo 'etiquetasId'
+   
     const {
       titulo,
       descripcion,
       equipoId,
       estado,
       prioridad,
-      etiquetasId // <--- ¡AQUÍ ESTÁ! (Será un array de IDs o undefined)
+      etiquetasId 
     } = req.body;
 
     const creadorId = req.user!.id;
 
-    // 2. Validamos lo mínimo necesario
+    
     if (!titulo || !equipoId) {
       return res.status(400).json({ error: "Título y EquipoID son obligatorios" });
     }
 
-    // 3. Agrupamos los datos de la tarea en un objeto
     const datosTarea = {
       titulo,
       descripcion,
@@ -33,27 +32,26 @@ export async function crearTarea(req: AuthRequest, res: Response) {
       prioridad
     };
 
-    // 4. Llamamos al servicio con los argumentos correctos
+   
     const tarea = await tareaService.crearTarea(
       datosTarea,
       creadorId,
-      etiquetasId // <--- Pasamos el array de IDs al servicio
+      etiquetasId 
     );
 
-    res.status(201).json(tarea); // Usamos 201 (Created) que es más correcto
+    res.status(201).json(tarea); 
   } catch (err: any) {
     res.status(400).json({ error: err.message });
   }
 }
 
 
-// En tu archivo de controller de tareas (ej: TareaController.ts)
-// Asegúrate de importar TareaService y TareaEtiqueta si es necesario
+
 
 export const listarTareasPorFiltro = async (req: AuthRequest, res: Response) => {
   const { equipoId } = req.params;
 
-  // 💡 CAMBIO: Extraemos 'etiquetaId' y 'q' (para búsqueda de texto)
+
   const {
     estado,
     prioridad,
@@ -63,7 +61,7 @@ export const listarTareasPorFiltro = async (req: AuthRequest, res: Response) => 
     q
   } = req.query;
 
-  const usuarioId = req.user!.id; // (No se usa aquí, pero está bien tenerlo)
+  const usuarioId = req.user!.id; 
 
   try {
     const tareasPaginadas = await TareaService.listarPorEquipoYFiltro(
@@ -72,7 +70,7 @@ export const listarTareasPorFiltro = async (req: AuthRequest, res: Response) => 
       prioridad as any,
       parseInt(page as string),
       parseInt(limit as string),
-      // 💡 CAMBIO: Pasamos los nuevos parámetros al servicio
+      
       etiquetaId as string | undefined,
       q as string | undefined
     );

@@ -103,10 +103,10 @@ export function HomePage(): React.ReactElement {
             }}>
                 <h2 style={{ marginBottom: "1rem", fontSize: "1.5em" }}>📋 Instrucciones</h2>
                 <ol style={{ lineHeight: "1.8", paddingLeft: "1.5rem", marginBottom: "1rem" }}>
-                    <li><strong>Lee el README.md</strong> - Revisa los ejercicios y sus objetivos</li>
-                    <li><strong>Inicia sesión</strong> - Usa el botón de abajo (usuario: gamer / password: cualquiera)</li>
-                    <li><strong>Explora la app</strong> - Navega por Feed, Perfil y Configuración</li>
-                    <li><strong>Completa los ejercicios</strong> - Implementa las funcionalidades faltantes</li>
+                    <li><strong>Lee el README.md</strong> - Revisar para entender el funcionamiento de la app</li>
+                    <li><strong>Registrate</strong> - Pone tus datos en el formulario de registro</li>
+                    <li><strong>Inicia sesión</strong> - Usa el botón de abajo para poder iniciar sesion</li>
+                    <li><strong>Explora la app</strong> - Crea equipos y tareas para poder organizar tu trabajo</li>
                 </ol>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95em" }}>
                     
