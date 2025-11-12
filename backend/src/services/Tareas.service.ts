@@ -99,8 +99,6 @@ static async listarPorEquipoYFiltro(
   };
 }
 
-
-
   async eliminarTareaService(tareaId: string, usuarioId: string): Promise<boolean> {
     const tarea = await this.tareaRepo.findOne({
       where: { id: tareaId },
