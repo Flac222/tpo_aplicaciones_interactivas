@@ -1,9 +1,9 @@
 @baseUrl = http://localhost:3000
-@userId = 0e6c43b7-7c00-4a3c-b60c-ed4f34e5741d
-@equipoId = b0eacabe-e0b2-4d9e-b48f-5620d8db4876
-@tareaId = e25e7d93-f698-4cea-917a-960eb71414e8
+@userId = da2abc8c-3193-4d96-b6d4-cf207266b5fc
+@equipoId = e84a6f88-9dff-4ce9-ba41-ba38206bb9fe
+@tareaId = 0d33e900-fdc0-4c29-9797-95157097aea3
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
-@commentId = f23c2b45-8c35-436d-96cd-0f9a6e15afc6
+@commentId = 5c750f66-dd64-4443-88a7-6986abb83323
 @token =
 
 ###
@@ -24,8 +24,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "SuperNigger",
-  "email": "nigger@example.com.ar",
+  "nombre": "SuperUsuario",
+  "email": "eze@example.com.ar",
   "password": "123456"
 }
 
@@ -39,23 +39,20 @@ Content-Type: application/json
 
 {
   "email": "eze6@example.com.ar",
-  "password": "1234567"
+  "password": "123456"
 }
 
 ###
 @token = {{loginRequest.response.body.token}}
 
-# (Opcional) Puedes imprimir el token para verificarlo
-# @tokenPreview = {{token}}
-###
-### Actualizar usuario (Requiere Auth)
+
 PUT {{baseUrl}}/api/users/{{userId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
   "nombre": "EzequielPepe",
-  "email": "eze4@example.com.ar",
+  "email": "eze6@example.com.ar",
   "password": "123456"
 }
 
@@ -90,8 +87,7 @@ GET {{baseUrl}}/api/equipos/equipos/{{userId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-# Nota: Los GET con body son inusuales. 
-# Si el 'userId' ya está en la URL, este body es redundante.
+
 {
   "userId": "{{userId}}"
 }
@@ -110,13 +106,13 @@ Authorization: Bearer {{token}}
 
 ###
 ### Invitar miembro al equipo (Requiere Auth)
-POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/invitar
+POST {{baseUrl}}/api/equipos/{{equipoId}}/invitar
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "correo": "nigger@example.com.ar",
-  "propietarioId": "a06450db-5d0c-4895-a1ea-653b2d03ae55"
+  "correo": "eze4@example.com.ar",
+  "propietarioId": "{{userId}}"
 }
 
 ###
@@ -137,9 +133,7 @@ GET {{baseUrl}}/api/tareas/{{equipoId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-# Nota: Los GET con body son inusuales. 
-# Es mejor pasar filtros como query params, ej:
-# GET {{baseUrl}}/api/tareas/{{equipoId}}?prioridad=Alta&estado=Pendiente
+
 {
   "equipoId": "{{equipoId}}",
   "prioridad": "Alta",
@@ -226,18 +220,9 @@ Authorization: Bearer {{token}}
 ###
 ### ---------- Etiquetas ----------
 
-# Nota: Todas estas rutas usan /api/etiquetas/ ya que así lo definiste en createApp():
-# app.use("/api/etiquetas", etiquetasRoutes); 
-
-
-### 1. Crear Etiqueta (Requiere Auth y ser Miembro del equipo)
-# POST /api/equipos/:equipoId/etiquetas  =>  /api/etiquetas/equipos/:equipoId/etiquetas
-### 1. Crear Etiqueta (PRUEBA FINAL LIMPIA)
-
-# @etiquetaNombre = "Urgente"
  
-@nuevaEtiquetaId = 56571552-dbdd-4b1b-8bb7-634e2a562c1b
-
+@nuevaEtiquetaId = 24f91f95-bc31-4617-9c82-8ecf0d04a8af
+### Crear etiqueta en un equipo
 POST {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
@@ -246,25 +231,20 @@ Authorization: Bearer {{token}}
     "nombre": "No urgente" 
 }
 
-### <-- Asegúrate que no haya NADA aquí
-
-### 2. Listar Etiquetas de un Equipo (Requiere Auth y ser Miembro)
-# GET /api/equipos/:equipoId/etiquetas
+### Listar etiquetas de un equipo
 GET {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
-### 3. Asignar Etiqueta a una Tarea (Requiere Auth y ser Miembro)
-# POST /api/tareas/:tareaId/etiquetas/:etiquetaId  =>  /api/etiquetas/tareas/:tareaId/etiquetas/:etiquetaId
+### Asignar etiqueta a tarea
 POST {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
-### 4. Actualizar Etiqueta (Requiere Auth y ser CREADOR)
-# PATCH /api/etiquetas/:etiquetaId
-PATCH {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+### Actualizar etiqueta
+PATCH {{baseUrl}}/api/etiquetas/etiquetas/{{nuevaEtiquetaId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -273,22 +253,20 @@ Authorization: Bearer {{token}}
 }
 
 
-### 5. Remover Etiqueta de Tarea (Requiere Auth y ser Miembro)
-# DELETE /api/tareas/:tareaId/etiquetas/:etiquetaId
+###  
 DELETE {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas/{{nuevaEtiquetaId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 
-### 6. Eliminar Etiqueta (Requiere Auth y ser CREADOR)
-# DELETE /api/etiquetas/:etiquetaId
-DELETE {{baseUrl}}/api/etiquetas/{{nuevaEtiquetaId}}
+### 
+DELETE {{baseUrl}}/api/etiquetas/etiquetas/{{nuevaEtiquetaId}}
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-### 7. Listar Etiquetas de una Tarea (Requiere Auth y ser Miembro)
+### 
 
-GET {{baseUrl}}/api/etiquetas/tareas/534f614a-0163-48ba-a8bb-05ec07238da9/etiquetas
+GET {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
 

@@ -5,15 +5,13 @@ import { AuthRequest } from "../middlewares/auth.middleware";
 const usuarioService = new UsuarioService();
 
 export async function obtenerMiPerfil(req: AuthRequest, res: Response) {
-    // El 'req.user' es establecido por el authMiddleware después de validar el token
+    
     if (!req.user || !req.user.id) {
         return res.status(401).json({ error: "No autenticado. Token inválido." });
     }
 
     try {
-        // En lugar de usar el service, simplemente devolvemos el objeto ya adjunto por el middleware,
-        // ya que el middleware lo buscó en la base de datos.
-        // Asegúrate de NO devolver la contraseña.
+       
         const { id, nombre, email } = req.user;
         
         return res.status(200).json({ 
@@ -21,7 +19,7 @@ export async function obtenerMiPerfil(req: AuthRequest, res: Response) {
         });
         
     } catch (error) {
-        // Esto solo ocurriría si el middleware falló o el usuario fue eliminado durante la solicitud.
+        
         return res.status(500).json({ error: "Error al obtener perfil." });
     }
 }
