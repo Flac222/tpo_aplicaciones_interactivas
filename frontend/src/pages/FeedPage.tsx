@@ -19,14 +19,12 @@ interface Propietario extends Miembro {
 interface Equipo {
   id: string;
   nombre: string;
-  // ¡CAMBIO AQUÍ! Ahora es un objeto Propietario, no un string
   propietario: Propietario;
   miembros: Miembro[];
 }
 const BASE_URL = "http://localhost:3000";
 
 export function FeedPage(): React.ReactElement {
-  // 1. Contexto y Opciones de Fetch (sin cambios)
   const { usuario } = useAuth();
   const userId = usuario?.id;
   const userToken = useAuth().token;
@@ -46,7 +44,7 @@ export function FeedPage(): React.ReactElement {
     return {};
   }, [userToken]);
 
-  // 3. Hook useFetch (sin cambios)
+
   const {
     data: equipos,
     loading,
@@ -54,22 +52,22 @@ export function FeedPage(): React.ReactElement {
     refetch
   } = useFetch<Equipo[]>(url, fetchOptions);
 
-  // --- Estados del Modal de CREACIÓN (sin cambios) ---
+ 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTeamName, setNewTeamName] = useState("");
   const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // --- ¡NUEVO! Estados para la GESTIÓN de miembros ---
+  
 
-  // Reemplaza 'expandedTeamId'. Almacena el equipo que estamos viendo en el modal.
+
   const [viewingTeam, setViewingTeam] = useState<Equipo | null>(null);
 
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
 
-  // --- Función handleCreateTeam (sin cambios) ---
+
   const handleCreateTeam = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTeamName.trim()) {
@@ -108,8 +106,6 @@ export function FeedPage(): React.ReactElement {
     }
   };
 
-  // --- ¡MODIFICADO! Función para remover miembro ---
-  // Ahora también actualiza el estado 'viewingTeam' para refrescar el modal
   const handleRemoveMember = useCallback(async (equipoId: string, miembroId: string) => {
     if (userId === miembroId) {
       setListError("No puedes eliminarte a ti mismo. Usa 'Salir del Equipo'.");
@@ -138,10 +134,9 @@ export function FeedPage(): React.ReactElement {
       }
 
       // ¡ÉXITO!
-      refetch(); // Recargar la lista principal en segundo plano
+      refetch(); 
 
-      // --- ¡NUEVO! Actualizar el modal en vivo ---
-      // Filtramos el miembro eliminado del estado 'viewingTeam'
+
       setViewingTeam(prevTeam => {
         if (!prevTeam) return null;
         const newMiembros = prevTeam.miembros.filter(m => m.id !== miembroId);
@@ -153,10 +148,10 @@ export function FeedPage(): React.ReactElement {
     } finally {
       setRemovingMemberId(null);
     }
-  }, [userToken, userId, refetch]); // Dependencias de useCallback
+  }, [userToken, userId, refetch]); 
 
 
-  // 4. Lógica de renderizado (¡MODIFICADA!)
+  
   const renderContent = (): React.ReactNode => {
     if (!userId) {
       return <p style={{ color: "var(--color-warning)" }}>⚠️ Esperando datos de usuario...</p>;
@@ -165,7 +160,7 @@ export function FeedPage(): React.ReactElement {
       return <p>Cargando equipos...</p>;
     }
 
-    // Mostramos el error de la lista (al eliminar) aquí para visibilidad
+    
     if (listError) {
       return (
         <p style={{ color: "var(--color-error)", fontWeight: 'bold' }}>
@@ -187,7 +182,7 @@ export function FeedPage(): React.ReactElement {
       return <p>Aún no tienes equipos asignados. ¡Empieza uno nuevo!</p>;
     }
 
-    // --- ¡MODIFICADO! Listado de equipos (más simple) ---
+    
     return (
       <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))' }}>
         {equipos.map((equipo) => {
@@ -214,9 +209,9 @@ export function FeedPage(): React.ReactElement {
                 <button
                   title="Ver miembros"
                   onClick={(e) => {
-                    e.stopPropagation(); // Evitar que el Link navegue
-                    e.preventDefault();   // Evitar comportamiento default
-                    setViewingTeam(equipo); // <-- ¡NUEVO! Abre el modal de miembros
+                    e.stopPropagation(); 
+                    e.preventDefault();   
+                    setViewingTeam(equipo);
                   }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', padding: '0.25rem' }}
                 >
@@ -237,7 +232,7 @@ export function FeedPage(): React.ReactElement {
     );
   };
 
-  // --- Función renderCreateTeamModal (sin cambios) ---
+ 
   const renderCreateTeamModal = (): React.ReactNode => {
     if (!isModalOpen) return null;
     return (
@@ -293,20 +288,19 @@ export function FeedPage(): React.ReactElement {
     );
   };
 
-  // --- ¡NUEVO! Función que renderiza el modal de MIEMBROS ---
   const renderMemberModal = (): React.ReactNode => {
-    if (!viewingTeam) return null; // Si no hay equipo seleccionado, no renderizar
+    if (!viewingTeam) return null; 
 
     const isOwner = userId === viewingTeam.propietario.id;
 
     return (
-      // Overlay (fondo oscuro)
+      
       <div style={{
         position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
         backgroundColor: 'rgba(0, 0, 0, 0.7)', display: 'flex',
         justifyContent: 'center', alignItems: 'center', zIndex: 1000,
       }}
-        onClick={() => setViewingTeam(null)} // Cierra al hacer clic fuera
+        onClick={() => setViewingTeam(null)} 
       >
         {/* Contenido del Modal */}
         <div
@@ -315,7 +309,7 @@ export function FeedPage(): React.ReactElement {
             padding: '2rem', borderRadius: '8px', minWidth: '300px',
             maxWidth: '500px', zIndex: 1001,
           }}
-          onClick={(e) => e.stopPropagation()} // Evita que el clic se propague
+          onClick={(e) => e.stopPropagation()} 
         >
           <h3 style={{ marginTop: 0 }}>Miembros de: {viewingTeam.nombre}</h3>
           <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginTop: '-0.5rem', marginBottom: '1rem' }}>
@@ -372,7 +366,6 @@ export function FeedPage(): React.ReactElement {
   };
 
 
-  // 5. Estructura del componente principal
   return (
     <div className="main-content">
       {/* Renderizar ambos modales (estarán ocultos por CSS) */}

@@ -20,7 +20,7 @@ export function HomePage(): React.ReactElement {
         setMessage(null);
         setLoading(true);
 
-        // Simple validación básica
+       
         if (!nombre || !email || !password) {
             setMessage({ type: 'error', text: "Todos los campos son obligatorios." });
             setLoading(false);
@@ -37,17 +37,17 @@ export function HomePage(): React.ReactElement {
             const data = await res.json();
 
             if (!res.ok) {
-                // Si el servidor devuelve un error (ej: email ya registrado)
+             
                 throw new Error(data.error || "Fallo en el registro. Intenta con otro email.");
             }
 
-            // Éxito en el registro
+           
             setMessage({ 
                 type: 'success', 
                 text: `✅ ¡Registro exitoso para ${data.nombre}! Ahora puedes iniciar sesión.` 
             });
             
-            // Limpiar formulario al éxito
+            
             setNombre("");
             setEmail("");
             setPassword("");
@@ -59,7 +59,7 @@ export function HomePage(): React.ReactElement {
         }
     };
 
-    // --- Estilos para inputs (basados en tus ejemplos) ---
+    
     const inputStyle: React.CSSProperties = { 
         width: '100%', 
         padding: '0.75rem', 

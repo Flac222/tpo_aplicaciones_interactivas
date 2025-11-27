@@ -5,7 +5,7 @@ import {
     EstadoTarea,
     PrioridadTarea,
     Tarea,
-    Comentario, // Asumiendo que la interfaz Comentario ya tiene 'autor' y 'fecha'
+    Comentario, 
     RegistroHistorial,
     estadoConfig,
     getPriorityColor,
@@ -15,14 +15,14 @@ import {
 
 const BASE_URL = 'http://localhost:3000';
 
-// Definición de Props para el modal de detalle
+
 interface TaskDetailsModalProps {
     selectedTask: Tarea | null;
     setSelectedTask: (task: Tarea | null) => void;
     handleUpdateTaskStatus: (tareaId: string, nuevoEstado: EstadoTarea) => Promise<void>;
     isUpdatingTask: boolean;
 
-    // **NUEVAS PROPS DE COMENTARIOS**
+
     comentarios: Comentario[];
     isCommentsLoading: boolean;
     currentUserId: string;
@@ -36,11 +36,11 @@ interface TaskDetailsModalProps {
     isUpdatingLabels: boolean;
 }
 
-// Componente para renderizar la Tarjeta de Tarea
+
 interface TareaCardProps {
     tarea: Tarea;
     setSelectedTask: (tarea: Tarea) => void;
-    token: string; // 💡 El token de autenticación es necesario para el fetch
+    token: string; 
 }
 
 interface EtiquetaDisplayProps {
@@ -155,9 +155,7 @@ const RemoveLabelsSection: React.FC<LabelActionSectionProps> = ({ currentTaskLab
     );
 };
 
-// ----------------------------------------------------
-// ... (Otros componentes sin cambios relevantes de estilo de botones)
-// ----------------------------------------------------
+
 
 const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) => {
 
@@ -567,7 +565,7 @@ interface CreateTaskModalProps {
     isTaskModalOpen: boolean;
     setIsTaskModalOpen: (isOpen: boolean) => void;
     handleCreateTask: (e: React.FormEvent) => Promise<void>;
-    // Estados del formulario
+    
     newTaskTitle: string;
     setNewTaskTitle: (title: string) => void;
     newTaskDesc: string;
@@ -578,7 +576,7 @@ interface CreateTaskModalProps {
     setNewTaskEstado: (e: EstadoTarea) => void;
     taskModalLoading: boolean;
     taskModalError: string | null;
-    // 💡 NUEVAS PROPS DE ETIQUETAS
+    
     allLabels: Etiqueta[];
     newTaskLabels: string[];
     setNewTaskLabels: (labels: string[]) => void;
@@ -587,7 +585,7 @@ interface CreateTaskModalProps {
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
     if (!props.isTaskModalOpen) return null;
 
-    // 💡 Lógica para manejo de etiquetas con doble click
+    
     const selectedLabels = props.allLabels.filter(label => props.newTaskLabels.includes(label.id));
     const availableLabels = props.allLabels.filter(label => !props.newTaskLabels.includes(label.id));
 
@@ -923,14 +921,14 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                                 <button 
                                     onClick={() => { setIsAddingLabels(true); setIsRemovingLabels(false); setLabelUpdateError(null); }}
                                     disabled={isReadOnly || isUpdatingLabels}
-                                    // Usa el color primario (el salmón que asumes)
+                                    
                                 >
                                     ➕ Agregar Etiquetas
                                 </button>
                                 <button 
                                     onClick={() => { setIsRemovingLabels(true); setIsAddingLabels(false); setLabelUpdateError(null); }}
                                     disabled={isReadOnly || isUpdatingLabels || currentTaskLabels.length === 0}
-                                    // Se eliminó el background 'warning' para que use el color primario (salmón)
+                                    
                                 >
                                     ➖ Remover Etiquetas
                                 </button>

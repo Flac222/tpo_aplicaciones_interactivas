@@ -6,7 +6,7 @@ export interface Usuario {
     id: string;
     nombre: string;
     email: string;
-    password: string; // Nota de Seguridad: Evita almacenar la contraseña real.
+    password: string; 
 }
 
 interface UpdateData {
@@ -22,7 +22,6 @@ interface AuthContextType {
     isAuthenticated: boolean;
     token: string | null;
     updateProfile: (data: UpdateData) => Promise<Usuario>;
-    // 💡 Nuevo: Estado de carga para sincronizar la aplicación
     loading: boolean; 
 }
 
@@ -33,14 +32,14 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [token, setToken] = useState<string | null>(null);
-    // 🛑 CLAVE: Inicialmente en true
+   
     const [loading, setLoading] = useState(true); 
     const baseUrl = "http://localhost:3000";
 
-    // 🔄 Función para intentar cargar el usuario usando un token
+    
     const loadUser = async (authToken: string) => {
         try {
-            // **IMPORTANTE:** Este endpoint debe ser el que tu API usa para obtener el usuario a partir del token
+            
             const res = await fetch(`${baseUrl}/api/users/me`, { 
                 method: "GET",
                 headers: { 
@@ -50,12 +49,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
 
             if (!res.ok) {
-                // Si el token falló, limpiaremos localmente
+                
                 throw new Error("Token de sesión inválido o expirado.");
             }
 
             const data = await res.json();
-            setUsuario(data.usuario || data); // Ajusta según tu API
+            setUsuario(data.usuario || data); 
             setToken(authToken);
         } catch (error) {
             console.error("Error al restaurar la sesión:", error);
@@ -63,25 +62,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUsuario(null);
             setToken(null);
         } finally {
-            // ✅ CLAVE: La carga inicial termina
+            
             setLoading(false); 
         }
     };
 
-    // 🚀 useEffect: Se ejecuta una vez al montar para verificar el token
+   
     useEffect(() => {
         const storedToken = localStorage.getItem("token");
         if (storedToken) {
             loadUser(storedToken);
         } else {
-            setLoading(false); // No hay token, la carga inicial termina inmediatamente
+            setLoading(false); 
         }
     }, []); 
 
 
     const login = async (email: string, password: string) => {
-        // No necesitamos setLoading(true) aquí porque el formulario de login ya maneja su propio estado de carga.
-        // Simplemente asegurémonos de que el login finalice con el token.
+
         try {
             const res = await fetch(`${baseUrl}/api/users/login`, {
                 method: "POST",
@@ -101,7 +99,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             throw error;
         } finally {
-            // Al hacer login, la carga inicial también se considera terminada.
             setLoading(false); 
         }
     };
@@ -144,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-    // ⏳ Mostrar un spinner/mensaje mientras se verifica el token al recargar
+    
     if (loading) {
         return (
             <div style={{ padding: '20px', textAlign: 'center', fontSize: '1.2em', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -162,7 +159,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAuthenticated: usuario !== null,
                 token,
                 updateProfile, 
-                // ✅ Exportamos el estado 'loading'
                 loading,
             }}
         >
