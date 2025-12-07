@@ -7,9 +7,9 @@ import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { FeedPage } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
+//import { NotFoundPage } from "./pages/NotFoundPage";
 
 
 function App() {

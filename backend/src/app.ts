@@ -14,7 +14,7 @@ import etiquetasRoutes from "./routes/etiquetas.routes";
 export function createApp() {
   const app = express();
   app.use(cors());
-  app.use(express.json());  
+  app.use(express.json());  
 
   // Swagger UI
   const openapiPath = path.join(__dirname, "../openapi.yaml");
@@ -27,13 +27,15 @@ export function createApp() {
   app.use("/api/comentarios", comentarioRoutes);
   app.use("/api/etiquetas", etiquetasRoutes);
 
-  // Siempre servir al front en vite
-  const distPath = path.join(__dirname, "../client/dist"); // adjust if your frontend folder is elsewhere
-  app.use(express.static(distPath));
 
-  // Fallback a index.html para el routeo.
+  const FRONT_BUILD_PATH = path.resolve(__dirname, '..', '..', 'frontend', 'dist');
+  
+  // Siempre servir al front en vite
+  app.use(express.static(FRONT_BUILD_PATH));
+
+  // Fallback a index.html para el routeo (SPA).
   app.get("*", (req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
+    res.sendFile(path.join(FRONT_BUILD_PATH, "index.html"));
   });
 
   return app;

@@ -84,7 +84,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/users/profile:
+  /api/users/me:
     get:
       summary: Obtener perfil del usuario autenticado
       tags: [Usuarios]
@@ -107,6 +107,8 @@ paths:
     put:
       summary: Actualizar usuario
       tags: [Usuarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -143,6 +145,8 @@ paths:
     delete:
       summary: Eliminar usuario
       tags: [Usuarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -161,10 +165,12 @@ paths:
           description: Usuario no encontrado
 
   # ---------- Equipos ----------
-  /api/equipos:
+  /api/equipos/{userId}:
     post:
       summary: Crear equipo
       tags: [Equipos]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -185,10 +191,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
-  /api/equipos/{id}:
+  /api/equipos/equipos/{id}:
     delete:
       summary: Borrar equipo
       tags: [Equipos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -214,6 +222,8 @@ paths:
     post:
       summary: Invitar miembro a un equipo
       tags: [Equipos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: equipoId
           in: path
@@ -251,6 +261,8 @@ paths:
     post:
       summary: Salir de un equipo
       tags: [Equipos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: equipoId
           in: path
@@ -291,6 +303,8 @@ paths:
     get:
       summary: Listar equipos de un usuario
       tags: [Equipos]
+      security:
+        - bearerAuth: []
       parameters:
         - name: userId
           in: path
@@ -319,6 +333,8 @@ paths:
     post:
       summary: Crear tarea
       tags: [Tareas]
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -343,6 +359,8 @@ paths:
     get:
       summary: Listar tareas por equipo con filtros
       tags: [Tareas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: equipoId
           in: path
@@ -395,6 +413,8 @@ paths:
     put:
       summary: Actualizar estado de tarea
       tags: [Tareas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -426,6 +446,8 @@ paths:
     delete:
       summary: Eliminar tarea
       tags: [Tareas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -461,6 +483,8 @@ paths:
     post:
       summary: Crear nueva etiqueta en un equipo
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: equipoId
           in: path
@@ -492,6 +516,8 @@ paths:
     get:
       summary: Listar todas las etiquetas de un equipo
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: equipoId
           in: path
@@ -509,10 +535,12 @@ paths:
                 items:
                   $ref: "#/components/schemas/Etiqueta"
 
-  /api/etiquetas/{etiquetaId}:
+  /api/etiquetas/etiquetas/{etiquetaId}:
     patch:
       summary: Actualizar nombre de etiqueta
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: etiquetaId
           in: path
@@ -542,6 +570,8 @@ paths:
     delete:
       summary: Eliminar etiqueta permanentemente
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: etiquetaId
           in: path
@@ -559,6 +589,8 @@ paths:
     post:
       summary: Asignar una etiqueta existente a una tarea
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: tareaId
           in: path
@@ -583,6 +615,8 @@ paths:
     delete:
       summary: Remover una etiqueta de una tarea
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: tareaId
           in: path
@@ -604,6 +638,8 @@ paths:
     get:
       summary: Listar etiquetas asignadas a una tarea específica
       tags: [Etiquetas]
+      security:
+        - bearerAuth: []
       parameters:
         - name: tareaId
           in: path
@@ -626,6 +662,8 @@ paths:
     get:
       summary: Listar comentarios de una tarea
       tags: [Comentarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: tareaId
           in: path
@@ -652,6 +690,8 @@ paths:
     post:
       summary: Crear comentario en una tarea
       tags: [Comentarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: tareaId
           in: path
@@ -683,6 +723,8 @@ paths:
     put:
       summary: Editar comentario
       tags: [Comentarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -714,6 +756,8 @@ paths:
     delete:
       summary: Eliminar comentario
       tags: [Comentarios]
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path

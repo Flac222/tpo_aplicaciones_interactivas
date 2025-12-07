@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class AutoMigration1762796800103 implements MigrationInterface {
-    name = 'AutoMigration1762796800103'
+export class AutoMigration1763060802106 implements MigrationInterface {
+    name = 'AutoMigration1763060802106'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "etiqueta" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "nombre" character varying NOT NULL, "fechaCreacion" TIMESTAMP NOT NULL DEFAULT now(), "fechaActualizacion" TIMESTAMP NOT NULL DEFAULT now(), "equipoId" uuid, "creadorId" uuid, CONSTRAINT "UQ_c24e444690deb02aa6202719e56" UNIQUE ("nombre"), CONSTRAINT "PK_621c4d2cb0f14181398ec5ddf6c" PRIMARY KEY ("id"))`);
