@@ -77,7 +77,7 @@ export class TaskTemplateRepository {
     });
   }
 
-  // R: Verificar unicidad (Nombre único por Creador)
+  // R: Verificar unicidad 
   async findByCreatorAndName(creatorId: string, name: string): Promise<TaskTemplate | null> {
       return this.repository.findOneBy({ 
           creatorId, 
@@ -85,8 +85,8 @@ export class TaskTemplateRepository {
       });
   }
 
-  // C: Crear una nueva template (solo la entidad principal)
-  // La gestión de Tags se hace en el Service usando TaskTemplateTagRepository
+  // C: Crear una nueva template 
+  
   async create(data: Partial<TaskTemplate>): Promise<TaskTemplate> {
     const newTemplate = this.repository.create(data);
     return this.repository.save(newTemplate);
