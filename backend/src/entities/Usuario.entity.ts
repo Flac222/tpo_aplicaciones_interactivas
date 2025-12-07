@@ -9,7 +9,8 @@ import {
 import { Equipo } from "./Equipo.entity";
 import { Tarea } from "./Tareas.entity";
 import { Comentario } from "./Comentarios.entity";
-import { Etiqueta } from "./Etiqueta.entity"; 
+import { Etiqueta } from "./Etiqueta.entity";
+import { TaskTemplate } from "./TaskTemplate.entity";
 
 @Entity()
 export class Usuario {
@@ -42,4 +43,8 @@ export class Usuario {
 
   @OneToMany(() => Etiqueta, (etiqueta) => etiqueta.creador)
   etiquetasCreadas!: Etiqueta[];
+
+  // Dentro de la clase Usuario
+  @OneToMany(() => TaskTemplate, (template) => template.creator)
+  templatesCreados!: TaskTemplate[];
 }

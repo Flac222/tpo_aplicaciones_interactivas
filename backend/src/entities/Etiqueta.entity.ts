@@ -11,7 +11,8 @@ import {
 } from "typeorm";
 import { Equipo } from "./Equipo.entity";
 import { Usuario } from "./Usuario.entity";
-import { TareaEtiqueta } from "../entities/TareasEtiqueta.entity"; // Entidad intermedia
+import { TareaEtiqueta } from "../entities/TareasEtiqueta.entity";
+import { TaskTemplateTag } from "./TaskTemplateTag.entity";  // Entidad intermedia
 
 @Entity()
 export class Etiqueta {
@@ -37,4 +38,7 @@ export class Etiqueta {
 
   @UpdateDateColumn()
   fechaActualizacion!: Date;
+
+  @OneToMany(() => TaskTemplateTag, (templateTag) => templateTag.etiqueta)
+  templateAsignada!: TaskTemplateTag[]; // Asociación con templates
 }
