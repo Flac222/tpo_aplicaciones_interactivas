@@ -9,6 +9,9 @@ import { FeedPage } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
+import { TemplateUsePage } from "./pages/TemplateUsePage";
+import { TemplateFormPage } from "./pages/TemplateFormPage";
+import { TemplateListPage } from "./pages/TemplateListPage";
 //import { NotFoundPage } from "./pages/NotFoundPage";
 
 
@@ -39,7 +42,10 @@ function App() {
                                 </Link>
                                 <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
                                     👤 Perfil
-                                </Link>                   
+                                </Link>
+                                <Link to="/templates" className="navbar-link">
+                                    📄 Templates
+                                </Link>
                             </>
                         )}
 
@@ -102,6 +108,11 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
+                    {/* RUTAS DE TEMPLATES */}
+                    <Route path="/templates" element={<ProtectedRoute><TemplateListPage /></ProtectedRoute>} />
+                    <Route path="/templates/new" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
+                    <Route path="/templates/:id/edit" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
+                    <Route path="/templates/:id/use" element={<ProtectedRoute><TemplateUsePage /></ProtectedRoute>} />
                 </Routes>
 
 

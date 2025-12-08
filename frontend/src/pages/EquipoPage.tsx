@@ -1,6 +1,6 @@
 // EquipoPage.tsx
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
 import {
@@ -32,6 +32,8 @@ interface PaginacionTareas {
 
 
 export function EquipoPage(): React.ReactElement {
+
+    const location = useLocation()
     const { id: equipoId } = useParams();
     // 💡 CAMBIO 1: Desestructuramos el objeto 'usuario' del contexto de Auth
     const { token, usuario } = useAuth();
@@ -542,6 +544,28 @@ export function EquipoPage(): React.ReactElement {
             throw error;
         }
     };
+
+    useEffect(() => {
+        // Verificamos si hay datos en location.state
+        const state = location.state as { prefillTask?: any };
+        
+        if (state && state.prefillTask && !isTaskModalOpen) {
+            const data = state.prefillTask;
+            
+            // Seteamos los estados del modal
+            setNewTaskTitle(data.title);
+            setNewTaskDesc(data.description || "");
+            setNewTaskPriority(data.priority);
+            // Aseguramos que data.tagIds sea un array
+            setNewTaskLabels(data.tagIds || []); 
+            
+            // Abrimos el modal automáticamente
+            setIsTaskModalOpen(true);
+            
+            // Limpiamos el state para que no se reabra al refrescar (opcional pero recomendado)
+            window.history.replaceState({}, document.title);
+        }
+    }, [location, isTaskModalOpen]);
 
     useEffect(() => {
         // Aseguramos que solo haga fetch si hay una tarea seleccionada Y un token
