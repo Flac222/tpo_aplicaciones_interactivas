@@ -10,11 +10,12 @@ import tareaRoutes from "./routes/Tareas.routes";
 import statusRouter from "./routes/status.routes";
 import comentarioRoutes from "./routes/comentarios.routes";
 import etiquetasRoutes from "./routes/etiquetas.routes";
+import taskTemplatesRoutes from "./routes/TaskTemplates.routes";
 
 export function createApp() {
   const app = express();
   app.use(cors());
-  app.use(express.json());  
+  app.use(express.json()); 
 
   // Swagger UI
   const openapiPath = path.join(__dirname, "../openapi.yaml");
@@ -26,6 +27,7 @@ export function createApp() {
   app.use("/api/tareas", tareaRoutes);
   app.use("/api/comentarios", comentarioRoutes);
   app.use("/api/etiquetas", etiquetasRoutes);
+  app.use("/api/tasktemplates", taskTemplatesRoutes);
 
 
   const FRONT_BUILD_PATH = path.resolve(__dirname, '..', '..', 'frontend', 'dist');

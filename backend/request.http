@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3000
 @userId = da2abc8c-3193-4d96-b6d4-cf207266b5fc
-@equipoId = e84a6f88-9dff-4ce9-ba41-ba38206bb9fe
+@equipoId = 2a9d1004-e74c-42da-9bfd-3dbd7990c192
 @tareaId = 0d33e900-fdc0-4c29-9797-95157097aea3
 @user2Id = 03990375-c525-46d4-a406-5b05cb757865
 @commentId = 5c750f66-dd64-4443-88a7-6986abb83323
@@ -24,8 +24,8 @@ POST {{baseUrl}}/api/users/register
 Content-Type: application/json
 
 {
-  "nombre": "SuperUsuario",
-  "email": "eze@example.com.ar",
+  "nombre": "UsuarioPrueba20",
+  "email": "usuarioprueba20@example.com",
   "password": "123456"
 }
 
@@ -38,7 +38,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze6@example.com.ar",
+  "email": "usuarioprueba20@example.com",
   "password": "123456"
 }
 
@@ -70,12 +70,12 @@ Authorization: Bearer {{token}}
 ### ---------- Equipos ----------
 
 ### Salir del equipo (Requiere Auth)
-POST {{baseUrl}}/api/equipos/c4c1c0c7-3b10-4ba5-b5fd-66753e980184/salir
+POST {{baseUrl}}/api/equipos/e84a6f88-9dff-4ce9-ba41-ba38206bb9fe/salir
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "userId": "d3d8acd9-6397-41d6-bcda-60568c7c01f6"
+  "userId": "bcb0db66-f37b-4be4-8dd6-e7550506abcb"
 }
 
 ###
@@ -99,7 +99,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "nombre": "Equipo Backend",
+  "nombre": "Equipo de prueba 20",
   "propietarioId": "{{userId}}" 
 
 }
@@ -111,7 +111,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "correo": "eze4@example.com.ar",
+  "correo": "eze20@example.com.ar",
   "propietarioId": "{{userId}}"
 }
 
@@ -137,7 +137,8 @@ Authorization: Bearer {{token}}
 {
   "equipoId": "{{equipoId}}",
   "prioridad": "Alta",
-  "estado": "Pendiente"
+  "estado": "Terminada",
+  "etiquetaId": "{{nuevaEtiquetaId}}"
 }
 
 ###
@@ -161,7 +162,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "nuevoEstado": "En curso",
+  "nuevoEstado": "Terminada",
   "usuarioId": "{{userId}}"
 }
 
@@ -194,7 +195,7 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-  "contenido": "Este es un comentario de prueba.",
+  "contenido": "Este es un comentario de prueba 2.",
   "creadorId": "{{userId}}"
 }
 
@@ -221,14 +222,14 @@ Authorization: Bearer {{token}}
 ### ---------- Etiquetas ----------
 
  
-@nuevaEtiquetaId = 24f91f95-bc31-4617-9c82-8ecf0d04a8af
+@nuevaEtiquetaId = cdeeb9f7-ca41-4d81-8b35-40f7ff6a6ee7
 ### Crear etiqueta en un equipo
 POST {{baseUrl}}/api/etiquetas/equipos/{{equipoId}}/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
 {
-    "nombre": "No urgente" 
+    "nombre": "Esta es mi etiqueta"
 }
 
 ### Listar etiquetas de un equipo
@@ -270,4 +271,58 @@ GET {{baseUrl}}/api/etiquetas/tareas/{{tareaId}}/etiquetas
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-###------------- backend/src/routes/etiquetas.routes.ts ----------
+### ---------- Task Templates ----------
+
+@templateId = 93ef8422-59bf-49e5-a24d-6263be3a50d2
+
+### Crear una nueva Task Template
+POST {{baseUrl}}/api/tasktemplates
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Template de Bug Crítico",
+    "description": "Plantilla para reportar un bug de alta prioridad.",
+    "priority": "Alta",
+    "teamId": "{{equipoId}}",
+    "tagIds": ["{{nuevaEtiquetaId}}"] 
+}
+
+### Crear una nueva Task Template sin tags
+
+### Listar Task Templates del usuario (con filtros)
+# GET /api/tasktemplates?teamId=...&q=...&priority=...
+GET {{baseUrl}}/api/tasktemplates?teamId={{equipoId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Obtener detalle de una Task Template
+GET {{baseUrl}}/api/tasktemplates/{{templateId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Obtener datos para prellenar formulario de Task
+GET {{baseUrl}}/api/tasktemplates/{{templateId}}/preview
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+
+### Actualizar Task Template
+PUT {{baseUrl}}/api/tasktemplates/{{templateId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+    "name": "Template de Bug Crítico V2",
+    "description": "Descripción actualizada. Bug de alta prioridad.",
+    "tagIds": ["{{nuevaEtiquetaId}}"]
+    // No incluyo tags/teamId para un update simple.
+}
+
+
+### Eliminar Task Template
+DELETE {{baseUrl}}/api/tasktemplates/{{templateId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}

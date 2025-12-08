@@ -1,7 +1,8 @@
 import { AuthRequest } from "../middlewares/auth.middleware";
 import { Response } from "express";
 import { TareaService } from "../services/Tareas.service";
-import { EstadoTarea } from "../entities/Tareas.entity";
+import { EstadoTarea } from "../entities/Enums";
+
 
 const tareaService = new TareaService();
 

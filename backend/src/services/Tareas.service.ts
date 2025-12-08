@@ -1,11 +1,14 @@
 // services/tareaService.ts
 import AppDataSource from "../db/data-source";
-import { Tarea, EstadoTarea, PrioridadTarea } from "../entities/Tareas.entity";
+import { Tarea,} from "../entities/Tareas.entity";
+import { PrioridadTarea } from "../entities/Enums";
+import { EstadoTarea } from "../entities/Enums";
 import { Usuario } from "../entities/Usuario.entity";
 import { Equipo } from "../entities/Equipo.entity";
 import { Historial } from "../entities/Historial.entity";
 import { TareaRepository } from "../repositories/Tareas.repository";
 import { TareaEtiqueta } from "../entities/TareasEtiqueta.entity";
+import { TaskTemplateRepository } from "../repositories/TaskTemplates.repository";
 
 
 
@@ -16,6 +19,7 @@ export class TareaService {
   private equipoRepo = AppDataSource.getRepository(Equipo);
   private historialRepo = AppDataSource.getRepository(Historial);
   private tareaEtiquetaRepo = AppDataSource.getRepository(TareaEtiqueta);
+  private taskTemplateRepo = new TaskTemplateRepository();
 
  
   async crearTarea(
@@ -25,12 +29,13 @@ export class TareaService {
       equipoId: string;
       estado?: string;
       prioridad?: string;
+      originTemplateId?: string;
     },
     creadorId: string,
     etiquetasId?: string[]
   ) {
 
-   
+    const { titulo, descripcion, equipoId, estado, prioridad, originTemplateId } = datosTarea;
     return AppDataSource.manager.transaction(async (transactionalEntityManager) => {
 
 
@@ -50,7 +55,8 @@ export class TareaService {
         titulo: datosTarea.titulo,
         descripcion: datosTarea.descripcion,
         creador: creador,
-        equipo: equipo, 
+        equipo: equipo,
+        originTemplateId: originTemplateId || null,
         estado: (datosTarea.estado as EstadoTarea) || EstadoTarea.PENDIENTE,
         prioridad: (datosTarea.prioridad as PrioridadTarea) || PrioridadTarea.MEDIA
       });
@@ -62,26 +68,21 @@ export class TareaService {
       const historial = historialRepo.create({
         tarea: tareaGuardada,
         usuario: creador,
-        cambio: "Tarea creada"
+        cambio: `Tarea creada${originTemplateId ? ' desde template' : ''}.`,
       });
       await historialRepo.save(historial);
 
    
       
-      if (etiquetasId && etiquetasId.length > 0) {
-
-      
-        const nuevasAsignaciones = etiquetasId.map(idDeEtiqueta => {
-          return tareaEtiquetaRepo.create({
-            tareaId: tareaGuardada.id, 
-            etiquetaId: idDeEtiqueta,   
+     if (etiquetasId && etiquetasId.length > 0) {
+        for (const etiquetaId of etiquetasId) {
+          const asignacion = tareaEtiquetaRepo.create({
+            tareaId: tareaGuardada.id,
+            etiquetaId,
           });
-        });
-
-
-        await tareaEtiquetaRepo.save(nuevasAsignaciones);
+          await tareaEtiquetaRepo.save(asignacion);
+        }
       }
-
 
       return tareaGuardada;
     });

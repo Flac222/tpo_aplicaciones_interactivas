@@ -13,7 +13,7 @@ import {
 import { Usuario } from "./Usuario.entity";
 import { Equipo } from "./Equipo.entity";
 import { TaskTemplateTag } from "./TaskTemplateTag.entity"; // Nueva entidad intermedia
-import { PrioridadTarea } from "./Tareas.entity";
+import { PrioridadTarea } from "./Enums";
 
 @Entity()
 @Index(["name", "creatorId"], { unique: true }) 

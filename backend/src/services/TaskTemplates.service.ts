@@ -64,7 +64,8 @@ import { TaskTemplateRepository } from "../repositories/TaskTemplates.repository
 import { TaskTemplateTagRepository } from "../repositories/TaskTemplatesTag.repository";
 import { EtiquetasRepository } from "../repositories/etiquetas.repository";
 import { EquipoRepository } from "../repositories/Equipos.repository";
-import { Tarea, PrioridadTarea } from "../entities/Tareas.entity"; 
+import { Tarea} from "../entities/Tareas.entity";
+import { PrioridadTarea } from "../entities/Enums";
 
 export class TaskTemplateService {
   private taskTemplateRepo: TaskTemplateRepository;

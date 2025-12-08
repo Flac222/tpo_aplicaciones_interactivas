@@ -12,19 +12,8 @@ import { Equipo } from "./Equipo.entity";
 import { Comentario } from "./Comentarios.entity";
 import { Historial } from "./Historial.entity";
 import { TareaEtiqueta } from "./TareasEtiqueta.entity";
+import { EstadoTarea, PrioridadTarea } from "./Enums";
 
-export enum EstadoTarea {
-  PENDIENTE = "Pendiente",
-  EN_CURSO = "En curso",
-  TERMINADA = "Terminada",
-  CANCELADA = "Cancelada"
-}
-
-export enum PrioridadTarea {
-  ALTA = "Alta",
-  MEDIA = "Media",
-  BAJA = "Baja"
-}
 
 @Entity()
 export class Tarea {
@@ -57,6 +46,14 @@ export class Tarea {
 
   @OneToMany(() => Historial, historial => historial.tarea)
   historial!: Historial[];
+
+  // ... otras propiedades
+
+  @Column({ type: "uuid", nullable: true })
+  // 💡 CORRECCIÓN: Usar 'string | null' para que DeepPartial<Tarea> acepte 'null' explícitamente
+  originTemplateId?: string | null;
+
+  // ... resto de las propiedades y relaciones
 
   @CreateDateColumn()
   fechaCreacion!: Date;
