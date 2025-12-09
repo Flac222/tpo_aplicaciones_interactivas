@@ -45,9 +45,7 @@ export class EquipoService {
     return this.equipoRepo.findByUser(usuario);
   }
 
- // NO LO HAGAS EN EL FRONT. ESTO ES UN EJEMPLO DE CÓMO SE VE EL BACKEND SI USAS UN SOLO ENDPOINT
-// Asumo que 'Usuario' es el tipo que devuelve tu usuarioRepo.findById
-// Y que tienes acceso a tu usuarioRepo.
+
 
 async salirEquipo(authenticatedUserId: string, equipoId: string, memberIdToRemove: string) {
   console.log("niggers", equipoId);

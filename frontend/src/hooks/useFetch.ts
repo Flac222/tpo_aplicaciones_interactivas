@@ -8,10 +8,10 @@ interface UseFetchResult<T> {
   refetch: () => void;
 }
 
-// *** CAMBIO: Se añade 'options' como segundo argumento ***
+
 export function useFetch<T>(
-    url: string | null, // Aceptamos null para no ejecutar el fetch si la URL no está lista
-    options?: RequestInit // Tipo estándar para las opciones de fetch
+    url: string | null, 
+    options?: RequestInit 
 ): UseFetchResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,7 +19,7 @@ export function useFetch<T>(
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   useEffect(() => {
-    // Si la URL es null, detenemos la ejecución y mostramos que no está cargando
+
     if (!url) {
         setLoading(false);
         setData(null);
@@ -35,7 +35,7 @@ export function useFetch<T>(
       try {
         const response = await fetch(url as string, {
           signal: abortController.signal,
-          // *** CAMBIO: Se unen las opciones recibidas con el signal ***
+        
           ...options
         });
 
@@ -59,8 +59,7 @@ export function useFetch<T>(
     return () => {
       abortController.abort();
     };
-    // *** CAMBIO: Se añade 'options' a las dependencias para que cambie si las opciones cambian ***
-    // (Ej. si el token cambia)
+
   }, [url, refetchTrigger, options]); 
 
   const refetch = () => {

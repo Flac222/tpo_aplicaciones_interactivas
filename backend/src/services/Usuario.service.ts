@@ -8,16 +8,16 @@ import jwt from "jsonwebtoken";
 export class UsuarioService {
   private usuarioRepo = AppDataSource.getRepository(Usuario);
   private usuarioCustomRepo = new UsuarioRepository();
-  // ... importaciones
-// ...
 
 
 
-  // 💡 NUEVO MÉTODO: Obtener usuario por ID
+
+
+ 
   async obtenerUsuarioPorId(id: string) {
     const usuario = await this.usuarioRepo.findOne({
       where: { id },
-      // ⚠️ Importante: Excluye la contraseña de la respuesta
+      
       select: ["id", "nombre", "email"], 
     });
     if (!usuario) throw new Error("Usuario no encontrado.");

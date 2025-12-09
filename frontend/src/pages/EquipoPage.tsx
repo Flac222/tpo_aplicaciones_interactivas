@@ -139,17 +139,18 @@ export function EquipoPage(): React.ReactElement {
         if (!Array.isArray(tareas)) {
             return [];
         }
-        // Nota: Solo se necesita filtrar lo que no se incluyó en el fetch principal.
-        // Los filtros de estado y prioridad ya se manejaban aquí, los mantendremos por coherencia, 
-        // aunque ahora también se envían al backend. La lógica de filtro por etiqueta 
-        // se asume manejada totalmente en el backend vía `etiquetaId` en la URL.
+        // Nota: Se asume que el backend ya filtró por `etiquetaId` y `q`. 
+        // Mantenemos los filtros locales de estado y prioridad por si el backend 
+        // no los está aplicando consistentemente en la paginación.
 
+        // 💡 CAMBIO CRÍTICO: Añadimos la condición de filtrado local para la etiqueta.
         return tareas.filter(t =>
             (filtroEstado === 'todos' || t.estado === filtroEstado) &&
-            (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad)
-            // Ya NO necesitamos filtrar por etiqueta aquí, ya que la API lo hace.
+            (filtroPrioridad === 'todos' || t.prioridad === filtroPrioridad) &&
+            (filtroEtiqueta === 'todos' || t.etiquetas?.some(label => label.id === filtroEtiqueta))
         );
-    }, [paginacion, filtroEstado, filtroPrioridad]);
+        // 💡 AÑADIDO: Incluimos 'filtroEtiqueta' a las dependencias para que se ejecute el filtro cuando cambie.
+    }, [paginacion, filtroEstado, filtroPrioridad, filtroEtiqueta]);
 
     const tareasAgrupadas = useMemo(() => {
         const grupos: Record<EstadoTarea, Tarea[]> = {

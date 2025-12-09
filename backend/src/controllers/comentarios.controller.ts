@@ -1,4 +1,4 @@
-import { AuthRequest } from "../middlewares/auth.middleware"; // Importar
+import { AuthRequest } from "../middlewares/auth.middleware"; 
 import { Response } from "express";
 import { ComentarioService } from "../services/comentario.service";
 

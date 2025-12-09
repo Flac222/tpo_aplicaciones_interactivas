@@ -1,8 +1,8 @@
 openapi: 3.1.1
 info:
   title: TPO - Aplicaciones Interactivas (API)
-  version: 1.0.0
-  description: API para gestión de usuarios, equipos, tareas y comentarios. Versión alineada con los controllers y routes provistos por el proyecto.
+  version: 1.1.0
+  description: API actualizada con gestión de etiquetas y filtros avanzados.
 
 servers:
   - url: http://localhost:3000
@@ -84,6 +84,25 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/users/profile:
+    get:
+      summary: Obtener perfil del usuario autenticado
+      tags: [Usuarios]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Perfil obtenido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  usuario:
+                    $ref: "#/components/schemas/Usuario"
+        "401":
+          description: No autenticado
+
   /api/users/{id}:
     put:
       summary: Actualizar usuario
@@ -131,13 +150,6 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        description: (Opcional) payload con id u otros datos de validación. Tu controller ignora el body y usa el parámetro.
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
       responses:
         "200":
           description: Usuario eliminado
@@ -147,16 +159,11 @@ paths:
                 $ref: "#/components/schemas/DeletedResponse"
         "404":
           description: Usuario no encontrado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
 
   # ---------- Equipos ----------
-  # Incluyo ambas variantes (POST /api/equipos y POST /api/equipos/{id}) para cubrir tu router / requests
   /api/equipos:
     post:
-      summary: Crear equipo (sin id en path)
+      summary: Crear equipo
       tags: [Equipos]
       requestBody:
         required: true
@@ -179,38 +186,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /api/equipos/{id}:
-    post:
-      summary: Crear equipo (variante con id en path, según tu router)
-      tags: [Equipos]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-            description: En tus requests envías el userId aquí; backend usa el body. Se deja para compatibilidad.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/EquipoCreate"
-      responses:
-        "201":
-          description: Equipo creado
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Equipo"
-        "400":
-          description: Error en creación
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
     delete:
-      summary: Borrar equipo (DELETE /api/equipos/{id})
+      summary: Borrar equipo
       tags: [Equipos]
       parameters:
         - name: id
@@ -219,17 +196,6 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: string
-                  format: uuid
-                  description: Usuario que solicita borrar (tu controller espera userId en body)
       responses:
         "200":
           description: Equipo borrado con éxito
@@ -260,7 +226,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/InvitarMiembro"
+              type: object
+              required: ["correo"]
+              properties:
+                correo:
+                  type: string
+                  format: email
+                  example: "nuevo@example.com"
       responses:
         "200":
           description: Miembro invitado / equipo actualizado
@@ -277,7 +249,7 @@ paths:
 
   /api/equipos/{equipoId}/salir:
     post:
-      summary: Salir de un equipo (POST /api/equipos/{equipoId}/salir)
+      summary: Salir de un equipo
       tags: [Equipos]
       parameters:
         - name: equipoId
@@ -287,12 +259,11 @@ paths:
             type: string
             format: uuid
       requestBody:
-        required: true
+        required: false
         content:
           application/json:
             schema:
               type: object
-              required: [userId]
               properties:
                 userId:
                   type: string
@@ -307,7 +278,6 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "Saliste del equipo con éxito"
                   equipo:
                     $ref: "#/components/schemas/Equipo"
         "400":
@@ -371,7 +341,7 @@ paths:
 
   /api/tareas/{equipoId}:
     get:
-      summary: Listar tareas por equipo y filtro (estado, prioridad)
+      summary: Listar tareas por equipo con filtros
       tags: [Tareas]
       parameters:
         - name: equipoId
@@ -385,13 +355,26 @@ paths:
           required: false
           schema:
             type: string
-            description: Estado de la tarea (Pendiente, En curso, Terminada, Cancelada)
+            enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
         - name: prioridad
           in: query
           required: false
           schema:
             type: string
-            description: Prioridad (Alta, Media, Baja)
+            enum: ["Alta", "Media", "Baja"]
+        - name: etiquetaId
+          in: query
+          description: Filtrar por UUID de etiqueta
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          description: Búsqueda de texto en título o descripción
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: Lista de tareas filtradas
@@ -441,7 +424,7 @@ paths:
 
   /api/tareas/{id}/{userId}:
     delete:
-      summary: Eliminar tarea (ruta usada en tu router)
+      summary: Eliminar tarea
       tags: [Tareas]
       parameters:
         - name: id
@@ -456,16 +439,6 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                usuarioId:
-                  type: string
-                  format: uuid
       responses:
         "200":
           description: Resultado de eliminación
@@ -476,13 +449,177 @@ paths:
                 properties:
                   eliminado:
                     type: boolean
-                    example: true
         "403":
-          description: No autorizado / error al eliminar
+          description: No autorizado
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+
+  # ---------- Etiquetas ----------
+  /api/etiquetas/equipos/{equipoId}/etiquetas:
+    post:
+      summary: Crear nueva etiqueta en un equipo
+      tags: [Etiquetas]
+      parameters:
+        - name: equipoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["nombre"]
+              properties:
+                nombre:
+                  type: string
+                  example: "Urgente"
+      responses:
+        "201":
+          description: Etiqueta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Etiqueta"
+        "400":
+          description: Error de validación
+
+    get:
+      summary: Listar todas las etiquetas de un equipo
+      tags: [Etiquetas]
+      parameters:
+        - name: equipoId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Lista de etiquetas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Etiqueta"
+
+  /api/etiquetas/{etiquetaId}:
+    patch:
+      summary: Actualizar nombre de etiqueta
+      tags: [Etiquetas]
+      parameters:
+        - name: etiquetaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ["nombre"]
+              properties:
+                nombre:
+                  type: string
+                  example: "Nuevo Nombre"
+      responses:
+        "200":
+          description: Etiqueta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Etiqueta"
+    
+    delete:
+      summary: Eliminar etiqueta permanentemente
+      tags: [Etiquetas]
+      parameters:
+        - name: etiquetaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Etiqueta eliminada (No Content)
+        "400":
+          description: Error
+
+  /api/etiquetas/tareas/{tareaId}/etiquetas/{etiquetaId}:
+    post:
+      summary: Asignar una etiqueta existente a una tarea
+      tags: [Etiquetas]
+      parameters:
+        - name: tareaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: etiquetaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "201":
+          description: Etiqueta asignada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenericMessage"
+
+    delete:
+      summary: Remover una etiqueta de una tarea
+      tags: [Etiquetas]
+      parameters:
+        - name: tareaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: etiquetaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Etiqueta removida (No Content)
+
+  /api/etiquetas/tareas/{tareaId}/etiquetas:
+    get:
+      summary: Listar etiquetas asignadas a una tarea específica
+      tags: [Etiquetas]
+      parameters:
+        - name: tareaId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Lista de etiquetas de la tarea
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Etiqueta"
 
   # ---------- Comentarios ----------
   /api/comentarios/tareas/{tareaId}/comentarios:
@@ -544,7 +681,7 @@ paths:
 
   /api/comentarios/comentarios/{id}:
     put:
-      summary: Editar comentario (ruta según comentarios.routes)
+      summary: Editar comentario
       tags: [Comentarios]
       parameters:
         - name: id
@@ -575,7 +712,7 @@ paths:
 
   /api/comentarios/{id}:
     delete:
-      summary: Eliminar comentario (incluye variante corta usada en tus requests)
+      summary: Eliminar comentario
       tags: [Comentarios]
       parameters:
         - name: id
@@ -584,12 +721,6 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
       responses:
         "200":
           description: Comentario eliminado
@@ -605,6 +736,12 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     # ---------- Usuarios ----------
     Usuario:
@@ -668,7 +805,7 @@ components:
 
     EquipoCreate:
       type: object
-      required: ["nombre", "propietarioId"]
+      required: ["nombre"]
       properties:
         nombre:
           type: string
@@ -676,20 +813,7 @@ components:
         propietarioId:
           type: string
           format: uuid
-          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
-
-    InvitarMiembro:
-      type: object
-      required: ["usuarioId", "propietarioId"]
-      properties:
-        usuarioId:
-          type: string
-          format: uuid
-          example: "76a71a0d-6fa4-421f-9ffd-98bcb6634430"
-        propietarioId:
-          type: string
-          format: uuid
-          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
+          description: "Opcional si se obtiene del token"
 
     # ---------- Tareas ----------
     Tarea:
@@ -715,6 +839,10 @@ components:
           type: string
           format: uuid
           nullable: true
+        etiquetas:
+          type: array
+          items:
+            $ref: "#/components/schemas/Etiqueta"
         fechaCreacion:
           type: string
           format: date-time
@@ -724,7 +852,7 @@ components:
 
     TareaCreate:
       type: object
-      required: ["titulo", "creadorId"]
+      required: ["titulo", "equipoId"]
       properties:
         titulo:
           type: string
@@ -732,9 +860,6 @@ components:
         descripcion:
           type: string
           example: "Crear endpoint de login con JWT"
-        creadorId:
-          type: string
-          format: uuid
         equipoId:
           type: string
           format: uuid
@@ -744,15 +869,36 @@ components:
         estado:
           type: string
           enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
+        etiquetasId:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: "Array de IDs de etiquetas para asignar al crear"
 
     TareaEstadoUpdate:
       type: object
-      required: ["nuevoEstado", "usuarioId"]
+      required: ["nuevoEstado"]
       properties:
         nuevoEstado:
           type: string
           enum: ["Pendiente", "En curso", "Terminada", "Cancelada"]
         usuarioId:
+          type: string
+          format: uuid
+          description: "Opcional, el backend usa el token generalmente"
+
+    # ---------- Etiquetas ----------
+    Etiqueta:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          example: "Urgente"
+        equipoId:
           type: string
           format: uuid
 
@@ -778,15 +924,15 @@ components:
 
     ComentarioCreate:
       type: object
-      required: ["autorId", "contenido"]
+      required: ["contenido"]
       properties:
-        autorId:
-          type: string
-          format: uuid
-          example: "9aba693f-2414-402a-9ecd-d3f8479a1b4c"
         contenido:
           type: string
           example: "Este es un comentario de prueba."
+        creadorId:
+           type: string
+           format: uuid
+           description: "Opcional, el backend lo toma del token"
 
     ComentarioUpdate:
       type: object
@@ -823,4 +969,5 @@ tags:
   - name: Usuarios
   - name: Equipos
   - name: Tareas
+  - name: Etiquetas
   - name: Comentarios

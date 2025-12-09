@@ -17,12 +17,12 @@ export class EtiquetasController {
     this.service = new EtiquetasService();
   }
 
-  // Manejador de errores centralizado
+ 
   private handleError(res: Response, error: any): Response {
     const statusCode = error instanceof ServiceError ? error.statusCode : 500;
     const message = error.message || "Error interno del servidor.";
     
-    // Si es un error 500, loguear para depuración
+    
     if (statusCode === 500) {
         console.error("Error en el controlador de etiquetas:", error);
     }
@@ -30,12 +30,12 @@ export class EtiquetasController {
     return res.status(statusCode).json({ message });
   }
 
-  // POST /api/equipos/:equipoId/etiquetas
+  
   async createEtiqueta(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const { equipoId } = req.params;
       const { nombre } = req.body;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado desde req.user
+      
       const creadorId = req.user!.id; 
 
       if (!nombre) {
@@ -53,7 +53,7 @@ export class EtiquetasController {
   async getEtiquetasByEquipo(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const { equipoId } = req.params;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado
+   
       const usuarioId = req.user!.id; 
 
       const etiquetas = await this.service.getEtiquetasByEquipo(equipoId, usuarioId);
@@ -68,7 +68,7 @@ export class EtiquetasController {
     try {
       const { etiquetaId } = req.params;
       const { nombre } = req.body;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado
+      
       const usuarioId = req.user!.id; 
 
       if (!nombre) {
@@ -86,7 +86,7 @@ export class EtiquetasController {
   async deleteEtiqueta(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const { etiquetaId } = req.params;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado
+      
       const usuarioId = req.user!.id; 
 
       await this.service.deleteEtiqueta(etiquetaId, usuarioId);
@@ -100,7 +100,7 @@ export class EtiquetasController {
   async asignarEtiqueta(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const { tareaId, etiquetaId } = req.params;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado
+      
       const usuarioId = req.user!.id; 
 
       await this.service.asignarEtiqueta(tareaId, etiquetaId, usuarioId);
@@ -114,7 +114,7 @@ export class EtiquetasController {
   async removerEtiqueta(req: AuthRequest, res: Response): Promise<Response> {
     try {
       const { tareaId, etiquetaId } = req.params;
-      // ✅ CORRECTO: Obtener el ID del usuario autenticado
+     
       const usuarioId = req.user!.id; 
 
       await this.service.removerEtiqueta(tareaId, etiquetaId, usuarioId);
@@ -126,7 +126,7 @@ export class EtiquetasController {
   async getEtiquetasByTarea(req: AuthRequest, res: Response): Promise<Response> {
         try {
             const { tareaId } = req.params;
-            // ✅ CORRECTO: Obtener el ID del usuario autenticado
+           
             const usuarioId = req.user!.id; 
 
             const etiquetas = await this.service.getEtiquetasByTarea(tareaId, usuarioId);

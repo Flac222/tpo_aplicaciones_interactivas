@@ -20,7 +20,7 @@ export function HomePage(): React.ReactElement {
         setMessage(null);
         setLoading(true);
 
-        // Simple validación básica
+       
         if (!nombre || !email || !password) {
             setMessage({ type: 'error', text: "Todos los campos son obligatorios." });
             setLoading(false);
@@ -37,17 +37,17 @@ export function HomePage(): React.ReactElement {
             const data = await res.json();
 
             if (!res.ok) {
-                // Si el servidor devuelve un error (ej: email ya registrado)
+             
                 throw new Error(data.error || "Fallo en el registro. Intenta con otro email.");
             }
 
-            // Éxito en el registro
+           
             setMessage({ 
                 type: 'success', 
                 text: `✅ ¡Registro exitoso para ${data.nombre}! Ahora puedes iniciar sesión.` 
             });
             
-            // Limpiar formulario al éxito
+            
             setNombre("");
             setEmail("");
             setPassword("");
@@ -59,7 +59,7 @@ export function HomePage(): React.ReactElement {
         }
     };
 
-    // --- Estilos para inputs (basados en tus ejemplos) ---
+    
     const inputStyle: React.CSSProperties = { 
         width: '100%', 
         padding: '0.75rem', 
@@ -103,10 +103,10 @@ export function HomePage(): React.ReactElement {
             }}>
                 <h2 style={{ marginBottom: "1rem", fontSize: "1.5em" }}>📋 Instrucciones</h2>
                 <ol style={{ lineHeight: "1.8", paddingLeft: "1.5rem", marginBottom: "1rem" }}>
-                    <li><strong>Lee el README.md</strong> - Revisa los ejercicios y sus objetivos</li>
-                    <li><strong>Inicia sesión</strong> - Usa el botón de abajo (usuario: gamer / password: cualquiera)</li>
-                    <li><strong>Explora la app</strong> - Navega por Feed, Perfil y Configuración</li>
-                    <li><strong>Completa los ejercicios</strong> - Implementa las funcionalidades faltantes</li>
+                    <li><strong>Lee el README.md</strong> - Revisar para entender el funcionamiento de la app</li>
+                    <li><strong>Registrate</strong> - Pone tus datos en el formulario de registro</li>
+                    <li><strong>Inicia sesión</strong> - Usa el botón de abajo para poder iniciar sesion</li>
+                    <li><strong>Explora la app</strong> - Crea equipos y tareas para poder organizar tu trabajo</li>
                 </ol>
                 <p style={{ color: "var(--text-secondary)", fontSize: "0.95em" }}>
                     

@@ -1,18 +1,17 @@
 import { useAuth } from "../contexts/AuthContext";
 import { useState } from "react";
-// 💡 Importamos el componente tipado
+
 import { EditProfileModal } from "../components/EditProfileModal"; 
 
 
 export function ProfilePage() {
-    // 🔥 CORRECCIÓN: SOLO desestructuramos 'usuario'. 
-    // Las propiedades 'setUsuario' y 'userId' ya no son necesarias y causaban el error.
+
     const { usuario } = useAuth(); 
     
-    // Estado para controlar la visibilidad del modal
+    
     const [isModalOpen, setIsModalOpen] = useState(false);
     
-    // El estado 'message' y el 'handleSaveProfile' han sido eliminados.
+
 
     return (
         <div className="main-content">
@@ -54,8 +53,8 @@ export function ProfilePage() {
             <EditProfileModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
-                user={usuario} // Pasamos el objeto usuario para pre-llenar el formulario
-                // 🔥 ELIMINAR onSave, el modal llama a updateProfile directamente
+                user={usuario}
+             
             />
         </div>
     );
