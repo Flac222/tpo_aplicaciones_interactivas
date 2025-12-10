@@ -15,7 +15,7 @@ const BASE_URL = 'http://localhost:3000';
 interface TaskCreateDTO {
     titulo: string;
     descripcion?: string;
-    // El estado inicial siempre debe ser PENDIENTE para una tarea nueva
+    
     estado: EstadoTarea; 
     prioridad: PrioridadTarea;
     teamId: string; 
@@ -29,7 +29,7 @@ export function TemplateUsePage() {
     const { token, usuario } = useAuth(); 
     const userId = usuario?.id;
     
-    // Fetch Options memoizadas
+  
     const fetchOptions: RequestInit = useMemo(() => ({
         headers: { Authorization: `Bearer ${token}` }
     }), [token]);
@@ -38,13 +38,13 @@ export function TemplateUsePage() {
     const [titulo, setTitulo] = useState('');
     const [descripcion, setDescripcion] = useState(''); 
     const [prioridad, setPrioridad] = useState<PrioridadTarea>(PrioridadTarea.MEDIA);
-    const [teamId, setTeamId] = useState(''); // El equipo donde se creará la tarea
+    const [teamId, setTeamId] = useState(''); 
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
     
     // --- Estados de UI ---
     const [loadingTemplate, setLoadingTemplate] = useState(true);
     const [templateError, setTemplateError] = useState<string | null>(null);
-    // Cambiamos 'saving' por 'redireccionando' para reflejar el nuevo flujo
+    
     const [saving, setSaving] = useState(false); 
     const [formError, setFormError] = useState<string | null>(null);
 
@@ -59,7 +59,7 @@ export function TemplateUsePage() {
         fetchOptions
     );
 
-    // 2. Fetch de etiquetas del equipo seleccionado
+    
     const tagsUrl = (token && teamId) 
         ? `${BASE_URL}/api/etiquetas/${teamId}`
         : null;
@@ -73,14 +73,14 @@ export function TemplateUsePage() {
     const isFormDisabled = loadingTemplate || saving;
 
 
-    // 3. useEffect para cargar los datos de la template (Preview)
+   
     useEffect(() => {
         if (!id || !token) return;
 
         setLoadingTemplate(true);
         setTemplateError(null);
 
-        // Fetch al endpoint de preview (GET /api/tasktemplates/:id/preview)
+        
         fetch(`${BASE_URL}/api/tasktemplates/${id}/preview`, {
             headers: { Authorization: `Bearer ${token}` }
         })
@@ -88,7 +88,7 @@ export function TemplateUsePage() {
             if (!res.ok) throw new Error("Error cargando preview de template.");
             const data: TaskPreFillDTO = await res.json();
             
-            // Prellenar estados con datos de la template
+            
             setTitulo(data.title);
             setDescripcion(data.description || '');
             setPrioridad(data.priority);
@@ -101,7 +101,7 @@ export function TemplateUsePage() {
     }, [id, token]);
 
 
-    // 💡 FUNCIÓN MODIFICADA: Ahora redirige en lugar de crear la tarea
+    
     const handleCreateTask = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -110,11 +110,10 @@ export function TemplateUsePage() {
             return;
         }
 
-        // 1. Construir el objeto de datos prellenados (TaskCreateDTO)
+        
         const prefillTaskData: TaskCreateDTO = {
             titulo: titulo,
             descripcion: descripcion,
-            // Importante: Asignar el estado inicial
             estado: EstadoTarea.PENDIENTE, 
             prioridad: prioridad,
             teamId: teamId,
@@ -124,19 +123,19 @@ export function TemplateUsePage() {
         
         setFormError(null);
 
-        // 2. REDIRECCIÓN: Vamos a la página del equipo y pasamos los datos en el 'state'
-        // El EquipoPage deberá leer este state y abrir el modal.
+        
+        
         navigate(`/equipo/${teamId}`, { 
             state: { prefillTask: prefillTaskData } 
         });
 
-        // Quitamos la lógica de fetch, setSaving y manejo de éxito/error.
+        
     };
 
 
     if (loadingTemplate) return <div className="main-content"><p>Cargando Template...</p></div>;
     if (templateError) return <div className="main-content"><p style={{ color: 'red' }}>Error: {templateError}</p></div>;
-    if (!usuario) return null; // No debería pasar si está en ProtectedRoute
+    if (!usuario) return null; 
 
 
     // Lógica para determinar qué etiquetas mostrar
@@ -184,7 +183,7 @@ export function TemplateUsePage() {
                             style={{ padding: '0.5rem', minWidth: '150px' }}
                             disabled={isFormDisabled}
                         >
-                            {/* Asegúrate de que PrioridadTarea.ALTA, MEDIA, BAJA sean strings válidos */}
+                            
                             <option value={PrioridadTarea.ALTA}>{PrioridadTarea.ALTA}</option>
                             <option value={PrioridadTarea.MEDIA}>{PrioridadTarea.MEDIA}</option>
                             <option value={PrioridadTarea.BAJA}>{PrioridadTarea.BAJA}</option>
@@ -198,7 +197,6 @@ export function TemplateUsePage() {
                             value={teamId}
                             onChange={(e) => {
                                 setTeamId(e.target.value);
-                                // Limpia las etiquetas si cambia de equipo
                                 setSelectedTagIds([]);
                             }}
                             style={{ padding: '0.5rem', minWidth: '150px', width: '100%' }}
@@ -237,10 +235,10 @@ export function TemplateUsePage() {
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
                         <button type="button" onClick={() => navigate('/templates')} className="secondary">
-                            ⬅️ Volver
+                            ⬅ Volver
                         </button>
                         
-                        {/* 💡 CAMBIO EN BOTÓN: Texto y disabled actualizado */}
+                        {/*  CAMBIO EN BOTÓN: Texto y disabled actualizado */}
                         <button 
                             type="submit" 
                             disabled={isFormDisabled || !teamId || !titulo}

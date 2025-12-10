@@ -24,23 +24,23 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
     const isEditing = !!id && location.pathname.includes('/edit'); 
     const isDetailView = !!id && viewMode;
     
-    // --- Estados del formulario ---
+    
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<PrioridadTarea>(PrioridadTarea.MEDIA);
     const [teamId, setTeamId] = useState(''); 
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
-    // --- Estados de fetch/UI ---
+    
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
 
-    // Fetch Options memoizadas
+    
     const fetchOptions: RequestInit = useMemo(() => ({
         headers: { Authorization: `Bearer ${token}` }
     }), [token]);
 
-    // 1. Fetch de equipos del usuario
+    
     const teamUrl = (token && userId) 
         ? `${BASE_URL}/api/equipos/equipos/${userId}` 
         : null;
@@ -50,7 +50,7 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         fetchOptions
     );
     
-    // 2. Fetch de etiquetas del equipo seleccionado
+    
     const tagsUrl = (token && teamId) 
         ? `${BASE_URL}/api/etiquetas/equipos/${teamId}/etiquetas` 
         : null;
@@ -64,7 +64,7 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         fetchOptions
     );
 
-    // 3. Fetch de la template a editar
+    
     type TemplateResponse = TaskTemplateCreateDTO & { id: string, tags?: Etiqueta[], teamName?: string };
     const templateUrl = (isEditing || isDetailView) && id && token 
         ? `${BASE_URL}/api/tasktemplates/${id}` 
@@ -75,7 +75,7 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         fetchOptions
     );
 
-    // Manejo de carga de datos iniciales
+   
     useEffect(() => {
         if (currentTemplate) {
             setName(currentTemplate.name);
@@ -83,7 +83,7 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
             setPriority(currentTemplate.priority);
             setTeamId(currentTemplate.teamId || '');
             
-            // Si la template tiene tags, extraemos sus IDs
+           
             if (currentTemplate.tags) {
                 setSelectedTagIds(currentTemplate.tags.map(t => t.id));
             } else {
@@ -92,11 +92,11 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         }
     }, [currentTemplate]);
 
-    // Función para manejar el cambio de equipo y resetear tags
+    
     const handleTeamChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newTeamId = e.target.value;
         setTeamId(newTeamId);
-        // Limpiar tags seleccionados al cambiar de equipo
+        
         setSelectedTagIds([]); 
     };
 
@@ -113,16 +113,14 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         }
 
         const method = isEditing ? 'PUT' : 'POST';
-        const url = isEditing 
-            ? `${BASE_URL}/api/tasktemplates/${id}` 
-            : `${BASE_URL}/api/tasktemplates`;
+        const url = isEditing ? `${BASE_URL}/api/tasktemplates/${id}` : `${BASE_URL}/api/tasktemplates`;
+
         
-        // El DTO para POST/PUT espera solo IDs de tags
         const templateData: TaskTemplateCreateDTO = {
             name,
             description: description || undefined,
             priority,
-            teamId: teamId || undefined, 
+            teamId: teamId || undefined,
             tagIds: selectedTagIds,
         };
 
@@ -141,9 +139,8 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
                 throw new Error(errorData.message || 'Error al guardar la template.');
             }
 
-            // Éxito: Volver a la lista de templates
-            navigate('/templates'); 
-
+            
+            navigate('/templates');
         } catch (err: any) {
             console.error(err);
             setFormError(err.message || 'Error desconocido al procesar la solicitud.');
@@ -152,53 +149,78 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
         }
     };
 
-
     if ((isEditing || isDetailView) && loadingTemplate) return <p>Cargando Template...</p>;
-    if (templateError) return <p style={{ color: 'red' }}>Error al cargar template: {templateError}</p>;
+    if (templateError) return <p style={{ color: 'red' }}>Error al cargar la template: {templateError}</p>;
 
-
-    // 💡 CORRECCIÓN PARA EL ERROR DE LENGTH: Se asegura de que sea un array vacío si es null/undefined
     const tagsToRender = availableTags || [];
+
+    const title = isDetailView
+        ? `Detalle de Template: ${currentTemplate?.name || 'Cargando...'}`
+        : isEditing
+            ? `Editar Template: ${currentTemplate?.name || 'Cargando...'}`
+            : 'Crear Nueva Template';
     
-    // El resto del JSX (renderizado)
+   
     return (
-        <div className="page-container">
-            <h1>{isEditing ? 'Editar Template' : isDetailView ? 'Detalle de Template' : 'Crear Nueva Template'}</h1>
-            <div className="card">
-                
-                <form onSubmit={handleSubmit}>
+        
+        <div style={{ 
+            padding: '2rem', 
+            minHeight: 'calc(100vh - 60px)', 
+            display: 'flex',
+            justifyContent: 'center', 
+            alignItems: 'flex-start', 
+        }}>
+          
+            <div className="card" style={{ 
+                maxWidth: '650px', 
+                width: '100%',
+                margin: '0', 
+                padding: '2rem', 
+                backgroundColor: 'var(--bg-secondary, #fff)', 
+                borderRadius: '12px', 
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.15)', 
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.5rem'
+            }}>
+                <h2>{title}</h2>
+
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     
+                    {/* Campo Nombre: Etiqueta arriba */}
                     <div className="form-group">
-                        <label htmlFor="name">Nombre de la Template:</label>
+                        <label htmlFor="name" style={{ fontWeight: 'bold', marginBottom: '0.3rem', display: 'block' }}>Nombre</label>
                         <input
                             id="name"
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             required
-                            disabled={saving || isDetailView}
+                            disabled={isDetailView}
                         />
                     </div>
 
+                    {/* Campo Descripción: Etiqueta arriba */}
                     <div className="form-group">
-                        <label htmlFor="description">Descripción (Opcional):</label>
+                        <label htmlFor="description" style={{ fontWeight: 'bold', marginBottom: '0.3rem', display: 'block' }}>Descripción (Opcional)</label>
                         <textarea
                             id="description"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             rows={4}
-                            disabled={saving || isDetailView}
-                        ></textarea>
+                            disabled={isDetailView}
+                        />
                     </div>
 
+                    {/* Selector de Prioridad: Etiqueta arriba */}
                     <div className="form-group">
-                        <label htmlFor="priority">Prioridad por Defecto:</label>
+                        <label htmlFor="priority" style={{ fontWeight: 'bold', marginBottom: '0.3rem', display: 'block' }}>Prioridad por Defecto</label>
                         <select
                             id="priority"
                             value={priority}
                             onChange={(e) => setPriority(e.target.value as PrioridadTarea)}
                             required
-                            disabled={saving || isDetailView}
+                            disabled={isDetailView}
                         >
                             {Object.values(PrioridadTarea).map(p => (
                                 <option key={p} value={p}>{p}</option>
@@ -206,44 +228,44 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
                         </select>
                     </div>
 
+                    {/* Selector de Equipo: Etiqueta arriba */}
                     <div className="form-group">
-                        <label htmlFor="teamId">Equipo (Opcional):</label>
-                        <select
-                            id="teamId"
-                            value={teamId}
-                            onChange={handleTeamChange} // Usar la función corregida
-                            disabled={saving || loadingTeams || isDetailView}
-                        >
-                            <option value="">-- Global / Sin Equipo --</option>
-                            {userTeams?.map(team => (
-                                <option key={team.id} value={team.id}>
-                                    {team.nombre}
-                                </option>
-                            ))}
-                        </select>
-                        {loadingTeams && <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Cargando equipos...</p>}
-                    </div>
-
-                    <div className="form-group">
-                        <label>Etiquetas ({teamId ? `disponibles para el equipo ${userTeams?.find(t => t.id === teamId)?.nombre}` : 'Sin equipo seleccionado'}):</label>
-                        
-                        {/* 💡 CORRECCIÓN DE TAG SELECTOR: Se usa tagsToRender para evitar el error de 'null.length' */}
-                        {loadingTags ? (
-                            <p>Cargando etiquetas...</p>
-                        ) : tagsError ? (
-                            <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>Error al cargar etiquetas.</p>
-                        ) : tagsToRender.length === 0 && teamId ? (
-                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>No hay etiquetas disponibles en este equipo.</p>
-                        ) : tagsToRender.length === 0 && !teamId ? (
-                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>Selecciona un equipo para ver sus etiquetas.</p>
+                        <label htmlFor="teamId" style={{ fontWeight: 'bold', marginBottom: '0.3rem', display: 'block' }}>Equipo Predeterminado (Opcional)</label>
+                        {loadingTeams ? (
+                            <p>Cargando equipos...</p>
                         ) : (
-                            <TagSelector 
-                                allTags={tagsToRender}
+                            <select
+                                id="teamId"
+                                value={teamId}
+                                onChange={handleTeamChange}
+                                disabled={isDetailView}
+                            >
+                                <option value="">(Sin Equipo Predeterminado)</option>
+                                {userTeams?.map(team => (
+                                    <option key={team.id} value={team.id}>{team.nombre}</option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+                    
+                    {/* Selector de Etiquetas: Etiqueta arriba */}
+                    <div className="form-group">
+                        <label style={{ fontWeight: 'bold', marginBottom: '0.3rem', display: 'block' }}>Etiquetas por Defecto (Opcional)</label>
+                        {(teamId || isEditing || isDetailView) && (
+                            <TagSelector
+                                allTags={tagsToRender} 
                                 selectedTagIds={selectedTagIds}
                                 onChange={setSelectedTagIds} 
                                 disabled={isDetailView}
                             />
                         )}
+                        {loadingTags ? (
+                            <p>Cargando etiquetas...</p>
+                        ) : tagsError ? (
+                            <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>Error al cargar etiquetas.</p>
+                        ) : tagsToRender.length === 0 && teamId && !isDetailView ? (
+                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem', color: '#666' }}>No hay etiquetas creadas para este equipo. Crea algunas en la vista de equipo.</p>
+                        ) : null}
                     </div>
 
                     {formError && (
@@ -252,9 +274,9 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
                         </div>
                     )}
 
-                    {/* Botones */}
+                    
                     {!isDetailView && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
                             <button type="button" onClick={() => navigate('/templates')} className="secondary">
                                 Cancelar
                             </button>
@@ -265,7 +287,7 @@ export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
                     )}
                     
                     {isDetailView && (
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1.5rem' }}>
                             <button type="button" onClick={() => navigate('/templates')}>
                                 Volver a la Lista
                             </button>

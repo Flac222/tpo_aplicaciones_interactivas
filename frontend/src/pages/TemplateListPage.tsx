@@ -1,10 +1,10 @@
 // src/pages/TemplateListPage.tsx
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
-// Asumo que estos tipos están definidos en tu proyecto
+
 import { TaskTemplate, EquipoSimple } from '../types/templates'; 
 import { TemplateCard } from '../components/TemplateComponets';
 
@@ -15,24 +15,24 @@ export function TemplateListPage() {
     const userId = usuario?.id;
     
     const [searchTerm, setSearchTerm] = useState('');
-    const [teamFilter, setTeamFilter] = useState(''); // Contiene el ID del equipo
+    const [teamFilter, setTeamFilter] = useState(''); 
 
-    // 💡 SOLUCIÓN 1: Memoizar las opciones de fetch para evitar recargas constantes
+    
     const fetchOptions: RequestInit = useMemo(() => ({
         headers: { Authorization: `Bearer ${token}` }
     }), [token]); 
 
-    // 2. Fetch de la lista de equipos del usuario (para el filtro)
+   
     const teamUrl = (token && userId) 
         ? `${BASE_URL}/api/equipos/equipos/${userId}` 
         : null;
 
     const { data: userTeams, loading: loadingTeams } = useFetch<EquipoSimple[]>(
         teamUrl,
-        fetchOptions // Usamos opciones memoizadas
+        fetchOptions 
     );
     
-    // 3. Construcción de URL de Templates (memoizada)
+    
     const templateUrl = useMemo(() => {
         const params = new URLSearchParams();
         if (teamFilter) params.append('teamId', teamFilter);
@@ -40,10 +40,10 @@ export function TemplateListPage() {
         return `${BASE_URL}/api/tasktemplates?${params.toString()}`;
     }, [teamFilter, searchTerm]); 
 
-    // 4. Fetch de las Templates
+    
     const { data, loading, error, refetch } = useFetch<{ templates: TaskTemplate[], total: number }>(
         token ? templateUrl : null, 
-        fetchOptions // Usamos opciones memoizadas
+        fetchOptions 
     );
 
     const handleDelete = async (id: string) => {

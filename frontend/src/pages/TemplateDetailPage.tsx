@@ -1,6 +1,6 @@
 // src/pages/TemplateDetailPage.tsx
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
@@ -26,23 +26,23 @@ export function TemplateDetailPage() {
     const navigate = useNavigate();
     const { token, usuario } = useAuth(); 
 
-    // --- Estados para la asignación ---
+    
     const [isAssigning, setIsAssigning] = useState(false);
     const [assignError, setAssignError] = useState<string | null>(null);
 
-    // Fetch Options memoizadas
+    
     const fetchOptions: RequestInit = useMemo(() => ({
         headers: { Authorization: `Bearer ${token}` }
     }), [token]);
 
-    // 1. Fetch de la Template Completa (GET /api/tasktemplates/:id)
+    
     const url = id && token ? `${BASE_URL}/api/tasktemplates/${id}` : null;
     const { data: template, loading, error } = useFetch<TaskTemplate>(
         url,
         fetchOptions
     );
 
-    // 💡 FUNCIÓN CORREGIDA: Incluye Título, Descripción y Prioridad
+    
     const handleUseTemplate = async () => {
         if (!template || !template.teamId) {
             setAssignError('Error: La template no está completa o no tiene equipo predefinido.');
@@ -52,15 +52,14 @@ export function TemplateDetailPage() {
         setIsAssigning(true);
         setAssignError(null);
 
-        // 1. Construir el objeto de datos prellenados (TaskCreateDTO)
+       
         const taskData: TaskCreateDTO = {
-            // ===============================================
-            // ⭐️ CAMPOS CLAVE: Título, Descripción, Prioridad incluidos
-            // ===============================================
+           
+          
             titulo: template.name, 
             descripcion: template.description ?? '', 
             prioridad: template.priority, 
-            // ===============================================
+            
 
             estado: EstadoTarea.PENDIENTE, 
             teamId: template.teamId,
@@ -68,7 +67,7 @@ export function TemplateDetailPage() {
             originTemplateId: template.id,
         };
 
-        // 2. REDIRECCIÓN: Navegar a la página del equipo y pasar los datos en el 'state'
+        
         try {
             navigate(`/equipo/${template.teamId}`, { 
                 state: { prefillTask: taskData } 
@@ -159,11 +158,11 @@ export function TemplateDetailPage() {
                         onClick={() => navigate('/templates')} 
                         className="secondary"
                     >
-                        ⬅️ Volver
+                        ⬅ Volver
                     </button>
 
                     {template.teamId ? (
-                        // BOTÓN CORREGIDO: Llama a la función que redirige con TODOS los datos.
+                        
                         <button 
                             onClick={handleUseTemplate} 
                             disabled={isAssigning}
@@ -174,7 +173,7 @@ export function TemplateDetailPage() {
                             {isAssigning ? 'Preparando...' : `🚀 Usar y Pre-llenar Tarea`}
                         </button>
                     ) : (
-                        // Si no hay equipo predefinido, sigue yendo al formulario de uso completo (Personalizar)
+                       
                         <Link 
                             to={`/templates/${template.id}/use`} 
                             className="button-primary" 
