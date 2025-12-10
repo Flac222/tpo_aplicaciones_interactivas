@@ -76,6 +76,13 @@ npm run migration:generate
 docker run --name backend-postgres -e POSTGRES_USER=my_username -e POSTGRES_PASSWORD=my_secure_password  -e POSTGRES_DB=my_db_name -p 5432:5432  -d postgres:16
 ```
 
+O usar el [docker-compose.yml](backend/docker-compose.yml) que esta seteado con pgadmin4:
+
+```bash
+cd backend
+docker-compose up -d
+```
+
 6. Iniciar la API:
 
 ```bash

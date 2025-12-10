@@ -1,6 +1,12 @@
 # Dependencies
 node_modules/
 
+# Ignorar los package-lock
+backend/package-lock.json
+frontend/package-lock.json
+# Ignorar las migraciones
+backend/src/db/migrations/
+
 # Build artifacts
 dist/
 coverage/
