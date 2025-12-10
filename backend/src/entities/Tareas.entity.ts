@@ -59,13 +59,13 @@ export class Tarea {
   @OneToMany(() => Historial, historial => historial.tarea)
   historial!: Historial[];
 
+  @OneToMany(() => TaskWatcher, watcher => watcher.task)
+  watchers!: TaskWatcher[];
+
   @CreateDateColumn()
   fechaCreacion!: Date;
 
   @UpdateDateColumn()
   fechaActualizacion!: Date;
-
-  @OneToMany(() => TaskWatcher, watcher => watcher.task)
-  watchers!: TaskWatcher[];
 
 }

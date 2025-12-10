@@ -3,10 +3,12 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   CreateDateColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
+  OneToMany
 } from "typeorm";
 import { Tarea } from "./Tareas.entity";
 import { Usuario } from "./Usuario.entity";
+import { TaskWatcherNotification } from "./TaskWatcherNotification.entity";
 
 @Entity()
 export class TaskWatcher {
@@ -24,6 +26,9 @@ export class TaskWatcher {
     onDelete: "CASCADE" // opcional: si se elimina el usuario, se eliminan sus watchers
   })
   user!: Usuario;
+
+  @OneToMany(() => TaskWatcherNotification, notif => notif.watcher)
+  notifications!: TaskWatcherNotification[];
 
   @CreateDateColumn()
   createdAt!: Date;
