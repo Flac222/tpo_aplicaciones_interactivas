@@ -1,177 +1,247 @@
 // src/pages/TemplateFormPage.tsx
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useFetch } from '../hooks/useFetch';
 import { PrioridadTarea, Etiqueta } from '../types/tareas';
-import { TaskTemplateCreateDTO } from '../types/templates';
-import { TagSelector } from '../components/TemplateComponets';
+import { TaskTemplateCreateDTO, EquipoSimple } from '../types/templates'; 
+import { TagSelector } from '../components/TemplateComponets'; 
 
 const BASE_URL = 'http://localhost:3000';
 
-export function TemplateFormPage() {
-    const { id } = useParams(); // Si hay ID, es edición
-    const navigate = useNavigate();
-    const { token, usuario } = useAuth();
-    const isEditing = !!id;
+interface TemplateFormPageProps {
+    viewMode?: boolean; 
+}
 
-    // Estados del formulario
+export function TemplateFormPage({ viewMode = false }: TemplateFormPageProps) {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const location = useLocation(); 
+    const { token, usuario } = useAuth(); 
+    const userId = usuario?.id;
+    
+    const isEditing = !!id && location.pathname.includes('/edit'); 
+    const isDetailView = !!id && viewMode;
+    
+    // --- Estados del formulario ---
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [priority, setPriority] = useState<PrioridadTarea>(PrioridadTarea.MEDIA);
-    const [teamId, setTeamId] = useState(''); // Opcional
+    const [teamId, setTeamId] = useState(''); 
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-    
-    const [formError, setFormError] = useState<string | null>(null);
+
+    // --- Estados de fetch/UI ---
     const [saving, setSaving] = useState(false);
+    const [formError, setFormError] = useState<string | null>(null);
 
-    // Cargar equipos (para el select) y etiquetas (para el selector)
-    // Nota: Para simplificar, cargamos etiquetas del primer equipo del usuario o globales si tu API lo permite.
-    // Aquí asumimos que obtenemos las etiquetas de algun endpoint general o del equipo seleccionado.
-    // *Para cumplir la consigna rápido*: Usaremos las etiquetas del equipo si se selecciona uno.
-    const [availableTags, setAvailableTags] = useState<Etiqueta[]>([]);
+    // Fetch Options memoizadas
+    const fetchOptions: RequestInit = useMemo(() => ({
+        headers: { Authorization: `Bearer ${token}` }
+    }), [token]);
 
-    // Fetch de datos si es edición
+    // 1. Fetch de equipos del usuario
+    const teamUrl = (token && userId) 
+        ? `${BASE_URL}/api/equipos/equipos/${userId}` 
+        : null;
+
+    const { data: userTeams, loading: loadingTeams } = useFetch<EquipoSimple[]>(
+        teamUrl, 
+        fetchOptions
+    );
+    
+    // 2. Fetch de etiquetas del equipo seleccionado
+    const tagsUrl = (token && teamId) 
+        ? `${BASE_URL}/api/etiquetas/equipos/${teamId}/etiquetas` 
+        : null;
+
+    const { 
+        data: availableTags = [], 
+        loading: loadingTags, 
+        error: tagsError 
+    } = useFetch<Etiqueta[]>(
+        tagsUrl, 
+        fetchOptions
+    );
+
+    // 3. Fetch de la template a editar
+    type TemplateResponse = TaskTemplateCreateDTO & { id: string, tags?: Etiqueta[], teamName?: string };
+    const templateUrl = (isEditing || isDetailView) && id && token 
+        ? `${BASE_URL}/api/tasktemplates/${id}` 
+        : null;
+
+    const { data: currentTemplate, loading: loadingTemplate, error: templateError } = useFetch<TemplateResponse>(
+        templateUrl, 
+        fetchOptions
+    );
+
+    // Manejo de carga de datos iniciales
     useEffect(() => {
-        if (isEditing && token) {
-            fetch(`${BASE_URL}/api/tasktemplates/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            .then(res => res.json())
-            .then(data => {
-                setName(data.name);
-                setDescription(data.description || '');
-                setPriority(data.priority);
-                setTeamId(data.teamId || '');
-                // Map tags objects to IDs
-                setSelectedTagIds(data.tags.map((t: any) => t.id));
-            })
-            .catch(err => setFormError("Error al cargar la template."));
+        if (currentTemplate) {
+            setName(currentTemplate.name);
+            setDescription(currentTemplate.description || '');
+            setPriority(currentTemplate.priority);
+            setTeamId(currentTemplate.teamId || '');
+            
+            // Si la template tiene tags, extraemos sus IDs
+            if (currentTemplate.tags) {
+                setSelectedTagIds(currentTemplate.tags.map(t => t.id));
+            } else {
+                setSelectedTagIds([]);
+            }
         }
-    }, [isEditing, id, token]);
+    }, [currentTemplate]);
 
-    // Efecto simulado para cargar etiquetas cuando cambia el teamId
-    // (En una app real, harías fetch a /api/etiquetas/equipos/:teamId)
-    useEffect(() => {
-        if (teamId && token) {
-            fetch(`${BASE_URL}/api/etiquetas/equipos/${teamId}/etiquetas`, {
-                headers: { Authorization: `Bearer ${token}` }
-            })
-            .then(res => res.ok ? res.json() : [])
-            .then(data => setAvailableTags(data));
-        }
-    }, [teamId, token]);
+    // Función para manejar el cambio de equipo y resetear tags
+    const handleTeamChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newTeamId = e.target.value;
+        setTeamId(newTeamId);
+        // Limpiar tags seleccionados al cambiar de equipo
+        setSelectedTagIds([]); 
+    };
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setSaving(true);
         setFormError(null);
 
-        if (!name.trim()) {
-            setFormError("El nombre es requerido.");
+        if (!name || !priority) {
+            setFormError("El nombre y la prioridad son obligatorios.");
+            setSaving(false);
             return;
         }
 
-        setSaving(true);
-        const payload: TaskTemplateCreateDTO = {
+        const method = isEditing ? 'PUT' : 'POST';
+        const url = isEditing 
+            ? `${BASE_URL}/api/tasktemplates/${id}` 
+            : `${BASE_URL}/api/tasktemplates`;
+        
+        // El DTO para POST/PUT espera solo IDs de tags
+        const templateData: TaskTemplateCreateDTO = {
             name,
-            description,
+            description: description || undefined,
             priority,
-            teamId: teamId || undefined,
-            tagIds: selectedTagIds
+            teamId: teamId || undefined, 
+            tagIds: selectedTagIds,
         };
 
         try {
-            const url = isEditing 
-                ? `${BASE_URL}/api/tasktemplates/${id}` 
-                : `${BASE_URL}/api/tasktemplates`;
-            
-            const method = isEditing ? 'PUT' : 'POST';
-
-            const res = await fetch(url, {
+            const response = await fetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(templateData),
             });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                // Manejo de errores sin ALERT (Consigna: "name duplicado, no utilizar alert")
-                throw new Error(data.message || "Error al guardar");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al guardar la template.');
             }
 
-            navigate('/templates'); // Éxito: Redirigir a lista
+            // Éxito: Volver a la lista de templates
+            navigate('/templates'); 
+
         } catch (err: any) {
-            setFormError(err.message);
+            console.error(err);
+            setFormError(err.message || 'Error desconocido al procesar la solicitud.');
         } finally {
             setSaving(false);
         }
     };
 
+
+    if ((isEditing || isDetailView) && loadingTemplate) return <p>Cargando Template...</p>;
+    if (templateError) return <p style={{ color: 'red' }}>Error al cargar template: {templateError}</p>;
+
+
+    // 💡 CORRECCIÓN PARA EL ERROR DE LENGTH: Se asegura de que sea un array vacío si es null/undefined
+    const tagsToRender = availableTags || [];
+    
+    // El resto del JSX (renderizado)
     return (
-        <div className="main-content">
-            <div className="card" style={{ maxWidth: '600px', margin: '0 auto' }}>
-                <h2>{isEditing ? 'Editar Template' : 'Nueva Template'}</h2>
+        <div className="page-container">
+            <h1>{isEditing ? 'Editar Template' : isDetailView ? 'Detalle de Template' : 'Crear Nueva Template'}</h1>
+            <div className="card">
                 
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label>Nombre *</label>
-                        <input 
-                            type="text" 
-                            value={name} 
-                            onChange={e => setName(e.target.value)} 
-                            style={{ width: '100%', padding: '0.5rem' }}
-                            placeholder="Ej: Reporte de Bug"
+                    
+                    <div className="form-group">
+                        <label htmlFor="name">Nombre de la Template:</label>
+                        <input
+                            id="name"
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                            disabled={saving || isDetailView}
                         />
                     </div>
 
-                    <div style={{ marginBottom: '1rem' }}>
-                        <label>Descripción</label>
-                        <textarea 
-                            value={description} 
-                            onChange={e => setDescription(e.target.value)} 
-                            style={{ width: '100%', minHeight: '80px', padding: '0.5rem' }}
-                        />
+                    <div className="form-group">
+                        <label htmlFor="description">Descripción (Opcional):</label>
+                        <textarea
+                            id="description"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={4}
+                            disabled={saving || isDetailView}
+                        ></textarea>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ flex: 1 }}>
-                            <label>Prioridad</label>
-                            <select 
-                                value={priority} 
-                                onChange={e => setPriority(e.target.value as PrioridadTarea)}
-                                style={{ width: '100%', padding: '0.5rem' }}
-                            >
-                                {Object.values(PrioridadTarea).map(p => (
-                                    <option key={p} value={p}>{p}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <label>ID Equipo (para cargar etiquetas)</label>
-                            <input 
-                                type="text"
-                                value={teamId}
-                                onChange={e => setTeamId(e.target.value)}
-                                placeholder="UUID del equipo"
-                                style={{ width: '100%', padding: '0.5rem' }}
-                            />
-                            <small style={{ color: '#666' }}>Pega el ID de un equipo para ver sus etiquetas</small>
-                        </div>
+                    <div className="form-group">
+                        <label htmlFor="priority">Prioridad por Defecto:</label>
+                        <select
+                            id="priority"
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value as PrioridadTarea)}
+                            required
+                            disabled={saving || isDetailView}
+                        >
+                            {Object.values(PrioridadTarea).map(p => (
+                                <option key={p} value={p}>{p}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem', border: '1px solid #eee', padding: '1rem', borderRadius: '8px' }}>
-                        <label>Etiquetas</label>
-                        {availableTags.length === 0 ? (
-                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>Ingresa un ID de equipo válido para cargar etiquetas.</p>
+                    <div className="form-group">
+                        <label htmlFor="teamId">Equipo (Opcional):</label>
+                        <select
+                            id="teamId"
+                            value={teamId}
+                            onChange={handleTeamChange} // Usar la función corregida
+                            disabled={saving || loadingTeams || isDetailView}
+                        >
+                            <option value="">-- Global / Sin Equipo --</option>
+                            {userTeams?.map(team => (
+                                <option key={team.id} value={team.id}>
+                                    {team.nombre}
+                                </option>
+                            ))}
+                        </select>
+                        {loadingTeams && <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Cargando equipos...</p>}
+                    </div>
+
+                    <div className="form-group">
+                        <label>Etiquetas ({teamId ? `disponibles para el equipo ${userTeams?.find(t => t.id === teamId)?.nombre}` : 'Sin equipo seleccionado'}):</label>
+                        
+                        {/* 💡 CORRECCIÓN DE TAG SELECTOR: Se usa tagsToRender para evitar el error de 'null.length' */}
+                        {loadingTags ? (
+                            <p>Cargando etiquetas...</p>
+                        ) : tagsError ? (
+                            <p style={{ color: 'var(--color-error)', fontSize: '0.9rem' }}>Error al cargar etiquetas.</p>
+                        ) : tagsToRender.length === 0 && teamId ? (
+                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>No hay etiquetas disponibles en este equipo.</p>
+                        ) : tagsToRender.length === 0 && !teamId ? (
+                            <p style={{ fontStyle: 'italic', fontSize: '0.9rem' }}>Selecciona un equipo para ver sus etiquetas.</p>
                         ) : (
                             <TagSelector 
-                                allTags={availableTags}
+                                allTags={tagsToRender}
                                 selectedTagIds={selectedTagIds}
-                                onChange={setSelectedTagIds}
+                                onChange={setSelectedTagIds} 
+                                disabled={isDetailView}
                             />
                         )}
                     </div>
@@ -182,14 +252,25 @@ export function TemplateFormPage() {
                         </div>
                     )}
 
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
-                        <button type="button" onClick={() => navigate('/templates')} className="secondary">
-                            Cancelar
-                        </button>
-                        <button type="submit" disabled={saving}>
-                            {saving ? 'Guardando...' : 'Guardar Template'}
-                        </button>
-                    </div>
+                    {/* Botones */}
+                    {!isDetailView && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button type="button" onClick={() => navigate('/templates')} className="secondary">
+                                Cancelar
+                            </button>
+                            <button type="submit" disabled={saving}>
+                                {saving ? 'Guardando...' : 'Guardar Template'}
+                            </button>
+                        </div>
+                    )}
+                    
+                    {isDetailView && (
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                            <button type="button" onClick={() => navigate('/templates')}>
+                                Volver a la Lista
+                            </button>
+                        </div>
+                    )}
                 </form>
             </div>
         </div>

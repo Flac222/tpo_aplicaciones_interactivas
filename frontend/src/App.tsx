@@ -1,3 +1,5 @@
+// src/App.tsx
+
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { use } from "react";
 import "./App.css";
@@ -9,10 +11,11 @@ import { FeedPage } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
-import { TemplateUsePage } from "./pages/TemplateUsePage";
-import { TemplateFormPage } from "./pages/TemplateFormPage";
+// Importar los componentes de Templates
 import { TemplateListPage } from "./pages/TemplateListPage";
-//import { NotFoundPage } from "./pages/NotFoundPage";
+import { TemplateFormPage } from "./pages/TemplateFormPage";
+import { TemplateUsePage } from "./pages/TemplateUsePage"; 
+import { TemplateDetailPage } from "./pages/TemplateDetailPage"; // <-- ¡NUEVA IMPORTACIÓN!
 
 
 function App() {
@@ -37,55 +40,33 @@ function App() {
                         </Link>
                         {isAuthenticated && (
                             <>
-                                <Link to="/Equipos" className="navbar-link">
-                                    📱 Equipos
-                                </Link>
-                                <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
-                                    👤 Perfil
+                                <Link to="/feed" className="navbar-link">
+                                    🧑‍💻 Equipos
                                 </Link>
                                 <Link to="/templates" className="navbar-link">
                                     📄 Templates
                                 </Link>
+                                <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
+                                    👤 {usuario?.nombre}
+                                </Link>
+                                <button onClick={logout} className="navbar-link">
+                                    🚪 Logout
+                                </button>
                             </>
                         )}
-
-                        <button
-                            onClick={toggleTheme}
-                            style={{
-                                padding: "0.5rem 1rem",
-                                fontSize: "0.9em",
-                                backgroundColor: "var(--bg-tertiary)"
-                            }}
-                        >
-                            {theme === "dark" ? "☀️" : "🌙"}
+                        <button onClick={toggleTheme} className="navbar-link">
+                            {theme === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode"}
                         </button>
-
-                        {isAuthenticated ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                                <span className="badge">{usuario?.nombre}</span>
-                                <button
-                                    onClick={logout}
-                                    className="btn-danger"
-                                    style={{ padding: "0.5rem 1rem", fontSize: "0.9em" }}
-                                >
-                                    🚪 Salir
-                                </button>
-                            </div>
-                        ) : (
-                            <Link to="/login">
-                                <button style={{ padding: "0.5rem 1rem", fontSize: "0.9em" }}>
-                                    🔐 Login
-                                </button>
-                            </Link>
-                        )}
                     </div>
                 </nav>
 
                 <Routes>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/login" element={<LoginPage />} />
+                    
+                    {/* RUTAS PROTEGIDAS */}
                     <Route
-                        path="/equipos"
+                        path="/feed"
                         element={
                             <ProtectedRoute>
                                 <FeedPage />
@@ -108,11 +89,23 @@ function App() {
                             </ProtectedRoute>
                         }
                     />
-                    {/* RUTAS DE TEMPLATES */}
+                    
+                    {/* RUTAS DE TEMPLATES (MODIFICADAS) */}
                     <Route path="/templates" element={<ProtectedRoute><TemplateListPage /></ProtectedRoute>} />
                     <Route path="/templates/new" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
                     <Route path="/templates/:id/edit" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
-                    <Route path="/templates/:id/use" element={<ProtectedRoute><TemplateUsePage /></ProtectedRoute>} />
+                    
+                    {/* 💡 RUTA DE DETALLE SIMPLE / ASIGNACIÓN DIRECTA (Nueva página) */}
+                    <Route 
+                        path="/templates/:id" 
+                        element={<ProtectedRoute><TemplateDetailPage /></ProtectedRoute>} 
+                    />
+                    
+                    {/* 💡 RUTA DE FORMULARIO DE USO COMPLETO (Personalizar) */}
+                    <Route 
+                        path="/templates/:id/use" 
+                        element={<ProtectedRoute><TemplateUsePage /></ProtectedRoute>} 
+                    />
                 </Routes>
 
 
@@ -134,4 +127,3 @@ function App() {
 }
 
 export default App;
-

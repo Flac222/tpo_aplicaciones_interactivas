@@ -1,18 +1,21 @@
 // src/components/TemplateComponents.tsx
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { TaskTemplate } from '../types/templates';
 import { Etiqueta, getPriorityColor } from '../types/tareas';
 
-// --- TagSelector ---
+// --- TagSelector (Sin cambios) ---
 interface TagSelectorProps {
     allTags: Etiqueta[];
     selectedTagIds: string[];
     onChange: (newIds: string[]) => void;
+    disabled?: boolean; // Añadir por si se necesita deshabilitar
 }
 
-export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagIds, onChange }) => {
+export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagIds, onChange, disabled = false }) => {
     const handleToggle = (tagId: string) => {
+        if (disabled) return;
         if (selectedTagIds.includes(tagId)) {
             onChange(selectedTagIds.filter(id => id !== tagId));
         } else {
@@ -29,17 +32,18 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagId
                         key={tag.id}
                         onClick={() => handleToggle(tag.id)}
                         style={{
-                            cursor: 'pointer',
+                            cursor: disabled ? 'default' : 'pointer',
                             padding: '4px 10px',
                             borderRadius: '15px',
-                            border: isSelected ? '2px solid var(--color-primary)' : '1px solid #ccc',
-                            backgroundColor: isSelected ? 'var(--color-primary-light)' : 'transparent',
-                            color: isSelected ? 'var(--color-primary-dark)' : 'inherit',
-                            fontWeight: isSelected ? 'bold' : 'normal',
-                            transition: 'all 0.2s'
+                            border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--bg-tertiary)',
+                            backgroundColor: isSelected ? 'var(--bg-tertiary)' : 'var(--bg-secondary)',
+                            color: 'var(--text-primary)',
+                            opacity: disabled ? 0.6 : 1,
+                            transition: 'all 0.2s ease',
+                            fontSize: '0.8rem',
                         }}
                     >
-                        {tag.nombre} {isSelected ? '✓' : '+'}
+                        {tag.nombre}
                     </span>
                 );
             })}
@@ -47,7 +51,47 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagId
     );
 };
 
-// --- TemplateCard ---
+// --- TemplateTagDisplay (NUEVO COMPONENTE para mostrar tags en la Card) ---
+interface TemplateTagDisplayProps {
+    tags: Etiqueta[];
+}
+
+export const TemplateTagDisplay: React.FC<TemplateTagDisplayProps> = ({ tags }) => {
+    return (
+        <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '0.5rem', 
+            marginTop: '0.5rem', 
+            maxHeight: '4rem', 
+            overflowY: 'auto',
+            paddingRight: '5px'
+        }}>
+            {tags.length === 0 ? (
+                <span style={{ fontStyle: 'italic', color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Sin etiquetas.</span>
+            ) : (
+                tags.map(tag => (
+                    <span 
+                        key={tag.id} 
+                        style={{
+                            padding: '2px 8px',
+                            borderRadius: '12px',
+                            fontSize: '0.75rem',
+                            backgroundColor: '#e2e8f0', 
+                            color: '#2d3748', 
+                            border: '1px solid #cbd5e0'
+                        }}
+                        title={tag.nombre}
+                    >
+                        {tag.nombre}
+                    </span>
+                ))
+            )}
+        </div>
+    );
+};
+
+// --- TemplateCard (MODIFICADO) ---
 interface TemplateCardProps {
     template: TaskTemplate;
     onDelete: (id: string) => void;
@@ -55,40 +99,62 @@ interface TemplateCardProps {
 
 export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDelete }) => {
     return (
-        <div style={{
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
-            padding: '1rem',
-            backgroundColor: 'var(--bg-lightest)',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-            position: 'relative'
+        <div className="card" style={{ 
+            padding: '1rem', 
+            backgroundColor: 'var(--bg-secondary)', 
+            borderLeft: `5px solid ${getPriorityColor(template.priority)}` 
         }}>
-            <div style={{ borderLeft: `4px solid ${getPriorityColor(template.priority)}`, paddingLeft: '0.5rem' }}>
-                <h4 style={{ margin: '0 0 0.5rem 0' }}>{template.name}</h4>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', margin: '0 0 0.5rem 0' }}>
-                    {template.description || 'Sin descripción'}
-                </p>
-                <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.8rem', flexWrap: 'wrap' }}>
-                    <span style={{ backgroundColor: '#edf2f7', padding: '2px 6px', borderRadius: '4px' }}>
-                        {template.teamName ? `Equipo: ${template.teamName}` : 'Personal'}
-                    </span>
-                    <span style={{ backgroundColor: '#edf2f7', padding: '2px 6px', borderRadius: '4px' }}>
-                        🏷️ {template.tags.length} tags
-                    </span>
-                </div>
+            <h3 style={{ margin: '0 0 0.5rem 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                {template.name}
+                <span style={{ fontSize: '0.8rem', padding: '3px 8px', borderRadius: '4px', backgroundColor: getPriorityColor(template.priority), color: '#fff' }}>
+                    {template.priority}
+                </span>
+            </h3>
+            
+            <p style={{ 
+                fontSize: '0.9rem', 
+                color: 'var(--text-secondary)', 
+                marginTop: '0.5rem', 
+                whiteSpace: 'pre-wrap',
+                maxHeight: '3rem',
+                overflowY: 'hidden'
+            }}>
+                {template.description || "Sin descripción."}
+            </p>
+            
+            {/* Información del equipo */}
+            <div style={{ fontSize: '0.85rem', marginTop: '0.8rem' }}>
+                Equipo: <span style={{ fontWeight: 'bold' }}>{template.teamName || 'Global'}</span>
             </div>
 
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                 {/* Botón Aplicar (Redirige al flujo de uso) */}
-                <Link to={`/templates/${template.id}/use`} className="button-primary" style={{ textDecoration: 'none', fontSize: '0.8rem', padding: '0.3rem 0.6rem' }}>
+            {/* 💡 DISPLAY DE ETIQUETAS ASOCIADAS A LA TEMPLATE */}
+            <div style={{ marginTop: '0.8rem' }}>
+                <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Etiquetas de la Template:</h4>
+                <TemplateTagDisplay tags={template.tags} />
+            </div>
+
+            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                
+                {/* 💡 Botón de 'Editar' (mantiene la ruta original para modificar la template) */}
+                <Link to={`/templates/${template.id}/edit`} style={{ textDecoration: 'none', fontSize: '1.2rem', color: 'var(--text-secondary)' }} title="Editar Template">
+                    ⚙️
+                </Link>
+
+                {/* 💡 Botón principal 'Usar' (va a /:id, que es la vista de detalle/asignación directa) */}
+                <Link 
+                    to={`/templates/${template.id}`} 
+                    className="button-primary" 
+                    style={{ 
+                        textDecoration: 'none', 
+                        fontSize: '0.8rem', 
+                        padding: '0.3rem 0.6rem', 
+                        backgroundColor: 'var(--color-success)', 
+                        fontWeight: 'bold' 
+                    }}
+                >
                     🚀 Usar
                 </Link>
-                <Link to={`/templates/${template.id}`} className="button-secondary" style={{ textDecoration: 'none', fontSize: '0.8rem', padding: '0.3rem 0.6rem', border: '1px solid #ccc', borderRadius:'4px' }}>
-                    Ver
-                </Link>
-                <Link to={`/templates/${template.id}/edit`} style={{ textDecoration: 'none', fontSize: '1.2rem' }} title="Editar">
-                    ✏️
-                </Link>
+
                 <button 
                     onClick={() => onDelete(template.id)} 
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem', color: 'var(--color-error)' }}

@@ -1,6 +1,11 @@
 // src/types/templates.ts
 import { PrioridadTarea, Etiqueta } from "./tareas";
 
+export interface EquipoSimple {
+    id: string;
+    nombre: string;
+}
+
 export interface TaskTemplate {
     id: string;
     name: string;

@@ -33,7 +33,15 @@ interface PaginacionTareas {
 
 export function EquipoPage(): React.ReactElement {
 
+
+
+    // Obtener los datos pre-llenados
+
+
     const location = useLocation()
+
+    const prefillData = location.state?.prefillTask;
+
     const { id: equipoId } = useParams();
     // 💡 CAMBIO 1: Desestructuramos el objeto 'usuario' del contexto de Auth
     const { token, usuario } = useAuth();
@@ -548,20 +556,19 @@ export function EquipoPage(): React.ReactElement {
     useEffect(() => {
         // Verificamos si hay datos en location.state
         const state = location.state as { prefillTask?: any };
-        
         if (state && state.prefillTask && !isTaskModalOpen) {
             const data = state.prefillTask;
-            
             // Seteamos los estados del modal
-            setNewTaskTitle(data.title);
-            setNewTaskDesc(data.description || "");
-            setNewTaskPriority(data.priority);
+            // ⭐️ CORRECCIÓN CLAVE: Usamos 'titulo' en lugar de 'title'
+            setNewTaskTitle(data.titulo);
+            // ⭐️ CORRECCIÓN CLAVE: Usamos 'descripcion' en lugar de 'description'
+            setNewTaskDesc(data.descripcion || "");
+            // ⭐️ CORRECCIÓN CLAVE: Usamos 'prioridad' en lugar de 'priority'
+            setNewTaskPriority(data.prioridad);
             // Aseguramos que data.tagIds sea un array
-            setNewTaskLabels(data.tagIds || []); 
-            
+            setNewTaskLabels(data.tagIds || []);
             // Abrimos el modal automáticamente
             setIsTaskModalOpen(true);
-            
             // Limpiamos el state para que no se reabra al refrescar (opcional pero recomendado)
             window.history.replaceState({}, document.title);
         }
