@@ -11,11 +11,11 @@ import { FeedPage } from "./pages/FeedPage";
 import { ProfilePage } from "./pages/ProfilePage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
-// Importar los componentes de Templates
+
 import { TemplateListPage } from "./pages/TemplateListPage";
 import { TemplateFormPage } from "./pages/TemplateFormPage";
 import { TemplateUsePage } from "./pages/TemplateUsePage"; 
-import { TemplateDetailPage } from "./pages/TemplateDetailPage"; // <-- ¡NUEVA IMPORTACIÓN!
+import { TemplateDetailPage } from "./pages/TemplateDetailPage"; 
 
 
 function App() {
@@ -90,18 +90,18 @@ function App() {
                         }
                     />
                     
-                    {/* RUTAS DE TEMPLATES (MODIFICADAS) */}
+                    {/* RUTAS DE TEMPLATES */}
                     <Route path="/templates" element={<ProtectedRoute><TemplateListPage /></ProtectedRoute>} />
                     <Route path="/templates/new" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
                     <Route path="/templates/:id/edit" element={<ProtectedRoute><TemplateFormPage /></ProtectedRoute>} />
                     
-                    {/* 💡 RUTA DE DETALLE SIMPLE / ASIGNACIÓN DIRECTA (Nueva página) */}
+                    {/*RUTA DE DETALLE SIMPLE / ASIGNACIÓN DIRECTA  */}
                     <Route 
                         path="/templates/:id" 
                         element={<ProtectedRoute><TemplateDetailPage /></ProtectedRoute>} 
                     />
                     
-                    {/* 💡 RUTA DE FORMULARIO DE USO COMPLETO (Personalizar) */}
+                    {/* RUTA DE FORMULARIO DE USO COMPLETO */}
                     <Route 
                         path="/templates/:id/use" 
                         element={<ProtectedRoute><TemplateUsePage /></ProtectedRoute>} 

@@ -47,13 +47,8 @@ export class Tarea {
   @OneToMany(() => Historial, historial => historial.tarea)
   historial!: Historial[];
 
-  // ... otras propiedades
-
   @Column({ type: "uuid", nullable: true })
-  // 💡 CORRECCIÓN: Usar 'string | null' para que DeepPartial<Tarea> acepte 'null' explícitamente
   originTemplateId?: string | null;
-
-  // ... resto de las propiedades y relaciones
 
   @CreateDateColumn()
   fechaCreacion!: Date;

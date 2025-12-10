@@ -15,7 +15,7 @@ export interface TaskTemplate {
     teamName?: string;
     creatorId: string;
     creatorName: string;
-    tags: Etiqueta[]; // El backend devuelve objetos completos en GET
+    tags: Etiqueta[]; 
     createdAt: string;
     updatedAt: string;
 }
@@ -25,7 +25,7 @@ export interface TaskTemplateCreateDTO {
     description?: string;
     priority: PrioridadTarea;
     teamId?: string;
-    tagIds: string[]; // El backend espera IDs en POST/PUT
+    tagIds: string[];
 }
 
 export interface TaskPreFillDTO {

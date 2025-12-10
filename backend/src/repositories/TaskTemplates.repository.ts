@@ -20,7 +20,7 @@ export class TaskTemplateRepository {
     offset: number = 0
   ): Promise<[TaskTemplate[], number]> {
     
-    // Configuración base de la consulta
+    
     const options: FindManyOptions<TaskTemplate> = {
       where: { creatorId },
       relations: ["team", "tagsAsociados", "tagsAsociados.etiqueta"],
@@ -29,18 +29,17 @@ export class TaskTemplateRepository {
       order: { createdAt: "DESC" },
     };
 
-    // Añadir filtro por TeamId (si se proporciona)
+    
     if (teamId) {
-        // Asegúrate de que TypeORM sepa manejar la columna teamId
+        
         (options.where as any).teamId = teamId;
     }
 
-    // Añadir búsqueda por nombre o descripción (si se proporciona)
+    // Añadir búsqueda por nombre o descripción 
     if (search) {
-      const searchCondition = ILike(`%${search}%`); // Búsqueda parcial (case-insensitive)
+      const searchCondition = ILike(`%${search}%`); 
       
-      // Combinar las condiciones de búsqueda con las condiciones existentes (creatorId y teamId)
-      // Se utiliza createQueryBuilder para manejo avanzado de OR/AND
+ 
       const query = this.repository
         .createQueryBuilder("template")
         .leftJoinAndSelect("template.team", "team")
@@ -51,13 +50,13 @@ export class TaskTemplateRepository {
         .take(limit)
         .skip(offset);
       
-      // Aplicar filtro de búsqueda (OR entre name y description)
+      
       query.andWhere(
           "(template.name ILike :search OR template.description ILike :search)",
           { search: `%${search}%` }
       );
 
-      // Aplicar filtro de equipo (AND adicional)
+      
       if (teamId) {
           query.andWhere("template.teamId = :teamId", { teamId });
       }
@@ -65,7 +64,7 @@ export class TaskTemplateRepository {
       return query.getManyAndCount();
     }
     
-    // Si no hay búsqueda por texto, usamos la forma simple de `find`
+    
     return this.repository.findAndCount(options);
   }
 
@@ -92,7 +91,7 @@ export class TaskTemplateRepository {
     return this.repository.save(newTemplate);
   }
 
-  // U: Actualizar template (solo la entidad principal)
+  // U: Actualizar template 
   async update(id: string, data: Partial<TaskTemplate>): Promise<TaskTemplate | null> {
     const template = await this.findById(id);
     if (!template) return null;

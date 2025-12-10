@@ -1,6 +1,5 @@
 // src/services/TaskTemplate.service.ts
 
-// --- Clases de Error (Similar a ServiceError en etiquetas.service.ts)
 class ServiceError extends Error {
   statusCode: number;
   constructor(message: string, statusCode: number = 400) {
@@ -28,7 +27,7 @@ export interface TaskPreFillDTO {
   teamId?: string;
   assignedToId?: string; 
   tagIds: string[];
-  originTemplateId: string; // CLAVE para rastrear el origen
+  originTemplateId: string; 
 }
 
 // 3. Output para Respuesta 
@@ -162,7 +161,7 @@ export class TaskTemplateService {
       );
     }
 
-    // 2. Validación de Tags (Requisito 4)
+    // 2. Validación de Tags 
     if (data.tagIds && data.tagIds.length > 0) {
       const validTags = await this.etiquetasRepo.findByIds(data.tagIds);
       if (validTags.length !== data.tagIds.length) {
@@ -170,7 +169,7 @@ export class TaskTemplateService {
       }
     }
     
-    // 3. Validación de Equipo (opcional)
+    // 3. Validación de Equipo 
     let equipo = undefined;
     if (data.teamId) {
         equipo = await this.equipoRepo.findById(data.teamId);
@@ -186,10 +185,10 @@ export class TaskTemplateService {
       description: data.description,
       priority: data.priority as PrioridadTarea,
       creatorId: creatorId,
-      team: equipo, // TypeORM manejará el objeto Equipo
+      team: equipo, 
     });
 
-    // 5. Creación de las relaciones Tags (Requisito 1 y 2)
+    // 5. Creación de las relaciones Tags 
     const tagAssociations: any[] = [];
     if (data.tagIds) {
       for (const tagId of data.tagIds) {
@@ -198,13 +197,13 @@ export class TaskTemplateService {
       }
     }
 
-    // Retornar el objeto creado (debes cargarlo de nuevo o construirlo manualmente para incluir las tags)
+  
     const templateWithTags = await this.taskTemplateRepo.findById(newTemplate.id);
     return this.mapToResponseDTO(templateWithTags);
   }
 
   /**
-   * 4. Actualizar template (Requisito 2 y 4)
+   * 4. Actualizar template 
    */
   async actualizarTemplate(
     id: string,
@@ -225,7 +224,7 @@ export class TaskTemplateService {
     // 2. Validación de Unicidad si se cambia el nombre
     if (data.name && data.name !== existingTemplate.name) {
       const existingWithName = await this.taskTemplateRepo.findByCreatorAndName(creatorId, data.name);
-      // Debe existir *y* tener un ID diferente al que estamos actualizando
+      
       if (existingWithName && existingWithName.id !== id) {
         throw new ServiceError(
           `Ya existe otra template llamada '${data.name}' creada por ti.`,
@@ -234,7 +233,7 @@ export class TaskTemplateService {
       }
     }
 
-    // 3. Validación de Tags (Requisito 4)
+    // 3. Validación de Tags 
     if (data.tagIds && data.tagIds.length > 0) {
       const validTags = await this.etiquetasRepo.findByIds(data.tagIds);
       if (validTags.length !== data.tagIds.length) {
@@ -251,7 +250,7 @@ export class TaskTemplateService {
                 throw new ServiceError("El ID de equipo proporcionado no es válido.", 400);
             }
         } else {
-            // Si teamId es null/undefined en el DTO, se remueve el equipo
+            
             equipo = undefined;
         }
     }
@@ -260,7 +259,7 @@ export class TaskTemplateService {
     const updatedTemplate = await this.taskTemplateRepo.update(id, {
         ...data,
         team: equipo,
-    } as any); // TypeORM maneja la actualización del campo 'updatedAt'
+    } as any); 
 
     if (!updatedTemplate) {
         throw new ServiceError("Error al actualizar la template.", 500);
@@ -317,7 +316,7 @@ export class TaskTemplateService {
       throw new ServiceError("Template de origen no encontrada.", 404);
     }
 
-    // Extraer solo los IDs de las etiquetas
+   
     const tagIds = template.tagsAsociados
         ? template.tagsAsociados.map((tt) => tt.etiqueta.id)
         : [];

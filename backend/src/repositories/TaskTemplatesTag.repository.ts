@@ -17,12 +17,12 @@ export class TaskTemplateTagRepository {
       templateId,
       etiquetaId,
     });
-    // Se usa { reload: false } para mayor eficiencia
+   
     return this.repository.save(nuevaAsignacion, { reload: false });
   }
 
   // D: Eliminar todas las etiquetas asociadas a una template
-  // Este método es CLAVE para la lógica de actualización (UPDATE)
+  // Este método es CLAVE para la lógica de actualización 
   async deleteByTemplateId(templateId: string): Promise<void> {
     await this.repository.delete({ templateId });
   }

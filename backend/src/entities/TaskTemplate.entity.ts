@@ -40,7 +40,7 @@ export class TaskTemplate {
   teamId!: string; 
 
   @ManyToOne(() => Usuario, usuario => usuario.templatesCreados, { onDelete: "CASCADE" })
-  creator!: Usuario; // Referencia al user que creó la template [cite: 20]
+  creator!: Usuario; 
   
   
   @Column() 
@@ -48,11 +48,11 @@ export class TaskTemplate {
 
   // Relación con la tabla intermedia para Tags de la Template
   @OneToMany(() => TaskTemplateTag, (templateTag) => templateTag.template)
-  tagsAsociados!: TaskTemplateTag[]; // Asociación con tags 
+  tagsAsociados!: TaskTemplateTag[]; 
 
   @CreateDateColumn()
-  createdAt!: Date; // Timestamp de creación [cite: 21]
+  createdAt!: Date; 
 
   @UpdateDateColumn()
-  updatedAt!: Date; // Timestamp de última actualización [cite: 22]
+  updatedAt!: Date;  
 }

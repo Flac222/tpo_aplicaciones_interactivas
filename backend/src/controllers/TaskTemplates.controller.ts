@@ -4,7 +4,7 @@ import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth.middleware"; 
 import { TaskTemplateService, 
     TaskTemplateListFilterDTO, 
-    TaskTemplateCreateUpdateDTO } from "../services/TaskTemplates.service"; // Importar DTOs y Service
+    TaskTemplateCreateUpdateDTO } from "../services/TaskTemplates.service"; 
 
 // Definición de ServiceError para manejar errores con status code
 class ServiceError extends Error {
@@ -15,13 +15,10 @@ class ServiceError extends Error {
   }
 }
 
-// Instancia del servicio
+
 const taskTemplateService = new TaskTemplateService();
 
-/**
- * Función auxiliar para centralizar el manejo de errores del servicio.
- * Se reutiliza la lógica vista en otros controllers como etiquetas.controller.ts
- */
+
 const handleError = (res: Response, error: any): Response => {
   const statusCode = error instanceof ServiceError ? error.statusCode : 500;
   const message = error.message || "Error interno del servidor.";
@@ -33,11 +30,11 @@ const handleError = (res: Response, error: any): Response => {
   return res.status(statusCode).json({ message });
 };
 
-// --- ENDPOINTS REST (CRUD + Listado + Pre-llenado) ---
+// --- ENDPOINTS REST  ---
 
 /**
  * GET /api/tasktemplates
- * Lista templates del usuario con filtros (teamId, búsqueda por nombre/descripción) y paginación. (Requisito 2)
+ * Lista templates del usuario con filtros (teamId, búsqueda por nombre/descripción) y paginación. 
  */
 export async function listarTemplates(req: AuthRequest, res: Response): Promise<Response> {
   try {
@@ -81,19 +78,16 @@ export async function listarTemplates(req: AuthRequest, res: Response): Promise<
 
 /**
  * GET /api/tasktemplates/:id
- * Consulta de detalle de un template con sus tags y relaciones. (Requisito 2)
+ * Consulta de detalle de un template con sus tags y relaciones. 
  */
 export async function obtenerTemplateDetalle(req: AuthRequest, res: Response): Promise<Response> {
   try {
     const { id } = req.params;
     
-    // No es necesario verificar que el usuario sea el creador aquí,
-    // ya que el Service podría implementarlo o dejarlo abierto
-    // (pero por unicidad por creador, es buena práctica que solo acceda a las suyas).
+  
     const template = await taskTemplateService.obtenerTemplatePorId(id);
     
-    // Opcional: Si solo las templates propias son accesibles, añadir:
-    // if (template.creatorId !== req.user!.id) throw new ServiceError("No autorizado para ver esta template.", 403);
+   
     
     return res.status(200).json(template);
 
@@ -104,7 +98,7 @@ export async function obtenerTemplateDetalle(req: AuthRequest, res: Response): P
 
 /**
  * POST /api/tasktemplates
- * Creación de template (Requisito 2)
+ * Creación de template 
  */
 export async function crearTemplate(req: AuthRequest, res: Response): Promise<Response> {
   try {
@@ -145,14 +139,14 @@ export async function actualizarTemplate(req: AuthRequest, res: Response): Promi
     return res.status(200).json(updatedTemplate);
 
   } catch (error: any) {
-    // El servicio lanza 403 si no es el creador, 404 si no existe, 409 si hay conflicto de nombre.
+  
     return handleError(res, error);
   }
 }
 
 /**
  * DELETE /api/tasktemplates/:id
- * Eliminación de template (Requisito 2)
+ * Eliminación de template 
  */
 export async function eliminarTemplate(req: AuthRequest, res: Response): Promise<Response> {
   try {
@@ -161,7 +155,6 @@ export async function eliminarTemplate(req: AuthRequest, res: Response): Promise
 
     await taskTemplateService.eliminarTemplate(id, creatorId);
 
-    // 204 No Content
     return res.status(204).send();
 
   } catch (error: any) {
@@ -171,15 +164,13 @@ export async function eliminarTemplate(req: AuthRequest, res: Response): Promise
 
 /**
  * GET /api/tasktemplates/:id/preview
- * Entrega la información necesaria para que el frontend pueda prellenar el formulario de tasks. (Requisito 2 y 3)
+ * Entrega la información necesaria para que el frontend pueda prellenar el formulario de tasks.
  */
 export async function obtenerDatosPrellenado(req: AuthRequest, res: Response): Promise<Response> {
     try {
         const { id } = req.params;
         
-        // No se requiere 'creatorId' en el Service para esta operación, ya que cualquiera puede
-        // usar una template si conoce el ID, aunque es más seguro verificar que la template exista
-        // y sea accesible.
+        
         
         const preFillData = await taskTemplateService.obtenerDatosPrellenado(id);
         

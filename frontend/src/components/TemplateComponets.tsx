@@ -10,7 +10,7 @@ interface TagSelectorProps {
     allTags: Etiqueta[];
     selectedTagIds: string[];
     onChange: (newIds: string[]) => void;
-    disabled?: boolean; // Añadir por si se necesita deshabilitar
+    disabled?: boolean; 
 }
 
 export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagIds, onChange, disabled = false }) => {
@@ -51,7 +51,7 @@ export const TagSelector: React.FC<TagSelectorProps> = ({ allTags, selectedTagId
     );
 };
 
-// --- TemplateTagDisplay (NUEVO COMPONENTE para mostrar tags en la Card) ---
+// --- TemplateTagDisplay ---
 interface TemplateTagDisplayProps {
     tags: Etiqueta[];
 }
@@ -91,7 +91,7 @@ export const TemplateTagDisplay: React.FC<TemplateTagDisplayProps> = ({ tags }) 
     );
 };
 
-// --- TemplateCard (MODIFICADO) ---
+// --- TemplateCard  ---
 interface TemplateCardProps {
     template: TaskTemplate;
     onDelete: (id: string) => void;
@@ -127,7 +127,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDelete }
                 Equipo: <span style={{ fontWeight: 'bold' }}>{template.teamName || 'Global'}</span>
             </div>
 
-            {/* 💡 DISPLAY DE ETIQUETAS ASOCIADAS A LA TEMPLATE */}
+            {/*DISPLAY DE ETIQUETAS ASOCIADAS A LA TEMPLATE */}
             <div style={{ marginTop: '0.8rem' }}>
                 <h4 style={{ margin: '0 0 0.3rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Etiquetas de la Template:</h4>
                 <TemplateTagDisplay tags={template.tags} />
@@ -135,12 +135,12 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onDelete }
 
             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                 
-                {/* 💡 Botón de 'Editar' (mantiene la ruta original para modificar la template) */}
+                {/* Botón de 'Editar'*/}
                 <Link to={`/templates/${template.id}/edit`} style={{ textDecoration: 'none', fontSize: '1.2rem', color: 'var(--text-secondary)' }} title="Editar Template">
                     ⚙️
                 </Link>
 
-                {/* 💡 Botón principal 'Usar' (va a /:id, que es la vista de detalle/asignación directa) */}
+                {/* Botón principal 'Usar' */}
                 <Link 
                     to={`/templates/${template.id}`} 
                     className="button-primary" 

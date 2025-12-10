@@ -195,7 +195,7 @@ export function EquipoPage(): React.ReactElement {
         // Array para almacenar todas las promesas de la API
         const updatePromises: Promise<any>[] = [];
 
-        // ✅ 3. Crear Promesas para AÑADIR (POST) - ¡POSICIÓN CORRECTA!
+        // 3. Crear Promesas para AÑADIR (POST) 
         labelsToAdd.forEach(labelId => {
             const promise = fetch(`${BASE_URL}/api/etiquetas/tareas/${tareaId}/etiquetas/${labelId}`, {
                 method: 'POST', // Usar POST para asignar
@@ -211,10 +211,10 @@ export function EquipoPage(): React.ReactElement {
             updatePromises.push(promise);
         });
 
-        // ✅ 4. Crear Promesas para REMOVER (DELETE) - ¡POSICIÓN CORRECTA!
+        
         labelsToRemove.forEach(labelId => {
             const promise = fetch(`${BASE_URL}/api/etiquetas/tareas/${tareaId}/etiquetas/${labelId}`, {
-                method: 'DELETE', // Usar DELETE para remover
+                method: 'DELETE', 
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
@@ -231,16 +231,16 @@ export function EquipoPage(): React.ReactElement {
             // 5. Ejecutar todas las llamadas en paralelo
             await Promise.all(updatePromises);
 
-            // 6. Si todas las llamadas son exitosas, actualizamos el estado local del modal
+            // 6. Si todas las llamadas son exitosas, actualizo el estado local del modal
             const updatedLabels = (etiquetas ?? []).filter(label => newLabelIds.includes(label.id));
             setModalTaskLabels(updatedLabels);
 
-            // 🚀 AQUI ESTÁ LA SOLUCIÓN: Recarga el listado completo de tareas
+            
             refetch();
 
         } catch (error) {
             console.error("Error en la actualización atómica de etiquetas:", error);
-            // Relanzar el error para que el modal pueda mostrar el mensaje
+            
             throw error;
         } finally {
             setIsUpdatingLabels(false);
@@ -554,22 +554,21 @@ export function EquipoPage(): React.ReactElement {
     };
 
     useEffect(() => {
-        // Verificamos si hay datos en location.state
+        
         const state = location.state as { prefillTask?: any };
         if (state && state.prefillTask && !isTaskModalOpen) {
             const data = state.prefillTask;
-            // Seteamos los estados del modal
-            // ⭐️ CORRECCIÓN CLAVE: Usamos 'titulo' en lugar de 'title'
+          
             setNewTaskTitle(data.titulo);
-            // ⭐️ CORRECCIÓN CLAVE: Usamos 'descripcion' en lugar de 'description'
+            
             setNewTaskDesc(data.descripcion || "");
-            // ⭐️ CORRECCIÓN CLAVE: Usamos 'prioridad' en lugar de 'priority'
+            
             setNewTaskPriority(data.prioridad);
-            // Aseguramos que data.tagIds sea un array
+            
             setNewTaskLabels(data.tagIds || []);
-            // Abrimos el modal automáticamente
+         
             setIsTaskModalOpen(true);
-            // Limpiamos el state para que no se reabra al refrescar (opcional pero recomendado)
+            
             window.history.replaceState({}, document.title);
         }
     }, [location, isTaskModalOpen]);
@@ -580,17 +579,17 @@ export function EquipoPage(): React.ReactElement {
 
             // 💡 Iniciar cargas en paralelo
             setIsCommentsLoading(true);
-            setModalLabelsLoading(true); // 💡 NUEVO
+            setModalLabelsLoading(true); 
 
             const loadModalData = async () => {
                 await Promise.all([
-                    fetchComentarios(selectedTask.id), // (Tu función existente)
-                    fetchTaskLabels(selectedTask.id)  // 💡 NUEVO: Cargar etiquetas
+                    fetchComentarios(selectedTask.id), 
+                    fetchTaskLabels(selectedTask.id)  
                 ]);
 
                 // Marcar como completadas
                 setIsCommentsLoading(false);
-                setModalLabelsLoading(false); // 💡 NUEVO
+                setModalLabelsLoading(false); 
             };
 
             loadModalData();
@@ -598,11 +597,11 @@ export function EquipoPage(): React.ReactElement {
         } else {
             // Limpiar estados cuando se cierra el modal
             setComentarios([]);
-            setModalTaskLabels([]); // 💡 NUEVO
+            setModalTaskLabels([]); 
         }
     }, [selectedTask, token]); // Dependencias existentes
 
-    // 💡 NUEVO EFECTO: Mostrar/Ocultar Modal de Etiqueta
+    
     const closeLabelModal = () => {
         setIsLabelModalOpen(false);
         setNewLabelName('');
@@ -615,7 +614,7 @@ export function EquipoPage(): React.ReactElement {
         setNewTaskDesc("");
         setNewTaskPriority(PrioridadTarea.MEDIA);
         setNewTaskEstado(EstadoTarea.PENDIENTE);
-        setNewTaskLabels([]); // 💡 Limpiamos al cerrar
+        setNewTaskLabels([]); 
         setTaskModalError(null);
     }
 
@@ -657,7 +656,7 @@ export function EquipoPage(): React.ReactElement {
             {/* Componentes de modal importados */}
             <CreateTaskModal
                 isTaskModalOpen={isTaskModalOpen}
-                setIsTaskModalOpen={closeTaskModal} // 💡 Usamos el nuevo handler para limpieza
+                setIsTaskModalOpen={closeTaskModal} 
                 handleCreateTask={handleCreateTask}
                 newTaskTitle={newTaskTitle}
                 setNewTaskTitle={setNewTaskTitle}
@@ -669,8 +668,10 @@ export function EquipoPage(): React.ReactElement {
                 setNewTaskEstado={setNewTaskEstado}
                 taskModalLoading={taskModalLoading}
                 taskModalError={taskModalError}
-                // 💡 NUEVAS PROPS PARA ETIQUETAS
-                allLabels={etiquetas ?? []} // Lista de todas las etiquetas disponibles
+                
+                
+                allLabels={etiquetas ?? []} 
+                
                 newTaskLabels={newTaskLabels}
                 setNewTaskLabels={setNewTaskLabels}
             />
