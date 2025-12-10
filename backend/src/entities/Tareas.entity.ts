@@ -12,6 +12,7 @@ import { Equipo } from "./Equipo.entity";
 import { Comentario } from "./Comentarios.entity";
 import { Historial } from "./Historial.entity";
 import { TareaEtiqueta } from "./TareasEtiqueta.entity";
+import { TaskWatcher } from "./TaskWatcher.entity";
 
 export enum EstadoTarea {
   PENDIENTE = "Pendiente",
@@ -63,4 +64,8 @@ export class Tarea {
 
   @UpdateDateColumn()
   fechaActualizacion!: Date;
+
+  @OneToMany(() => TaskWatcher, watcher => watcher.task)
+  watchers!: TaskWatcher[];
+
 }
