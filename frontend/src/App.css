@@ -169,8 +169,13 @@
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Badge Gaming Style */
@@ -268,3 +273,152 @@
   }
 }
 
+/* Notification Badge */
+
+.notif-container {
+  position: relative;
+  display: inline-block;
+}
+
+.notif-icon {
+  cursor: pointer;
+  font-size: 1.6rem;
+  position: relative;
+  color: var(--accent-primary);
+}
+
+.notif-count {
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: var(--error);
+  color: white;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-weight: bold;
+  border: 2px solid var(--bg-tertiary);
+}
+
+/* PANEL */
+.notif-panel {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 320px;
+  background: var(--bg-secondary);
+  border: 2px solid var(--bg-tertiary);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  z-index: 100;
+  animation: fadeIn 0.15s ease-out;
+}
+
+/* Entrada suave */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* HEADER */
+.notif-header {
+  padding: 12px;
+  font-weight: bold;
+  background: linear-gradient(135deg,
+      var(--bg-tertiary) 0%,
+      var(--bg-secondary) 100%);
+  border-bottom: 2px solid var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* TEXTOS */
+.notif-loading,
+.notif-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+/* ITEMS */
+.notif-item {
+  padding: 12px;
+  border-bottom: 1px solid var(--bg-tertiary);
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  transition: background 0.25s;
+}
+
+.notif-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.notif-title {
+  font-weight: bold;
+  color: var(--accent-primary);
+}
+
+.notif-type {
+  color: var(--text-primary);
+  margin: 4px 0;
+}
+
+.notif-date {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Botón marcar leído */
+.notif-read-btn {
+  position: absolute;
+  right: 10px;
+  top: 14px;
+  background: var(--success);
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: transform .2s, opacity .2s;
+}
+
+.notif-read-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.05);
+}
+
+/* PAGINACIÓN */
+.notif-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12px;
+  gap: 12px;
+  background: var(--bg-secondary);
+}
+
+.notif-pagination button {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-primary);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.notif-pagination button:hover:not(:disabled) {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.notif-pagination button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}

@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { use } from "react";
 import "./App.css";
@@ -10,6 +11,9 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { NotFoundPage } from "./pages/NotFoundPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { EquipoPage } from "./pages/EquipoPage";
+import { WatchlistPage } from "./pages/WatchlistPage";
+import { NotificationBadge } from "./components/NotificationComponents";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 
 function App() {
@@ -34,12 +38,15 @@ function App() {
                         </Link>
                         {isAuthenticated && (
                             <>
-                                <Link to="/Equipos" className="navbar-link">
+                                <Link to="/equipos" className="navbar-link">
                                     📱 Equipos
                                 </Link>
                                 <Link to={`/profile/${usuario?.nombre}`} className="navbar-link">
                                     👤 Perfil
-                                </Link>                   
+                                </Link>
+                                <Link to="/watchlist" className="navbar-link">
+                                    📋 Watchlist
+                                </Link>
                             </>
                         )}
 
@@ -55,7 +62,8 @@ function App() {
                         </button>
 
                         {isAuthenticated ? (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                                <NotificationBadge />
                                 <span className="badge">{usuario?.nombre}</span>
                                 <button
                                     onClick={logout}
@@ -75,34 +83,45 @@ function App() {
                     </div>
                 </nav>
 
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route
-                        path="/equipos"
-                        element={
-                            <ProtectedRoute>
-                                <FeedPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/equipo/:id"
-                        element={
-                            <ProtectedRoute>
-                                <EquipoPage />
-                            </ProtectedRoute>
-                        }
-                    />
-                    <Route
-                        path="/profile/:username"
-                        element={
-                            <ProtectedRoute>
-                                <ProfilePage />
-                            </ProtectedRoute>
-                        }
-                    />
-                </Routes>
+                <ErrorBoundary>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route
+                            path="/equipos"
+                            element={
+                                <ProtectedRoute>
+                                    <FeedPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/equipo/:id"
+                            element={
+                                <ProtectedRoute>
+                                    <EquipoPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/profile/:username"
+                            element={
+                                <ProtectedRoute>
+                                    <ProfilePage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="/watchlist"
+                            element={
+                                <ProtectedRoute>
+                                    <WatchlistPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </ErrorBoundary>
 
 
                 <footer style={{
@@ -123,4 +142,3 @@ function App() {
 }
 
 export default App;
-

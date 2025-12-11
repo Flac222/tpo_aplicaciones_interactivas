@@ -35,7 +35,7 @@ export class TaskWatcherRepository {
   ) {
     const qb = this.repo.createQueryBuilder("watcher")
       .leftJoinAndSelect("watcher.task", "task")
-      .leftJoin("task.equipo", "equipo")
+      .leftJoinAndSelect("task.equipo", "equipo")
       .where("watcher.userId = :userId", { userId });
 
     if (filters.status) {

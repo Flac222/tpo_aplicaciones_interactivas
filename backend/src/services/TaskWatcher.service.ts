@@ -27,7 +27,7 @@ export class TaskWatcherService {
   private tareaRepo = AppDataSource.getRepository(Tarea);
   private usuarioRepo = AppDataSource.getRepository(Usuario);
 
-  constructor(private maxWatchersPerTask = 50) {}
+  constructor(private maxWatchersPerTask = 50) { }
 
   // Suscribirse a una tarea (aplica reglas)
   // Suscribirse a una tarea (aplica reglas)
@@ -37,8 +37,8 @@ export class TaskWatcherService {
 
     // Validar existencia de usuario y tarea
     const [user, task] = await Promise.all([
-        this.usuarioRepo.findOne({ where: { id: userId }, relations: ["equipos"] }),
-        this.tareaRepo.findOne({ where: { id: taskId }, relations: ["equipo", "equipo.propietario"] })
+      this.usuarioRepo.findOne({ where: { id: userId }, relations: ["equipos"] }),
+      this.tareaRepo.findOne({ where: { id: taskId }, relations: ["equipo", "equipo.propietario"] })
     ]);
 
     if (!user) return { ok: false, status: 404, message: "Usuario no encontrado" };
@@ -47,23 +47,23 @@ export class TaskWatcherService {
     // Regla: solo miembros del team o propietario (admin)
     const isAdmin = task.equipo && task.equipo.propietario.id === user.id;
     const isTeamMember = task.equipo
-        ? (user.equipos || []).some(e => e.id === task.equipo.id)
-        : false;
+      ? (user.equipos || []).some(e => e.id === task.equipo.id)
+      : false;
 
     if (!isAdmin && !isTeamMember) {
-        return { ok: false, status: 403, message: "No pertenece al equipo de la tarea" };
+      return { ok: false, status: 403, message: "No pertenece al equipo de la tarea" };
     }
 
     // Regla: no duplicados
     const alreadyExists = await this.watcherRepo.exists(userId, taskId);
     if (alreadyExists) {
-        return { ok: false, status: 409, message: "Ya estás suscripto a esta tarea" };
+      return { ok: false, status: 409, message: "Ya estás suscripto a esta tarea" };
     }
 
     // Regla: máximo watchers por task
     const count = await this.watcherRepo.countByTask(taskId);
     if (count >= this.maxWatchersPerTask) {
-        return { ok: false, status: 422, message: "Se alcanzó el máximo de watchers para la tarea" };
+      return { ok: false, status: 422, message: "Se alcanzó el máximo de watchers para la tarea" };
     }
 
     // Crear watcher
@@ -91,7 +91,6 @@ export class TaskWatcherService {
   // Desuscribirse de una tarea
   async unsubscribe(dto: UnsubscribeWatcherDTO): Promise<ServiceResult<null>> {
     const { userId, taskId } = dto;
-
     const repo = AppDataSource.getRepository(TaskWatcher);
     const watcher = await repo.findOne({
       where: { user: { id: userId }, task: { id: taskId } },
@@ -103,6 +102,11 @@ export class TaskWatcherService {
       return { ok: false, status: 404, message: "Suscripción no encontrada" };
     }
 
+    await this.onTaskEvent(taskId, EventType.UNSUBSCRIBE, {
+      usuarioId: watcher.user.id,
+      nombre: watcher.user.nombre
+    });
+
     await repo.remove(watcher);
 
     const historialRepo = AppDataSource.getRepository(Historial);
@@ -112,11 +116,6 @@ export class TaskWatcherService {
       cambio: `Usuario ${watcher.user.nombre} se desuscribió de la tarea`
     });
     await historialRepo.save(historial);
-
-    await this.notifRepo.createNotification(watcher, EventType.UNSUBSCRIBE, {
-      usuarioId: watcher.user.id,
-      nombre: watcher.user.nombre
-    });
 
     return { ok: true, data: null };
   }
@@ -171,7 +170,8 @@ export class TaskWatcherService {
       estado: w.task.estado,
       prioridad: w.task.prioridad,
       fechaActualizacion: w.task.fechaActualizacion,
-      subscribedAt: w.createdAt
+      subscribedAt: w.createdAt,
+      teamId: w.task.equipo ? w.task.equipo.id : undefined
     }));
 
     return { ok: true, data: { items, total } };

@@ -1,11 +1,12 @@
 // src/components/TareaComponents.tsx
 import React, { useState, useEffect } from 'react';
+import { TaskWatcherSection } from './WatcherComponents';
 
 import {
     EstadoTarea,
     PrioridadTarea,
     Tarea,
-    Comentario, 
+    Comentario,
     RegistroHistorial,
     estadoConfig,
     getPriorityColor,
@@ -40,7 +41,7 @@ interface TaskDetailsModalProps {
 interface TareaCardProps {
     tarea: Tarea;
     setSelectedTask: (tarea: Tarea) => void;
-    token: string; 
+    token: string;
 }
 
 interface EtiquetaDisplayProps {
@@ -97,13 +98,13 @@ const AddLabelsSection: React.FC<LabelActionSectionProps> = ({ allLabels = [], c
                         <div
                             key={label.id}
                             onClick={() => !isUpdatingLabels && onAction(label.id, 'add')}
-                            style={{ 
-                                cursor: isUpdatingLabels ? 'wait' : 'pointer', 
-                                padding: '5px', margin: '2px 0', borderRadius: '4px', 
-                                backgroundColor: 'var(--bg-lightest)', 
-                                border: '1px solid var(--color-primary)', 
-                                transition: 'background-color 0.1s', 
-                                opacity: isUpdatingLabels ? 0.6 : 1 
+                            style={{
+                                cursor: isUpdatingLabels ? 'wait' : 'pointer',
+                                padding: '5px', margin: '2px 0', borderRadius: '4px',
+                                backgroundColor: 'var(--bg-lightest)',
+                                border: '1px solid var(--color-primary)',
+                                transition: 'background-color 0.1s',
+                                opacity: isUpdatingLabels ? 0.6 : 1
                             }}
                             onMouseEnter={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
                             onMouseLeave={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--bg-lightest)')}
@@ -134,14 +135,14 @@ const RemoveLabelsSection: React.FC<LabelActionSectionProps> = ({ currentTaskLab
                         <div
                             key={label.id}
                             onClick={() => !isUpdatingLabels && onAction(label.id, 'remove')}
-                            style={{ 
-                                cursor: isUpdatingLabels ? 'wait' : 'pointer', 
-                                padding: '5px', margin: '2px 0', borderRadius: '4px', 
-                                backgroundColor: 'var(--color-warning-light)', 
-                                border: '1px solid var(--color-warning)', 
-                                fontWeight: 'bold', 
-                                transition: 'background-color 0.1s', 
-                                opacity: isUpdatingLabels ? 0.6 : 1 
+                            style={{
+                                cursor: isUpdatingLabels ? 'wait' : 'pointer',
+                                padding: '5px', margin: '2px 0', borderRadius: '4px',
+                                backgroundColor: 'var(--color-warning-light)',
+                                border: '1px solid var(--color-warning)',
+                                fontWeight: 'bold',
+                                transition: 'background-color 0.1s',
+                                opacity: isUpdatingLabels ? 0.6 : 1
                             }}
                             onMouseEnter={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-error-light)')}
                             onMouseLeave={(e) => isUpdatingLabels ? null : (e.currentTarget.style.backgroundColor = 'var(--color-warning-light)')}
@@ -161,7 +162,7 @@ const RegistroHistorialCard: React.FC<RegistroHistorialProps> = ({ registro }) =
 
     const fechaFormateada = new Date(registro.fecha).toLocaleString();
     const usuario = registro.usuario;
-    let nombreMostrar = 'Sistema / Usuario Desconocido'; 
+    let nombreMostrar = 'Sistema / Usuario Desconocido';
 
     if (usuario) {
         if (usuario.nombre && usuario.nombre.trim() !== '') {
@@ -383,10 +384,10 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
         const needsFetching = token && tarea.id && (!tarea.etiquetas || tarea.etiquetas.length === 0);
 
         if (needsFetching) {
-            if (!loadingLabels) { 
+            if (!loadingLabels) {
                 setLoadingLabels(true);
             }
-            
+
             const fetchTaskLabels = async () => {
                 try {
                     const res = await fetch(`${BASE_URL}/api/etiquetas/tareas/${tarea.id}/etiquetas`, {
@@ -396,29 +397,29 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
                             'Authorization': `Bearer ${token}`,
                         },
                     });
-                    
+
                     if (!res.ok) {
                         console.error(`Error ${res.status} al cargar etiquetas para tarea ${tarea.id}`);
                         setTaskLabels([]);
                     } else {
                         const data: Etiqueta[] = await res.json();
-                        setTaskLabels(data); 
+                        setTaskLabels(data);
                     }
 
                 } catch (error) {
                     console.error("Fallo el fetch de etiquetas:", error);
                     setTaskLabels([]);
                 } finally {
-                    setHasFetchedLabels(true); 
+                    setHasFetchedLabels(true);
                     setLoadingLabels(false);
                 }
             };
 
             fetchTaskLabels();
-        } 
-        
+        }
+
         if (tarea.etiquetas && tarea.etiquetas.length > 0) {
-             setHasFetchedLabels(true);
+            setHasFetchedLabels(true);
         }
     }, [tarea.id, token, tarea.etiquetas]);
 
@@ -449,22 +450,22 @@ export const TareaCard: React.FC<TareaCardProps> = ({ tarea, setSelectedTask, to
             <div style={{ display: 'flex', gap: '1.5rem', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                 <span>Prioridad: <strong>{tarea.prioridad}</strong></span>
             </div>
-            
-            <div style={{ 
-                display: 'flex', 
-                alignItems: 'flex-start', 
-                flexDirection: 'column', 
-                gap: '0.2rem', 
-                fontSize: '0.8rem', 
-                color: 'var(--text-secondary)', 
-                marginTop: '0.5rem' 
+
+            <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                flexDirection: 'column',
+                gap: '0.2rem',
+                fontSize: '0.8rem',
+                color: 'var(--text-secondary)',
+                marginTop: '0.5rem'
             }}>
                 <span style={{ fontWeight: 'bold' }}>Etiquetas:</span>
                 <div style={{ marginTop: '0.2rem' }}>
-                    {loadingLabels 
+                    {loadingLabels
                         ? <small style={{ fontStyle: 'italic' }}>Cargando etiquetas...</small>
-                        : (hasFetchedLabels || taskLabels.length > 0) 
-                            ? <EtiquetaDisplay etiquetas={taskLabels}/>
+                        : (hasFetchedLabels || taskLabels.length > 0)
+                            ? <EtiquetaDisplay etiquetas={taskLabels} />
                             : <small style={{ fontStyle: 'italic' }}>Sin etiquetas</small>
                     }
                 </div>
@@ -477,23 +478,23 @@ export const EtiquetaDisplay: React.FC<EtiquetaDisplayProps> = ({ etiquetas }) =
     if (!etiquetas || etiquetas.length === 0) {
         return null;
     }
-    
+
     return (
-        <div style={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: '6px', 
+        <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
         }}>
             {etiquetas.map(etiqueta => (
-                <span 
-                    key={etiqueta.id} 
+                <span
+                    key={etiqueta.id}
                     style={{
-                        backgroundColor: 'var(--color-primary-light)', 
-                        color: 'var(--text-primary)', 
-                        border: '1px solid var(--color-primary)', 
-                        padding: '3px 8px', 
-                        borderRadius: '12px', 
-                        fontSize: '0.75rem', 
+                        backgroundColor: 'var(--color-primary-light)',
+                        color: 'var(--text-primary)',
+                        border: '1px solid var(--color-primary)',
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        fontSize: '0.75rem',
                         fontWeight: 'bold',
                         whiteSpace: 'nowrap'
                     }}
@@ -511,7 +512,7 @@ interface TareaColumnaProps {
     setSelectedTask: (tarea: Tarea) => void;
     token: string;
 }
-export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setSelectedTask, token}) => {
+export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setSelectedTask, token }) => {
     const config = estadoConfig[estado];
 
     return (
@@ -552,7 +553,7 @@ export const TareaColumna: React.FC<TareaColumnaProps> = ({ estado, tareas, setS
                         key={t.id}
                         tarea={t}
                         setSelectedTask={setSelectedTask}
-                        token={token} 
+                        token={token}
                     />)
                 )}
             </div>
@@ -565,7 +566,7 @@ interface CreateTaskModalProps {
     isTaskModalOpen: boolean;
     setIsTaskModalOpen: (isOpen: boolean) => void;
     handleCreateTask: (e: React.FormEvent) => Promise<void>;
-    
+
     newTaskTitle: string;
     setNewTaskTitle: (title: string) => void;
     newTaskDesc: string;
@@ -576,7 +577,7 @@ interface CreateTaskModalProps {
     setNewTaskEstado: (e: EstadoTarea) => void;
     taskModalLoading: boolean;
     taskModalError: string | null;
-    
+
     allLabels: Etiqueta[];
     newTaskLabels: string[];
     setNewTaskLabels: (labels: string[]) => void;
@@ -585,7 +586,7 @@ interface CreateTaskModalProps {
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
     if (!props.isTaskModalOpen) return null;
 
-    
+
     const selectedLabels = props.allLabels.filter(label => props.newTaskLabels.includes(label.id));
     const availableLabels = props.allLabels.filter(label => !props.newTaskLabels.includes(label.id));
 
@@ -644,7 +645,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                     </div>
 
                     <div style={{ display: 'flex', gap: '1.5rem', marginBottom: '1.5rem' }}>
-                        
+
                         <div style={{ flex: 1 }}>
                             <label htmlFor="taskPriority" style={{ display: 'block', marginBottom: '0.5rem' }}>Prioridad:</label>
                             <select
@@ -691,11 +692,11 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                                             <div
                                                 key={label.id}
                                                 onDoubleClick={() => handleSelectLabel(label.id)}
-                                                style={{ 
-                                                    cursor: 'pointer', padding: '5px', margin: '2px 0', 
-                                                    borderRadius: '4px', backgroundColor: 'var(--bg-lightest)', 
-                                                    border: '1px solid var(--text-secondary)', 
-                                                    transition: 'background-color 0.1s' 
+                                                style={{
+                                                    cursor: 'pointer', padding: '5px', margin: '2px 0',
+                                                    borderRadius: '4px', backgroundColor: 'var(--bg-lightest)',
+                                                    border: '1px solid var(--text-secondary)',
+                                                    transition: 'background-color 0.1s'
                                                 }}
                                                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
                                                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-lightest)')}
@@ -718,12 +719,12 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = (props) => {
                                             <div
                                                 key={label.id}
                                                 onDoubleClick={() => handleDeselectLabel(label.id)}
-                                                style={{ 
-                                                    cursor: 'pointer', padding: '5px', margin: '2px 0', 
-                                                    borderRadius: '4px', backgroundColor: 'var(--color-primary-light)', 
-                                                    border: '1px solid var(--color-primary)', 
-                                                    fontWeight: 'bold', 
-                                                    transition: 'background-color 0.1s' 
+                                                style={{
+                                                    cursor: 'pointer', padding: '5px', margin: '2px 0',
+                                                    borderRadius: '4px', backgroundColor: 'var(--color-primary-light)',
+                                                    border: '1px solid var(--color-primary)',
+                                                    fontWeight: 'bold',
+                                                    transition: 'background-color 0.1s'
                                                 }}
                                                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-warning-light)')}
                                                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-primary-light)')}
@@ -787,7 +788,7 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
     const validStatuses = getValidNextStatuses(currentStatus);
     const displayStatuses = Array.from(new Set([currentStatus, ...validStatuses]));
     const isReadOnly = currentStatus === EstadoTarea.CANCELADA;
-    
+
     const [selectedLabelIds, setSelectedLabelIds] = useState<string[]>([]);
     const [isAddingLabels, setIsAddingLabels] = useState(false);
     const [isRemovingLabels, setIsRemovingLabels] = useState(false);
@@ -815,8 +816,8 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
 
         try {
             await handleUpdateTaskLabels(selectedTask.id, newLabelIds);
-            setSelectedLabelIds(newLabelIds); 
-            
+            setSelectedLabelIds(newLabelIds);
+
         } catch (error) {
             setLabelUpdateError(error instanceof Error ? error.message : 'Error al guardar');
         }
@@ -851,6 +852,8 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                         &times;
                     </button>
                 </div>
+
+                <TaskWatcherSection taskId={selectedTask.id} currentUserId={currentUserId} />
 
                 <div style={{ marginBottom: '2rem', backgroundColor: 'var(--bg-tertiary)', padding: '1rem', borderRadius: '4px', display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
 
@@ -899,42 +902,42 @@ export const TaskDetailsModal: React.FC<TaskDetailsModalProps> = ({
                 <h3 style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', marginBottom: '1rem', marginTop: '2rem', fontSize: '1.2rem' }}>
                     🏷️ Etiquetas
                 </h3>
-                
+
                 {labelsLoading ? (
                     <p style={{ color: 'var(--text-secondary)' }}>Cargando etiquetas...</p>
                 ) : (
                     <div style={{ marginBottom: '1.5rem' }}>
-                        
+
                         <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Etiquetas Actuales:</p>
                         <div style={{ display: 'flex', gap: '5px', alignItems: 'center', marginBottom: '1rem', minHeight: '30px' }}>
                             <EtiquetaDisplay etiquetas={currentTaskLabels} />
                         </div>
 
                         {/* 💡 CAMBIO: Contenedor para centrar los botones y darles margen */}
-                        <div style={{ 
-                            display: 'flex', 
-                            justifyContent: 'center', 
-                            marginTop: '1.5rem',     
-                            marginBottom: '1rem'     
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            marginTop: '1.5rem',
+                            marginBottom: '1rem'
                         }}>
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <button 
+                                <button
                                     onClick={() => { setIsAddingLabels(true); setIsRemovingLabels(false); setLabelUpdateError(null); }}
                                     disabled={isReadOnly || isUpdatingLabels}
-                                    
+
                                 >
                                     ➕ Agregar Etiquetas
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => { setIsRemovingLabels(true); setIsAddingLabels(false); setLabelUpdateError(null); }}
                                     disabled={isReadOnly || isUpdatingLabels || currentTaskLabels.length === 0}
-                                    
+
                                 >
                                     ➖ Remover Etiquetas
                                 </button>
                             </div>
                         </div>
-                        
+
                         {/* Secciones condicionales para la gestión */}
                         {(isAddingLabels || isRemovingLabels) && (
                             <div style={{ marginTop: '1rem', padding: '1rem', border: '1px dashed var(--border-color)', borderRadius: '4px' }}>

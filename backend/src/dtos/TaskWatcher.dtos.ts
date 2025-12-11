@@ -31,4 +31,5 @@ export interface WatchlistItemDTO {
   prioridad: string;
   fechaActualizacion: Date;
   subscribedAt: Date; // cuando se suscribio el usuario
+  teamId?: string;
 }
