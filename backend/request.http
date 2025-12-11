@@ -38,7 +38,7 @@ POST {{baseUrl}}/api/users/login
 Content-Type: application/json
 
 {
-  "email": "eze6@example.com.ar",
+  "email": "jorge@jorge.com",
   "password": "123456"
 }
 
@@ -83,7 +83,7 @@ Authorization: Bearer {{token}}
 
 
 ### Obtener Equipos (Requiere Auth)
-GET {{baseUrl}}/api/equipos/equipos/{{userId}}
+GET {{baseUrl}}/api/equipos/equipos/jorge@jorge.com
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
@@ -271,3 +271,10 @@ Content-Type: application/json
 Authorization: Bearer {{token}}
 
 ###------------- backend/src/routes/etiquetas.routes.ts ----------
+
+
+
+### Listar watchers de una tarea
+GET http://localhost:3000/api/tareas/09a9240d-e89b-42e4-b858-b68759da3951/watchers
+Content-Type: : application/json
+Authorization: Bearer {{token}}

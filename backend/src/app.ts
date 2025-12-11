@@ -10,6 +10,7 @@ import tareaRoutes from "./routes/Tareas.routes";
 import statusRouter from "./routes/status.routes";
 import comentarioRoutes from "./routes/comentarios.routes";
 import etiquetasRoutes from "./routes/etiquetas.routes";
+import taskWatcherNotificationRoutes from "./routes/taskWatcherNotification.routes";
 
 export function createApp() {
   const app = express();
@@ -26,6 +27,7 @@ export function createApp() {
   app.use("/api/tareas", tareaRoutes);
   app.use("/api/comentarios", comentarioRoutes);
   app.use("/api/etiquetas", etiquetasRoutes);
+  app.use("/api/notifications", taskWatcherNotificationRoutes);
 
   // Siempre servir al front en vite
   const distPath = path.join(__dirname, "../client/dist"); // adjust if your frontend folder is elsewhere
