@@ -9,10 +9,13 @@ import { TaskWatcher } from "./TaskWatcher.entity";
 
 export enum EventType {
   STATUS_CHANGE = "statusChange",
-  COMMENT = "comment",
+  CREATE_COMMENT = "createComment",
+  EDIT_COMMENT = "editComment",
+  DELETE_COMMENT = "deleteComment",
   SUBSCRIBE = "subscribe",
   UNSUBSCRIBE = "unsubscribe",
-  TAG_CHANGE = "tagChange",
+  ASSIGN_TAG = "assingTag",
+  REMOVE_TAG = "removeTag",
   OTHER = "other"
 }
 

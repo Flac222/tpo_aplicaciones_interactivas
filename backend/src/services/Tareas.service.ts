@@ -6,7 +6,8 @@ import { Equipo } from "../entities/Equipo.entity";
 import { Historial } from "../entities/Historial.entity";
 import { TareaRepository } from "../repositories/Tareas.repository";
 import { TareaEtiqueta } from "../entities/TareasEtiqueta.entity";
-
+import { TaskWatcherService } from "./TaskWatcher.service";
+import { EventType } from "../entities/TaskWatcherNotification.entity";
 
 
 export class TareaService {
@@ -104,6 +105,13 @@ export class TareaService {
       cambio: `Estado cambiado de ${estadoAnterior} a ${nuevoEstado}`
     });
     await this.historialRepo.save(historial);
+
+    const watcherService = new TaskWatcherService();
+    await watcherService.onTaskEvent(
+      tarea.id,
+      EventType.STATUS_CHANGE,
+      { anterior: estadoAnterior, nuevo: nuevoEstado, usuarioId }
+    );
 
     return tarea;
   }

@@ -1,10 +1,14 @@
 
+import AppDataSource from "../db/data-source";
 import { EtiquetasRepository } from "../repositories/etiquetas.repository";
 import { TareaEtiquetaRepository } from "../repositories/tareaEtiqueta.repository";
 import { EquipoRepository } from "../repositories/Equipos.repository"; 
 import { UsuarioRepository } from "../repositories/Usuario.repository"; 
 import { TareaRepository } from "../repositories/Tareas.repository"; 
 import { Etiqueta } from "../entities/Etiqueta.entity";
+import { Historial } from "../entities/Historial.entity";
+import { TaskWatcherService } from "./TaskWatcher.service";
+import { EventType } from "../entities/TaskWatcherNotification.entity";
 
 
 class ServiceError extends Error {
@@ -124,25 +128,44 @@ export class EtiquetasService {
     if (!etiqueta) {
         throw new ServiceError("Etiqueta no encontrada.", 404);
     }
-
    
     if (tarea.equipo.id !== etiqueta.equipo.id) {
         throw new ServiceError("La etiqueta no pertenece al equipo de esta tarea.", 400);
     }
-
    
     const esMiembro = await this.esMiembro(tarea.equipo.id, usuarioId);
     if (!esMiembro) {
         throw new ServiceError("Acceso denegado. El usuario no es miembro del equipo de la tarea.", 403);
     }
-
   
     const asignacionExistente = await this.tareaEtiquetaRepo.findOne(tareaId, etiquetaId);
     if (asignacionExistente) {
         return asignacionExistente; 
     }
 
-   
+    // Historial
+    const usuario = await this.usuarioRepo.findById(usuarioId);
+
+    if (!usuario) {
+      throw new ServiceError("Usuario no encontrado.", 404);
+    }
+
+    const historialRepo = AppDataSource.getRepository(Historial);
+    const historial = historialRepo.create({
+      tarea: tarea,
+      usuario: usuario,
+      cambio: `Etiqueta "${etiqueta.nombre}" asignada a la tarea por ${usuario?.nombre}`
+    });
+    await historialRepo.save(historial);
+
+    // Notificación
+    const watcherService = new TaskWatcherService();
+    await watcherService.onTaskEvent(
+      tarea.id,
+      EventType.ASSIGN_TAG,
+      { etiquetaId: etiqueta.id, etiquetaNombre: etiqueta.nombre, usuarioId }
+    );
+
     return this.tareaEtiquetaRepo.create(tareaId, etiquetaId);
   }
 
@@ -154,12 +177,33 @@ export class EtiquetasService {
         throw new ServiceError("Tarea no encontrada o no pertenece a un equipo.", 404);
     }
 
-   
     const esMiembro = await this.esMiembro(tarea.equipo.id, usuarioId);
     if (!esMiembro) {
         throw new ServiceError("Acceso denegado. El usuario no es miembro del equipo de la tarea.", 403);
     }
 
+    const usuario = await this.usuarioRepo.findById(usuarioId);
+    if (!usuario) {
+      throw new ServiceError("Usuario no encontrado.", 404);
+    }
+
+    const etiqueta = await this.etiquetaRepo.findById(etiquetaId);
+
+    const historialRepo = AppDataSource.getRepository(Historial);
+    const historial = historialRepo.create({
+      tarea: tarea,
+      usuario: usuario,
+      cambio: `Etiqueta "${etiqueta?.nombre}" removida de la tarea por ${usuario.nombre}`
+    });
+    await historialRepo.save(historial);
+
+    // Notificación
+    const watcherService = new TaskWatcherService();
+    await watcherService.onTaskEvent(
+      tarea.id,
+      EventType.REMOVE_TAG,
+      { etiquetaId, etiquetaNombre: etiqueta?.nombre, usuarioId }
+    );
 
     await this.tareaEtiquetaRepo.delete(tareaId, etiquetaId);
   }

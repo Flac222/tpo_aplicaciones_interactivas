@@ -78,7 +78,7 @@ export class TaskWatcherService {
       cambio: `Usuario ${user.nombre} se suscribió a la tarea`
     });
     await historialRepo.save(historial);
-    
+
     // Creo la notificacion
     await this.notifRepo.createNotification(watcher, EventType.SUBSCRIBE, {
       usuarioId: user.id,
@@ -94,7 +94,8 @@ export class TaskWatcherService {
 
     const repo = AppDataSource.getRepository(TaskWatcher);
     const watcher = await repo.findOne({
-      where: { user: { id: userId }, task: { id: taskId } }
+      where: { user: { id: userId }, task: { id: taskId } },
+      relations: ["user", "task"]
     });
 
     if (!watcher) {
@@ -111,6 +112,11 @@ export class TaskWatcherService {
       cambio: `Usuario ${watcher.user.nombre} se desuscribió de la tarea`
     });
     await historialRepo.save(historial);
+
+    await this.notifRepo.createNotification(watcher, EventType.UNSUBSCRIBE, {
+      usuarioId: watcher.user.id,
+      nombre: watcher.user.nombre
+    });
 
     return { ok: true, data: null };
   }
