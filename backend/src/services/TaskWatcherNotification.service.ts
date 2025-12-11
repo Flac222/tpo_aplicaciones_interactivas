@@ -4,6 +4,7 @@ import { TaskWatcher } from "../entities/TaskWatcher.entity";
 import { TaskWatcherNotificationRepository } from "../repositories/TaskWatcherNotification.repository";
 import { EventType } from "../entities/TaskWatcherNotification.entity";
 import { NotificationItemDTO, NotificationsQueryDTO } from "../dtos/taskWatcherNotification.dtos";
+import { TaskWatcherNotification } from "../entities/TaskWatcherNotification.entity";
 
 type ServiceResult<T> =
   | { ok: true; data: T }
@@ -35,7 +36,7 @@ export class TaskWatcherNotificationService {
     }
   }
 
-  // Obtener notificaciones (por defecto: no leídas) con filtros y paginación
+    // Obtener notificaciones (por defecto: no leídas) con filtros y paginación
   async getUnread(
     userId: string,
     query: NotificationsQueryDTO = {}
@@ -43,18 +44,20 @@ export class TaskWatcherNotificationService {
     try {
       const { taskId, eventType, skip = 0, take = 20 } = query;
 
-      // Base query (no leídas)
-      const qb = AppDataSource.getRepository(TaskWatcher).createQueryBuilder("watcher")
-        .leftJoin("watcher.user", "user")
-        .leftJoin("watcher.task", "task")
-        .leftJoinAndSelect("watcher.notifications", "notif")
+      const notifRepo = AppDataSource.getRepository(TaskWatcherNotification);
+
+      // Base query sobre notificaciones
+      const qb = notifRepo.createQueryBuilder("notif")
+        .innerJoinAndSelect("notif.watcher", "watcher")
+        .innerJoinAndSelect("watcher.task", "task")
+        .innerJoin("watcher.user", "user")
         .where("user.id = :userId", { userId })
         .andWhere("notif.readAt IS NULL");
 
       if (taskId) qb.andWhere("task.id = :taskId", { taskId });
       if (eventType) qb.andWhere("notif.eventType = :eventType", { eventType });
 
-      // total
+      // total de notificaciones pendientes
       const total = await qb.getCount();
 
       // page
@@ -64,17 +67,15 @@ export class TaskWatcherNotificationService {
         .take(take)
         .getMany();
 
-      // map a DTO (aplana notificaciones por watcher)
-      const items: NotificationItemDTO[] = rows.flatMap(w =>
-        (w.notifications || []).map(n => ({
-          id: n.id,
-          taskId: w.task.id,
-          titulo: w.task.titulo,
-          eventType: n.eventType,
-          payload: n.payload ?? null,
-          createdAt: n.createdAt
-        }))
-      );
+      // map a DTO
+      const items: NotificationItemDTO[] = rows.map(n => ({
+        id: n.id,
+        taskId: n.watcher.task.id,
+        titulo: n.watcher.task.titulo,
+        eventType: n.eventType,
+        payload: n.payload ?? null,
+        createdAt: n.createdAt
+      }));
 
       return { ok: true, data: { items, total } };
     } catch {
@@ -82,20 +83,63 @@ export class TaskWatcherNotificationService {
     }
   }
 
-  // Marcar notificaciones como leídas (todas o filtradas por task)
-  async markAsRead(userId: string, taskId?: string): Promise<ServiceResult<{ affected: number }>> {
+  async markAsRead(
+    userId: string,
+    taskId?: string,
+    notificationId?: string
+  ): Promise<ServiceResult<{ affected: number }>> {
     try {
-        // Usamos el método del repositorio que ya hace el UPDATE sobre TaskWatcherNotification
-        await this.notifRepo.markAsRead(userId, taskId);
+      const notifRepo = AppDataSource.getRepository(TaskWatcherNotification);
 
-        // Para devolver cuántas se marcaron, contamos las no leídas antes del update
-        const pending = await this.notifRepo.getUnread(userId);
-        const affected = pending.filter(n => (taskId ? n.watcher.task.id === taskId : true)).length;
+      if (notificationId) {
+        // Caso: marcar una sola notificación
+        const notif = await notifRepo.findOne({
+          where: { id: notificationId },
+          relations: ["watcher", "watcher.user"]
+        });
 
-        return { ok: true, data: { affected } };
+        if (!notif) {
+          return { ok: false, status: 404, message: "Notificación no encontrada" };
+        }
+        if (notif.watcher.user.id !== userId) {
+          return { ok: false, status: 403, message: "No tienes permiso para modificar esta notificación" };
+        }
+
+        const result = await notifRepo.createQueryBuilder()
+          .update(TaskWatcherNotification)
+          .set({ readAt: () => "CURRENT_TIMESTAMP" })
+          .where("id = :id", { id: notificationId })
+          .execute();
+
+        return { ok: true, data: { affected: result.affected ?? 0 } };
+      }
+
+      // Caso: marcar todas o por task
+      const watcherIdsRaw = await AppDataSource.getRepository(TaskWatcher)
+        .createQueryBuilder("w")
+        .select("w.id", "id")
+        .where("w.userId = :userId", { userId })
+        .andWhere(taskId ? "w.taskId = :taskId" : "1=1", { taskId })
+        .getRawMany();
+
+      const watcherIds = watcherIdsRaw.map(r => r.id);
+
+      if (watcherIds.length === 0) {
+        return { ok: true, data: { affected: 0 } };
+      }
+
+      const result = await notifRepo.createQueryBuilder()
+        .update(TaskWatcherNotification)
+        .set({ readAt: () => "CURRENT_TIMESTAMP" })
+        .where("watcherId IN (:...ids)", { ids: watcherIds })
+        .execute();
+
+      return { ok: true, data: { affected: result.affected ?? 0 } };
     } catch {
-        return { ok: false, status: 500, message: "Error al marcar como leídas" };
+      return { ok: false, status: 500, message: "Error al marcar como leídas" };
     }
-    }
+  }
+
+
 
 }

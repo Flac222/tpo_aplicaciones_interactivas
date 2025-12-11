@@ -33,15 +33,21 @@ export async function listUnreadNotifications(req: AuthRequest, res: Response) {
 export async function markNotificationsAsRead(req: AuthRequest, res: Response) {
   try {
     const userId = req.user!.id;
-    const { taskId } = req.body; // opcional
+    const { taskId, notificationId } = req.body; // o req.query
 
-    const result = await notifService.markAsRead(userId, taskId);
+    const result = await notifService.markAsRead(
+      userId,
+      taskId as string | undefined,
+      notificationId as string | undefined
+    );
 
     if (!result.ok) {
       return res.status(result.status).json({ error: result.message });
     }
-    return res.json(result.data); // { affected: number }
-  } catch (err: any) {
+    return res.json(result.data);
+  } catch {
     return res.status(500).json({ error: "Error interno del servidor" });
   }
 }
+
+

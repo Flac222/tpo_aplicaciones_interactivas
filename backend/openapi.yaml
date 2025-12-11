@@ -256,6 +256,9 @@ paths:
                 taskId:
                   type: string
                   description: Si se envía, marca solo las notificaciones de esa tarea
+                notificationId:
+                  type: string
+                  description: Si se envía, marca solo la notificación con ese ID
       responses:
         "200":
           description: Cantidad de notificaciones marcadas como leídas
